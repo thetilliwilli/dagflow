@@ -125,6 +125,13 @@ description: "Task list for 002-editor-ui-redesign"
 
 **Checkpoint**: окно свойств работает рядом с прежней карточкой; e2e фичи 001 зелёные
 
+### Уточнение FR-006a (после ручной проверки US3)
+
+Плашку хранилища в правом верхнем углу закрывало окно свойств. Решение пользователя:
+сообщения о хранилище — вверху левой панели, точка на кнопке меню.
+
+- [X] T077 [US1] Перенести `FolderBanner` вверх `src/ui/layout/SidebarWindow.tsx`, этап подсказки — в стор интерфейса (`storageHint`, `src/store/ui-logic.ts`), выбор сообщения — чистая `storageNotice()` в `src/ui/layout/storage-notice.ts`, точка на `MenuButton` (`data-attention`); тесты: `tests/unit/ui/storage-notice.test.ts`, `tests/unit/store/ui-logic.test.ts`, `tests/component/convergence.test.tsx` (T101), e2e `ui-us1-layout.spec.ts` (FR-006a); e2e `us3-storage-tabs`, `autosave-durability` — кнопки хранилища через `openSidebar`
+
 ---
 
 ## Phase 5: User Story 4 — Связывание свойств перетаскиванием (Priority: P2)

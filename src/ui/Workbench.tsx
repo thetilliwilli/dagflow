@@ -4,7 +4,6 @@ import { useAppState } from '../store/react';
 import { Editor } from './Editor';
 import { FloatingLayer } from './floating/FloatingLayer';
 import { useGlobalKeys } from './floating/useGlobalKeys';
-import { FolderBanner } from './layout/FolderBanner';
 import { MenuButton } from './layout/MenuButton';
 import { Notifications } from './layout/Notifications';
 import { SidebarWindow } from './layout/SidebarWindow';
@@ -22,10 +21,6 @@ export function Workbench() {
           <TabBar />
         </header>
         <main className="main">
-          {/* Предложения о хранилище — неблокирующие плашки поверх холста (FR-006a) */}
-          <div className="main__banners">
-            <FolderBanner />
-          </div>
           {activeTabId ? (
             <Editor key={activeTabId} />
           ) : (

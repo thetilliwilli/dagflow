@@ -12,7 +12,7 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { activeTab, tabGraph, type AppStore } from './store';
 import * as logic from './ui-logic';
-import type { Point, UiState, WindowId } from './ui-logic';
+import type { Point, StorageHint, UiState, WindowId } from './ui-logic';
 
 export type UiStoreApi = StoreApi<UiState>;
 
@@ -40,6 +40,7 @@ export interface UiActions {
   focusWindow(id: WindowId): void;
   setWindowPosition(id: WindowId, position: Point): void;
   setPaletteCategory(category: string): void;
+  setStorageHint(stage: StorageHint): void;
   setSelection(selection: string[]): void;
   openEdgeWindow(source: string, target: string, at: Point): void;
   escape(): void;
@@ -57,6 +58,7 @@ export function createUiActions(ui: UiStoreApi): UiActions {
     focusWindow: (id) => apply(logic.focusWindow(s(), id)),
     setWindowPosition: (id, position) => apply(logic.setWindowPosition(s(), id, position)),
     setPaletteCategory: (category) => apply(logic.setPaletteCategory(s(), category)),
+    setStorageHint: (stage) => apply(logic.setStorageHint(s(), stage)),
     setSelection: (selection) => apply(logic.setSelection(s(), selection)),
     openEdgeWindow: (source, target, at) => apply(logic.openEdgeWindow(s(), source, target, at)),
     escape: () => apply(logic.escape(s())),

@@ -139,6 +139,7 @@ export const windowMessages = {
   close: 'Закрыть',
   menu: 'Меню',
   sidebar: 'Workflow и хранилище',
+  sidebarAttention: 'Workflow и хранилище: есть сообщение о хранении данных',
   paletteCategories: 'Категории',
   noComposites: 'Составных нодов пока нет: выделите ноды на холсте и сверните их в составной нод.',
 };

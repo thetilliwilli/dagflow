@@ -125,7 +125,7 @@ src/
 │   ├── + ui.ts              # стор интерфейса (Zustand vanilla) + UiProvider, useUi/useUiActions, bindUiToApp
 │   └── + ui-logic.ts        # чистые редьюсеры: окна, z-порядок, Escape, выделение, связывание
 ├── ui/
-│   ├── ~ Workbench.tsx      # полоса (☰ + TabBar) + холст; SidebarWindow; плашки поверх холста
+│   ├── ~ Workbench.tsx      # полоса (☰ + TabBar) + холст; SidebarWindow; уведомления поверх холста
 │   ├── ~ Editor.tsx         # холст + слой плавающих окон внутри ReactFlowProvider
 │   ├── ~ messages.ts        # typeAbbr, подписи окон, подсказки связывания, «ещё N»
 │   ├── ~ styles.css         # новая раскладка, карточка без скруглений, окна, строки свойств
@@ -155,15 +155,17 @@ src/
 │   ├── palette/
 │   │   └── ~ Palette.tsx         # плавающее окно с вкладками; щелчок добавляет
 │   └── layout/
-│       ├── + MenuButton.tsx      # ☰
+│       ├── + MenuButton.tsx      # ☰; точка, пока в левой панели есть сообщение о хранилище (FR-006a)
+│       ├── ~ FolderBanner.tsx    # вверху левой панели; этап подсказки — в сторе интерфейса; хук useStorageNotice
+│       ├── + storage-notice.ts   # storageNotice(): какое сообщение о хранилище показать
 │       └── + SidebarWindow.tsx   # StorageIndicator + WorkflowList + ExportImport в окне
 
 tests/
 ├── unit/
 │   ├── engine/ ~ validate.test.ts (linkCandidates, E10–E12), + naming.test.ts (E13–E15)
 │   ├── model/  ~ serialize.test.ts, import.test.ts (name; файл без имён отклоняется)
-│   ├── store/  + ui-logic.test.ts
-│   └── ui/     + bundles.test.ts, edge-geometry.test.ts, floating-geometry.test.ts
+│   ├── store/  + ui-logic.test.ts (в т. ч. storageHint)
+│   └── ui/     + bundles.test.ts, edge-geometry.test.ts, floating-geometry.test.ts, storage-notice.test.ts
 ├── component/  ~ helpers.ts → helpers.tsx (UiProbe, openSidebar, openPalette); ~ FlowNode.test.tsx, phase10.test.tsx, convergence.test.tsx, workflows-tabs.test.tsx;
 │               + property-grid.test.tsx, palette-tabs.test.tsx, floating-window.test.tsx, edge-list.test.tsx
 └── e2e/        ~ helpers.ts (addNode, connect, linkByClick, setInput, openSidebar), us1–us5, perf, autosave, opfs;
@@ -188,8 +190,8 @@ engine/model/storage`). Новые папки `src/ui/floating/` и `src/ui/prop
    - стор интерфейса и `ui-logic` с тестами;
    - `FloatingWindow` и `geometry`.
 2. **US1 (P1)**: каркас `Workbench` (☰, вкладки, холст на весь экран),
-   `SidebarWindow`, палитра-окно с вкладками, Пробел и Escape, плашки поверх
-   холста. Хелпер `addNode` и обращения к боковой панели в e2e переводятся здесь.
+   `SidebarWindow`, палитра-окно с вкладками, Пробел и Escape; сообщения о
+   хранилище — вверху левой панели, точка на кнопке меню (уточнение после US3). Хелпер `addNode` и обращения к боковой панели в e2e переводятся здесь.
 3. **US3 (P1)**: `PropertyGrid` и `PropertyRow` (ручной ввод, источник, действия
    составного нода и нода Вход/Выход). Карточка пока прежняя.
 4. **US4 (P2)**: машина связывания, `useLinking`, `PeekGrid`, `LinkGhost`,

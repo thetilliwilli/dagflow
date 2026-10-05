@@ -12,6 +12,7 @@ import {
   resetForTab,
   setPaletteCategory,
   setSelection,
+  setStorageHint,
   setWindowPosition,
   toggleWindow,
   type UiState,
@@ -75,6 +76,15 @@ describe('окна', () => {
     let s = setWindowPosition(openWindow(initialUiState(), 'palette'), 'palette', { x: 10, y: 20 });
     s = openWindow(closeWindow(s, 'palette'), 'palette');
     expect(s.windows.palette.position).toEqual({ x: 10, y: 20 });
+  });
+
+  it('этап подсказки о хранилище: hint → reminder → hidden, переживает закрытие панели', () => {
+    let s = initialUiState();
+    expect(s.storageHint).toBe('hint');
+    s = setStorageHint(s, 'reminder');
+    s = openWindow(closeWindow(openWindow(s, 'sidebar'), 'sidebar'), 'sidebar');
+    expect(s.storageHint).toBe('reminder');
+    expect(setStorageHint(s, 'hidden').storageHint).toBe('hidden');
   });
 
   it('вкладка палитры запоминается', () => {

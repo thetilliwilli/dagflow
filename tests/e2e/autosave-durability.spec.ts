@@ -17,8 +17,8 @@ test('SC-008: режим рабочей папки', async ({ page }) => {
       (await navigator.storage.getDirectory()).getDirectoryHandle('picked-folder', { create: true });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
-  await page.getByRole('button', { name: 'Перенести' }).click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Перенести' }).click();
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
   await changeWaitReload(page);
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');

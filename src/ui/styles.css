@@ -328,18 +328,26 @@ body,
   min-width: 0;
   min-height: 0;
 }
-/* Плашки хранилища поверх холста не блокируют его (FR-006a) */
-.main__banners {
-  position: absolute;
-  /* правый верхний угол: низ занят палитрой, левый верх — панелью инструментов (research R12) */
-  top: 8px;
-  right: 8px;
-  z-index: 6;
-  max-width: min(560px, calc(100% - 32px));
-  pointer-events: none;
+/* Точка на кнопке меню: в левой панели есть сообщение о хранилище (FR-006a) */
+.menu-button {
+  position: relative;
 }
-.main__banners > * {
-  pointer-events: auto;
+.menu-button__dot {
+  position: absolute;
+  top: 8px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--waiting);
+}
+/* Сообщения о хранилище в левой панели — в столбик */
+.sidebar .banner {
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+}
+.sidebar .banner span {
+  flex-basis: 100%;
 }
 .main .editor {
   flex: 1;

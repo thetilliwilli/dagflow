@@ -62,11 +62,21 @@ describe('напоминание о выгрузке (T101, US3 #2)', () => {
   it('после «Позже» при поддержке папок показывается напоминание о выгрузке в файл', async () => {
     const user = userEvent.setup();
     setup({ storageLocation: { kind: 'browser' }, folderSupported: true });
+    // Фича 002 (FR-006a): сообщение — вверху левой панели, на кнопке меню точка
+    const menu = screen.getByRole('button', { name: 'Меню' });
+    expect(menu).toHaveAttribute('data-attention', 'true');
+    expect(screen.queryByText(/Выберите рабочую папку/)).toBeNull();
+    openSidebar();
     expect(screen.getByText(/Выберите рабочую папку/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Позже' }));
     expect(screen.getByText(/выгрузите workflow в файл/)).toBeInTheDocument();
+    // Закрыть и открыть панель — этап подсказки не сбрасывается
+    await user.click(menu);
+    openSidebar();
+    expect(screen.getByText(/выгрузите workflow в файл/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Понятно' }));
     expect(screen.queryByText(/выгрузите workflow в файл/)).toBeNull();
+    expect(menu).not.toHaveAttribute('data-attention');
   });
 
   it('сохранение недоступно — баннер с объяснением', () => {

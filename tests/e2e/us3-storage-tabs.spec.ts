@@ -52,8 +52,8 @@ async function buildSum(page: Page, a: string, b: string) {
 test('US3: рабочая папка, два workflow во вкладках, перезагрузка (#1, #3)', async ({ page }) => {
   await stubFolderPicker(page);
   await page.goto('/');
-  await page.getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
-  await page.getByRole('button', { name: 'Перенести' }).click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Перенести' }).click();
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
 
   const show1 = await buildSum(page, '2', '3');
@@ -108,7 +108,7 @@ test('US3: без поддержки папок — индикатор «Дан�
   });
   await page.goto('/');
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
-  await expect(page.getByRole('button', { name: 'Выбрать рабочую папку' })).toHaveCount(0);
+  await expect((await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' })).toHaveCount(0);
   const show = await buildSum(page, '1', '1');
   await expect(show.getByTestId('show-value')).toHaveText('2');
   await page.waitForTimeout(500);
@@ -120,8 +120,8 @@ test('US3: браузер требует подтверждения — экра
   await stubFolderPicker(page, { permission: 'prompt' });
   await page.goto('/');
   // Первый визит: выбор папки (requestPermission → granted) и создание данных
-  await page.getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
-  await page.getByRole('button', { name: 'Перенести' }).click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Перенести' }).click();
   const show = await buildSum(page, '7', '8');
   await expect(show.getByTestId('show-value')).toHaveText('15');
   await page.waitForTimeout(500);

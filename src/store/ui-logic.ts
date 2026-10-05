@@ -18,6 +18,9 @@ export interface WindowState {
 /** Связывание параметров (US4). Переходы появятся вместе с историей US4. */
 export type LinkingState = { kind: 'idle' };
 
+/** Этап подсказки о хранилище: подсказка о папке → напоминание о выгрузке → скрыто (FR-006a). */
+export type StorageHint = 'hint' | 'reminder' | 'hidden';
+
 export interface EdgeWindow {
   source: string;
   target: string;
@@ -34,6 +37,8 @@ export interface UiState {
   paletteCategory: string | null;
   edgeWindow: EdgeWindow | null;
   linking: LinkingState;
+  /** Живёт в сторе, а не в компоненте: левую панель можно закрыть и открыть без потери этапа. */
+  storageHint: StorageHint;
 }
 
 const IDLE: LinkingState = { kind: 'idle' };
@@ -47,6 +52,7 @@ export function initialUiState(): UiState {
     paletteCategory: null,
     edgeWindow: null,
     linking: IDLE,
+    storageHint: 'hint',
   };
 }
 
@@ -83,6 +89,10 @@ export function focusWindow(s: UiState, id: WindowId): UiState {
 
 export function setWindowPosition(s: UiState, id: WindowId, position: Point): UiState {
   return { ...s, windows: { ...s.windows, [id]: { ...s.windows[id], position } } };
+}
+
+export function setStorageHint(s: UiState, storageHint: StorageHint): UiState {
+  return { ...s, storageHint };
 }
 
 export function setPaletteCategory(s: UiState, category: string): UiState {
