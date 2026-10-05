@@ -118,7 +118,7 @@ src/
 │   ├── composite.ts       # collapse, expand, compositePorts, зависимости, разворачивание
 │   ├── evaluator.ts       # реактивное инкрементальное вычисление
 │   ├── errors.ts          # NodeError, Rejection, тексты сообщений
-│   ├── builtins/          # constants.ts, math.ts, text.ts, logic.ts, collections.ts, show.ts, io.ts
+│   ├── builtins/          # constants.ts, math.ts, text.ts, logic.ts, collections.ts, show.ts, io.ts («Вход», «Выход», служебный passthrough)
 │   └── index.ts           # публичный API движка
 ├── model/
 │   ├── schemas.ts         # Valibot-схемы файлов
@@ -147,7 +147,7 @@ src/
 │   ├── layout/            # WorkflowList, TabBar, StorageIndicator, AccessScreen, FolderBanner, Notifications, ExportImport
 │   ├── canvas/            # Canvas (ReactFlow + MiniMap), FlowNode, NodeStatus, PortHandle, ValueView, ValueEditor, IoPortsEditor, useShortcuts
 │   ├── palette/           # Palette
-│   ├── dialogs/           # ConfirmDialog, ImportErrorDialog, CompositeNameDialog
+│   ├── dialogs/           # ConfirmDialog, ImportErrorDialog, NameDialog (общий ввод имени), CompositeNameDialog
 │   └── messages.ts        # тексты UI
 └── main.tsx
 

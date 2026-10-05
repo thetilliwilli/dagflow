@@ -20,9 +20,8 @@ export function ExportImport() {
     const state = app.store.getState();
     const workflow = workflowId ? state.workflows[workflowId] : undefined;
     if (!workflow) return;
-    const used = new Set(workflow.graph.nodes.filter((n) => n.type.startsWith('composite:')).map((n) => n.type.slice(10)));
-    const composites = Object.values(state.composites).filter((c) => used.has(c.id));
-    const blob = new Blob([toJsonText(buildExport(workflow, composites, app.deps.now()))], { type: 'application/json' });
+    const file = buildExport(workflow, Object.values(state.composites), app.deps.now());
+    const blob = new Blob([toJsonText(file)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

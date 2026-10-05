@@ -46,6 +46,8 @@ export const rejections = {
   unknownPort: (port: string) => reject('unknown-port', `Порт «${port}» не найден.`),
   unknownType: (typeId: string) => reject('unknown-type', `Неизвестный тип нода: ${typeId}.`),
   inputOccupied: (port: string) => reject('input-occupied', `К входу «${port}» подключено больше одной связи.`),
+  compositeRecursion: (title: string) =>
+    reject('composite-recursion', `Нельзя поместить составной нод «${title}» внутрь самого себя (напрямую или через другие составные ноды).`),
   ioOutsideComposite: () =>
     reject('io-node-outside-composite', 'Ноды «Вход» и «Выход» можно добавлять только внутри составного нода.'),
 };

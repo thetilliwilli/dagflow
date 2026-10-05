@@ -1,6 +1,6 @@
 // Вкладки открытых workflow (FR-031a)
 import { useActions, useAppState } from '../../store/react';
-import { workflowMessages as m } from '../messages';
+import { compositeMessages, workflowMessages as m } from '../messages';
 
 export function TabBar() {
   const actions = useActions();
@@ -12,7 +12,8 @@ export function TabBar() {
   return (
     <div className="tab-bar" role="tablist" data-testid="tab-bar">
       {tabs.map((t) => {
-        const title = (t.kind === 'workflow' ? workflows[t.targetId]?.name : composites[t.targetId]?.name) ?? '…';
+        const name = (t.kind === 'workflow' ? workflows[t.targetId]?.name : composites[t.targetId]?.name) ?? '…';
+        const title = t.kind === 'composite' ? compositeMessages.tabTitle(name) : name;
         const selected = t.id === activeTabId;
         return (
           <div key={t.id} className={`tab ${selected ? 'tab--active' : ''}`}>

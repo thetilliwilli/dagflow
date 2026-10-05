@@ -27,6 +27,8 @@ export interface NodeTypeDef {
   outputs: PortDef[];
   /** Чистая синхронная функция; бросает NodeError. Есть у встроенных нодов. */
   compute?: (inputs: Inputs) => Outputs;
+  /** Где нод доступен в палитре: только внутри составного нода или нигде (служебный). */
+  paletteScope?: 'composite' | 'hidden';
 }
 
 export interface NodeRegistry {

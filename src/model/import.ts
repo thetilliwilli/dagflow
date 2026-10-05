@@ -23,9 +23,45 @@ export const importMessages = {
   schema: (path: string) => `Файл не похож на выгрузку workflow: ${path}`,
   unknownTypes: (types: string[]) => `В файле есть неизвестные типы нодов: ${types.join(', ')}`,
   invalidGraph: (reason: string) => `Граф в файле некорректен: ${reason}`,
+  compositeRenamed: (name: string, renamed: string) =>
+    `Составной нод «${name}» уже есть в палитре с другим содержимым — добавлен как «${renamed}».`,
 };
 
-/** Слияние определений составных нодов (FR-029a). В US3 — только разрешение конфликтов id. */
+/** JSON с отсортированными ключами — для сравнения содержимого определений. */
+export function canonicalJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : v,
+  );
+}
+
+const contentOf = (d: CompositeDef) => canonicalJson({ name: d.name, description: d.description, graph: d.graph });
+
+/** Порядок «зависимости раньше зависящих» среди входящих определений. */
+function dependencyOrder(defs: CompositeDef[]): CompositeDef[] {
+  const byId = new Map(defs.map((d) => [d.id, d]));
+  const done = new Set<string>();
+  const result: CompositeDef[] = [];
+  const visit = (d: CompositeDef, stack: Set<string>) => {
+    if (done.has(d.id) || stack.has(d.id)) return;
+    stack.add(d.id);
+    for (const n of d.graph.nodes) {
+      const dep = n.type.startsWith('composite:') ? byId.get(n.type.slice('composite:'.length)) : undefined;
+      if (dep) visit(dep, stack);
+    }
+    done.add(d.id);
+    result.push(d);
+  };
+  for (const d of defs) visit(d, new Set());
+  return result;
+}
+
+/**
+ * Слияние определений составных нодов (FR-029a):
+ * то же содержимое — переиспользовать; то же имя, другое содержимое — копия «<имя> (N)»;
+ * занятый id — новый id. Существующие определения никогда не изменяются.
+ */
 export function mergeComposites(
   incoming: CompositeDef[],
   existing: Record<string, CompositeDef>,
@@ -33,16 +69,30 @@ export function mergeComposites(
 ): { added: CompositeDef[]; idMap: Map<string, string>; notices: string[] } {
   const idMap = new Map<string, string>();
   const added: CompositeDef[] = [];
-  for (const def of incoming) {
-    const id = existing[def.id] ? newId() : def.id;
+  const notices: string[] = [];
+  const known = () => [...Object.values(existing), ...added];
+  for (const def of dependencyOrder(incoming)) {
+    const candidate: CompositeDef = { ...def, graph: rewriteCompositeRefs(def.graph, idMap) };
+    const same = known().find((k) => contentOf(k) === contentOf(candidate));
+    if (same) {
+      idMap.set(def.id, same.id);
+      continue;
+    }
+    const names = new Set(known().map((k) => k.name));
+    let name = candidate.name;
+    if (names.has(name)) {
+      let n = 2;
+      while (names.has(`${candidate.name} (${n})`)) n += 1;
+      name = `${candidate.name} (${n})`;
+      notices.push(importMessages.compositeRenamed(candidate.name, name));
+    }
+    const taken = existing[def.id] || added.some((a) => a.id === def.id);
+    const id = taken ? newId() : def.id;
     idMap.set(def.id, id);
-    added.push({ ...def, id });
+    added.push({ ...candidate, id, name });
   }
-  return {
-    added: added.map((d) => ({ ...d, graph: rewriteCompositeRefs(d.graph, idMap) })),
-    idMap,
-    notices: [],
-  };
+  // Ссылки на определения, получившие новый id позже, тоже переписываем
+  return { added: added.map((d) => ({ ...d, graph: rewriteCompositeRefs(d.graph, idMap) })), idMap, notices };
 }
 
 /** Переписывает ссылки `composite:<id>` по таблице соответствия. */
@@ -82,7 +132,7 @@ export function importExport(text: string, ctx: ImportContext): ImportResult {
   const registry = createRegistry([...Object.values(ctx.composites), ...file.composites]);
   const graphs = [file.workflow.graph, ...file.composites.map((c) => c.graph)];
   const unknown = new Set<string>();
-  for (const g of graphs) for (const n of g.nodes) if (!registry.get(n.type) && !n.type.startsWith('builtin:input') && !n.type.startsWith('builtin:output')) unknown.add(n.type);
+  for (const g of graphs) for (const n of g.nodes) if (!registry.get(n.type)) unknown.add(n.type);
   if (unknown.size > 0) return { ok: false, message: importMessages.unknownTypes([...unknown]) };
   const problems = [
     ...validateGraph(file.workflow.graph, registry),

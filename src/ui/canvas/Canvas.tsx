@@ -19,6 +19,8 @@ import { activeTab, tabGraph } from '../../store/store';
 import { canConnect } from '../../engine';
 import { useActions, useApp, useAppState } from '../../store/react';
 import { tryConnect } from './connection';
+import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
+import { compositeMessages } from '../messages';
 import { FlowNode } from './FlowNode';
 import { inHandle, outHandle, portOfHandle } from './PortHandle';
 
@@ -143,13 +145,25 @@ export function Canvas() {
       e.preventDefault();
       const type = e.dataTransfer.getData(NODE_DRAG_TYPE);
       if (!type) return;
-      actions.addNode(type, screenToFlowPosition({ x: e.clientX, y: e.clientY }));
+      const r = actions.addNode(type, screenToFlowPosition({ x: e.clientX, y: e.clientY }));
+      if (!r.ok) actions.notify('error', r.message);
     },
     [actions, screenToFlowPosition],
   );
 
+  const [collapsing, setCollapsing] = useState<string[] | null>(null);
+  const selected = rfNodes.filter((n) => n.selected).map((n) => n.id);
+
   return (
     <div className="canvas" data-testid="canvas">
+      {selected.length > 0 && (
+        <div className="canvas-toolbar">
+          <button type="button" onClick={() => setCollapsing(selected)}>
+            {compositeMessages.collapse}
+          </button>
+        </div>
+      )}
+      {collapsing && <CompositeNameDialog nodeIds={collapsing} onClose={() => setCollapsing(null)} />}
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}

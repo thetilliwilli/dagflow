@@ -4,6 +4,9 @@ import type { NodeProps } from '@xyflow/react';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
+import { compositeIdOf, IO_INPUT, IO_OUTPUT, nodePorts } from '../../engine';
+import { compositeMessages } from '../messages';
+import { IoPortsEditor } from './IoPortsEditor';
 import { NodeMessage, NodeStatusBadge } from './NodeStatus';
 import { PortHandle } from './PortHandle';
 import { ValueEditor } from './ValueEditor';
@@ -12,7 +15,8 @@ import { ValueView } from './ValueView';
 export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
   const actions = useActions();
   const node = useAppState((s) => tabGraph(s, activeTab(s))?.nodes.find((n) => n.id === id));
-  const def = useAppState((s) => (node ? registryOf(s).get(node.type) : undefined));
+  const registry = useAppState(registryOf);
+  const def = node ? registry.get(node.type) : undefined;
   const state = useAppState((s) => (s.activeTabId ? s.nodeStates[s.activeTabId]?.[id] : undefined));
   const connected = useAppState((s) =>
     (tabGraph(s, activeTab(s))?.edges ?? [])
@@ -22,6 +26,9 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
       .join('\u0000'),
   );
   if (!node || !def) return null;
+  const ports = nodePorts(node, registry)!;
+  const compositeId = compositeIdOf(node.type);
+  const isIo = node.type === IO_INPUT || node.type === IO_OUTPUT;
   const connectedSet = new Set(connected.split('\u0000'));
   const ok = state?.status === 'ok';
 
@@ -31,8 +38,18 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
         <span className="flow-node__title">{def.title}</span>
         <NodeStatusBadge state={state} />
       </div>
+      {compositeId && (
+        <div className="flow-node__actions">
+          <button type="button" className="nodrag" aria-label={compositeMessages.open(def.title)} onClick={() => actions.openComposite(compositeId)}>
+            Открыть
+          </button>
+          <button type="button" className="nodrag" aria-label={compositeMessages.expand(def.title)} onClick={() => actions.expandInstance(id)}>
+            Развернуть
+          </button>
+        </div>
+      )}
       <NodeMessage state={state} />
-      {def.inputs.map((p) => {
+      {ports.inputs.map((p) => {
         const isConnected = connectedSet.has(p.name);
         const missing =
           p.required &&
@@ -58,12 +75,13 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
           </div>
         );
       })}
-      {def.outputs.map((p) => (
+      {ports.outputs.map((p) => (
         <div className="port-row port-row--out" key={`out-${p.name}`}>
           <ValueView testId={`out-${p.name}`} value={ok ? state.outputs[p.name] : undefined} />
           <PortHandle port={p} kind="out" />
         </div>
       ))}
+      {isIo && <IoPortsEditor nodeId={id} ports={node.ports ?? []} />}
       {node.type === 'builtin:show' && (
         <ValueView
           className="show-value"

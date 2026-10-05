@@ -1,7 +1,10 @@
 // Связка стора с движком: по Evaluator на вкладку, пересчёт не чаще раза за кадр (research R2, T032)
-import { createEvaluator, type Evaluator, type Graph, type NodeState } from '../engine';
-import { registryOf } from './registry';
+import { createEvaluator, createRegistry, type Evaluator, type Graph, type NodeState } from '../engine';
 import { tabGraph, type AppState, type AppStore } from './store';
+
+/** Внутренние ноды экземпляров имеют id `экземпляр/нод`; на холсте виден нод верхнего уровня. */
+const topLevel = (id: string) => id.split('/')[0]!;
+const newEvaluator = () => createEvaluator((composites) => createRegistry(composites));
 
 type Schedule = (fn: () => void) => void;
 
@@ -16,7 +19,9 @@ export function startEvaluation({ store }: AppStore, schedule: Schedule = defaul
     const updates: Record<string, Map<string, NodeState>> = {};
     for (const [tabId, entry] of evaluators) {
       if (entry.ev.pending().size === 0) continue;
-      updates[tabId] = entry.ev.flush();
+      const changed = entry.ev.flush();
+      const tops = new Set([...changed.keys()].map(topLevel));
+      updates[tabId] = new Map([...tops].map((id) => [id, entry.ev.state(id)]));
     }
     if (Object.keys(updates).length === 0) return;
     store.setState((draft: AppState) => {
@@ -36,18 +41,15 @@ export function startEvaluation({ store }: AppStore, schedule: Schedule = defaul
       const graph = tabGraph(state, tab);
       let entry = evaluators.get(tab.id);
       if (!entry) {
-        entry = { ev: createEvaluator(registryOf(state)), graph: undefined, composites: state.composites };
+        entry = { ev: newEvaluator(), graph: undefined, composites: state.composites };
         evaluators.set(tab.id, entry);
       }
-      if (entry.composites !== state.composites) {
-        entry.ev = createEvaluator(registryOf(state));
-        entry.graph = undefined;
-        entry.composites = state.composites;
-      }
-      if (graph && graph !== entry.graph) {
+      // Изменение определения составного нода пересчитывает только затронутые внутренние ноды (T080)
+      if (graph && (graph !== entry.graph || entry.composites !== state.composites)) {
         entry.graph = graph;
+        entry.composites = state.composites;
         entry.ev.setGraph(graph, Object.values(state.composites));
-        const pending = [...entry.ev.pending()];
+        const pending = [...new Set([...entry.ev.pending()].map(topLevel))];
         if (pending.length > 0) markComputing[tab.id] = pending;
       }
     }

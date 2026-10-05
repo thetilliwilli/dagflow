@@ -44,8 +44,9 @@ function validateGraph(graph: Graph, registry: NodeRegistry): Rejection[];
 ## Составные ноды
 
 ```ts
-function collapse(graph: Graph, nodeIds: string[], name: string, newId: () => string):
-  { graph: Graph; composite: CompositeDef } | Rejection;
+function collapse(graph: Graph, nodeIds: string[], name: string, registry: NodeRegistry, newId: () => string):
+  { graph: Graph; composite: CompositeDef; instanceId: string } | Rejection;
+// registry нужен, чтобы узнать типы портов для создаваемых нодов «Вход»/«Выход»
 // FR-021: создаёт определение с нодами «Вход»/«Выход» для внешних связей
 // и заменяет группу экземпляром; вычисленные значения не меняются (FR-022)
 
@@ -57,6 +58,12 @@ function compositePorts(def: CompositeDef): { inputs: PortDef[]; outputs: PortDe
 
 function compositeDependencies(defs: CompositeDef[]): Map<string, Set<string>>;
 // для проверки рекурсии (FR-026) и сбора определений при выгрузке (FR-029)
+
+function validateIoPorts(graph: Graph): Rejection | null;
+// FR-021c: уникальность (и длина 1–40) имён портов среди нодов «Вход» и, отдельно, «Выход»
+
+function flatten(graph: Graph, composites: CompositeDef[]): { graph: Graph; instances: Map<string, …> };
+// research R3: экземпляры → плоский граф, «Вход»/«Выход» экземпляра → builtin:passthrough
 ```
 
 ## Реактивное вычисление
@@ -77,7 +84,8 @@ interface Evaluator {
   stateAt(path: string): NodeState;
 }
 
-function createEvaluator(registry: NodeRegistry): Evaluator;
+function createEvaluator(registry: NodeRegistry | ((composites: CompositeDef[]) => NodeRegistry)): Evaluator;
+// фабрика пересоздаёт реестр в setGraph при изменении набора составных нодов
 ```
 
 **Гарантии** (покрываются тестами):

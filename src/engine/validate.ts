@@ -3,7 +3,9 @@ import { rejections, type Rejection } from './errors';
 import type { CompositeDef, Edge, Graph, NodeInstance, NodeRegistry, PortDef } from './types';
 import { isCompatible } from './values';
 
-export const IO_NODE_TYPES = ['builtin:input', 'builtin:output'];
+import { IO_INPUT, IO_OUTPUT, PASSTHROUGH } from './builtins/io';
+
+export const IO_NODE_TYPES = [IO_INPUT, IO_OUTPUT];
 
 export interface NodePorts {
   inputs: PortDef[];
@@ -14,6 +16,11 @@ export interface NodePorts {
 export function nodePorts(node: NodeInstance, registry: NodeRegistry): NodePorts | undefined {
   const def = registry.get(node.type);
   if (!def) return undefined;
+  const ports = node.ports ?? [];
+  const asOutputs = () => ports.map((p) => ({ name: p.name, type: p.type }));
+  if (node.type === IO_INPUT) return { inputs: [], outputs: asOutputs() };
+  if (node.type === IO_OUTPUT) return { inputs: ports, outputs: [] };
+  if (node.type === PASSTHROUGH) return { inputs: ports, outputs: asOutputs() };
   return { inputs: def.inputs, outputs: def.outputs };
 }
 
@@ -64,10 +71,25 @@ export function canAddNode(
   typeId: string,
   ctx: { insideComposite?: string },
   registry: NodeRegistry,
-  _composites: CompositeDef[],
+  composites: CompositeDef[],
 ): { ok: true } | Rejection {
   if (IO_NODE_TYPES.includes(typeId) && !ctx.insideComposite) return rejections.ioOutsideComposite();
-  if (!registry.get(typeId)) return rejections.unknownType(typeId);
+  const def = registry.get(typeId);
+  if (!def || def.paletteScope === 'hidden') return rejections.unknownType(typeId);
+  const added = typeId.startsWith('composite:') ? typeId.slice('composite:'.length) : null;
+  if (added && ctx.insideComposite) {
+    // Рекурсия: добавляемый нод — это сам составной нод или он уже (косвенно) содержит его (FR-026)
+    const deps = new Map<string, string[]>(composites.map((c) => [c.id, c.graph.nodes.map((n) => n.type)]));
+    const seen = new Set<string>();
+    const stack = [added];
+    while (stack.length > 0) {
+      const id = stack.pop()!;
+      if (id === ctx.insideComposite) return rejections.compositeRecursion(def.title);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      for (const t of deps.get(id) ?? []) if (t.startsWith('composite:')) stack.push(t.slice('composite:'.length));
+    }
+  }
   return { ok: true };
 }
 

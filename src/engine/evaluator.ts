@@ -1,4 +1,6 @@
 // Реактивное инкрементальное вычисление (research R2, contracts/engine-api.md E1–E7)
+import { IO_INPUT } from './builtins/io';
+import { flatten } from './composite';
 import { internalErrorMessage, NodeError } from './errors';
 import type {
   CompositeDef,
@@ -8,6 +10,8 @@ import type {
   NodeInstance,
   NodeRegistry,
   NodeState,
+  NodeStatus,
+  Outputs,
   PortRef,
 } from './types';
 import { nodePorts, topologicalOrder } from './validate';
@@ -21,13 +25,23 @@ export interface Evaluator {
   pending(): ReadonlySet<string>;
   /** Пересчитать грязные ноды в топологическом порядке; вернуть их новые состояния. */
   flush(): Map<string, NodeState>;
-  /** Текущее состояние нода. */
+  /** Текущее состояние нода верхнего уровня (для экземпляра составного нода — сводное, E9). */
   state(nodeId: string): NodeState;
+  /** Состояние внутреннего нода экземпляра по пути `экземпляр/…/нод`. */
+  stateAt(path: string): NodeState;
 }
+
+/** Приоритет сводного статуса: первопричина важнее следствий (E9). */
+const STATUS_PRIORITY: NodeStatus[] = ['error', 'waiting', 'blocked', 'computing', 'ok'];
 
 const EMPTY: NodeState = { status: 'computing', inputs: {}, outputs: {} };
 
-export function createEvaluator(registry: NodeRegistry): Evaluator {
+/** Реестр или фабрика реестра по набору составных нодов (тогда он обновляется в setGraph). */
+export type RegistrySource = NodeRegistry | ((composites: CompositeDef[]) => NodeRegistry);
+
+export function createEvaluator(source: RegistrySource): Evaluator {
+  let registry: NodeRegistry = typeof source === 'function' ? source([]) : source;
+  let instances = new Map<string, { inputs: string[]; outputs: string[] }>();
   let order: string[] = [];
   let nodes = new Map<string, NodeInstance>();
   /** target node → input port → источник */
@@ -90,7 +104,10 @@ export function createEvaluator(registry: NodeRegistry): Evaluator {
       if (src) {
         const s = states.get(src.node);
         const v = s?.status === 'ok' ? s.outputs[src.port] : undefined;
-        if (v === undefined) blocked ??= blockedMessage(src.node, s);
+        if (v === undefined) {
+          blocked ??=
+            s?.status === 'ok' ? `Нет значения на выходе «${src.port}» нода «${title(src.node)}»` : blockedMessage(src.node, s);
+        }
         else inputs[p.name] = v;
       } else if (Object.hasOwn(n.values, p.name)) {
         inputs[p.name] = n.values[p.name]!;
@@ -99,6 +116,12 @@ export function createEvaluator(registry: NodeRegistry): Evaluator {
       } else if (p.required) {
         missing ??= p.name;
       }
+    }
+    if (n.type === IO_INPUT) {
+      // «Вход» во вкладке составного нода: отдаёт значения по умолчанию своих портов
+      const outputs: Outputs = {};
+      for (const p of n.ports ?? []) if (p.default !== undefined) outputs[p.name] = p.default;
+      return { status: 'ok', inputs: {}, outputs };
     }
     if (missing) return { status: 'waiting', inputs, outputs: {}, message: `Заполните вход «${missing}»` };
     if (blocked) return { status: 'blocked', inputs, outputs: {}, message: blocked };
@@ -111,7 +134,11 @@ export function createEvaluator(registry: NodeRegistry): Evaluator {
   }
 
   return {
-    setGraph(graph) {
+    setGraph(input, composites) {
+      if (typeof source === 'function') registry = source(composites);
+      const flat = flatten(input, composites);
+      instances = flat.instances;
+      const graph = flat.graph;
       nodes = new Map(graph.nodes.map((n) => [n.id, n]));
       incoming = new Map();
       children = new Map();
@@ -165,8 +192,30 @@ export function createEvaluator(registry: NodeRegistry): Evaluator {
     },
 
     state(nodeId) {
-      const s = states.get(nodeId) ?? EMPTY;
-      return pending().has(nodeId) ? { ...s, status: 'computing', message: undefined } : s;
+      const inst = instances.get(nodeId);
+      return inst ? aggregate(nodeId, inst) : flatState(nodeId);
+    },
+
+    stateAt(path) {
+      return flatState(path);
     },
   };
+
+  function flatState(id: string): NodeState {
+    const s = states.get(id) ?? EMPTY;
+    return pending().has(id) ? { ...s, status: 'computing', message: undefined } : s;
+  }
+
+  /** Сводное состояние экземпляра по внутренним нодам (E9). */
+  function aggregate(id: string, inst: { inputs: string[]; outputs: string[] }): NodeState {
+    const prefix = `${id}/`;
+    const inner = [...nodes.keys()].filter((k) => k.startsWith(prefix)).map(flatState);
+    const status = STATUS_PRIORITY.find((st) => inner.some((s) => s.status === st)) ?? 'ok';
+    const inputs: Inputs = {};
+    for (const p of inst.inputs) Object.assign(inputs, flatState(p).inputs);
+    const outputs: Outputs = {};
+    if (status === 'ok') for (const p of inst.outputs) Object.assign(outputs, flatState(p).outputs);
+    const message = inner.find((s) => s.status === status)?.message;
+    return message ? { status, inputs, outputs, message } : { status, inputs, outputs };
+  }
 }

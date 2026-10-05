@@ -490,3 +490,74 @@ button.link {
   color: var(--muted);
   font-size: 12px;
 }
+
+/* Составные ноды (US4) */
+.palette__item-actions {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+.palette__item-actions button {
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+.flow-node__actions {
+  display: flex;
+  gap: 4px;
+  padding: 4px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.flow-node__actions button {
+  font-size: 11px;
+  padding: 1px 6px;
+}
+.io-ports {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+}
+.io-ports__row {
+  display: flex;
+  gap: 4px;
+}
+.io-ports__row input {
+  width: 70px;
+  font: inherit;
+}
+.io-ports__row select {
+  font: inherit;
+  font-size: 11px;
+}
+.io-ports__row button,
+.io-ports__add {
+  font-size: 11px;
+  padding: 1px 4px;
+}
+.canvas {
+  position: relative;
+}
+.canvas-toolbar {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+.field input {
+  font: inherit;
+  padding: 4px 6px;
+}
+.field__error {
+  color: var(--error);
+  font-size: 12px;
+}

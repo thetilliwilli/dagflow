@@ -83,3 +83,31 @@ export const workflowMessages = {
   importErrorTitle: 'Не удалось загрузить файл',
   close: 'Закрыть',
 };
+
+export const compositeMessages = {
+  category: 'Мои составные ноды',
+  interface: 'Интерфейс составного нода',
+  collapse: 'Свернуть в составной нод',
+  collapseTitle: 'Свернуть в составной нод',
+  nameLabel: 'Имя составного нода',
+  collapseButton: 'Свернуть',
+  renameTitle: 'Переименовать составной нод',
+  renameButton: 'Переименовать',
+  open: (name: string) => `Открыть составной нод «${name}»`,
+  expand: (name: string) => `Развернуть «${name}»`,
+  rename: (name: string) => `Переименовать составной нод «${name}»`,
+  remove: (name: string) => `Удалить составной нод «${name}»`,
+  removeTitle: 'Удалить составной нод?',
+  removeText: (name: string, usage: number) =>
+    usage > 0
+      ? `Используется в ${usage} ${usage === 1 ? 'месте' : 'местах'}. Все экземпляры «${name}» будут удалены вместе со связями.`
+      : `«${name}» будет удалён из палитры.`,
+  tabTitle: (name: string) => `Составной нод: ${name}`,
+  nameTaken: (name: string) => `Имя «${name}» уже занято другим составным нодом`,
+  edgesRemoved: (n: number) => `Порты составного нода изменились. Удалено связей: ${n}`,
+  ports: 'Порты',
+  addPort: 'Добавить порт',
+  portName: 'Имя порта',
+  portType: 'Тип порта',
+  removePort: (name: string) => `Удалить порт «${name}»`,
+};

@@ -1,6 +1,6 @@
 // Файлы ↔ объекты модели (contracts/file-formats.md)
 import * as v from 'valibot';
-import type { CompositeDef, Workflow, Workspace } from '../engine';
+import { compositeDependencies, compositeIdOf, type CompositeDef, type Workflow, type Workspace } from '../engine';
 import { CompositeFileSchema, ExportFileSchema, WorkflowFileSchema, WorkspaceFileSchema } from './schemas';
 
 export const FORMAT_VERSION = 1;
@@ -63,7 +63,15 @@ export function fileToWorkspace(data: unknown): Workspace {
   return strip(parse(WorkspaceFileSchema, data, 'workspace'));
 }
 
-/** Файл выгрузки: workflow + используемые определения составных нодов (FR-029). */
+/** Файл выгрузки: workflow + транзитивно используемые им определения составных нодов (FR-029). */
 export function buildExport(workflow: Workflow, composites: CompositeDef[], exportedAt: string): ExportFile {
-  return { format: 'dagflow-export', version: FORMAT_VERSION, exportedAt, workflow, composites };
+  const deps = compositeDependencies(composites);
+  const used = new Set<string>();
+  for (const n of workflow.graph.nodes) {
+    const id = compositeIdOf(n.type);
+    if (id === null) continue;
+    used.add(id);
+    for (const d of deps.get(id) ?? []) used.add(d);
+  }
+  return { format: 'dagflow-export', version: FORMAT_VERSION, exportedAt, workflow, composites: composites.filter((c) => used.has(c.id)) };
 }
