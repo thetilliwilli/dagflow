@@ -1,50 +1,104 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report
+==================
+Version change: (template) → 1.0.0
+Modified principles: — (first fill of the template)
+  [PRINCIPLE_1_NAME] → I. Простота прежде гибкости (YAGNI)
+  [PRINCIPLE_2_NAME] → II. Тесты для бизнес-логики (обязательно)
+  [PRINCIPLE_3_NAME] → III. Только локальные данные
+  [PRINCIPLE_4_NAME] → IV. Понятные сообщения об ошибках
+  [PRINCIPLE_5_NAME] → V. Учебная прозрачность
+Added sections: «Ограничения», «Процесс разработки», «Governance»
+Removed sections: —
+Templates: plan/spec/tasks templates read the constitution at runtime; not modified.
+Follow-up TODOs: none
+-->
+
+# SDD Test Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Простота прежде гибкости (YAGNI)
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- Реализуется только то, что требует текущая спецификация. Никаких «на будущее»:
+  плагинов, конфигурируемости, абстракций под гипотетические сценарии.
+- Новый слой, паттерн или зависимость ДОЛЖНЫ быть обоснованы конкретным требованием
+  из spec.md и записаны в разделе Complexity Tracking плана.
+- Из двух рабочих решений выбирается то, которое короче и проще читается.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Зачем**: проект учебный; лишняя сложность мешает увидеть, как спецификация
+превращается в код.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Тесты для бизнес-логики (обязательно)
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- Любая бизнес-логика (правила предметной области, вычисления, валидация) ДОЛЖНА
+  быть покрыта автоматическими тестами.
+- Тесты пишутся до или вместе с реализацией; задача не считается выполненной, пока
+  её тесты не проходят.
+- Каждый acceptance-сценарий из spec.md ДОЛЖЕН иметь хотя бы один соответствующий тест.
+- Тонкий слой ввода-вывода (разбор аргументов, печать) можно не покрывать отдельно,
+  если логика из него вынесена в тестируемые функции.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Зачем**: тесты — объективный критерий «готово» и для человека, и для агента.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Только локальные данные
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Приложение НЕ ДОЛЖНО обращаться к внешним сервисам, сети, облачным API или
+  серверам баз данных.
+- Данные хранятся локально в файле в человекочитаемом формате.
+- Отсутствие или повреждение файла данных ДОЛЖНО обрабатываться явно: пустое
+  состояние или понятная ошибка, но не падение с трассировкой.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Зачем**: приложение запускается где угодно без настройки, а данные легко
+посмотреть и поправить руками.
+
+### IV. Понятные сообщения об ошибках
+
+- Каждая ошибка, видимая пользователю, ДОЛЖНА объяснять, что пошло не так и что
+  делать дальше. Сырые исключения и трассировки пользователю не показываются.
+- Ошибки выводятся в stderr, программа завершается с ненулевым кодом.
+- Тексты ошибок для ожидаемых ситуаций (неверный ввод, не найден объект) проверяются
+  тестами.
+
+**Зачем**: качество продукта определяется и тем, как он ведёт себя в нештатных
+ситуациях.
+
+### V. Учебная прозрачность
+
+- Артефакты SDD (spec, plan, tasks) ДОЛЖНЫ оставаться источником истины: если
+  поведение меняется, сначала правится spec.md, затем plan/tasks, затем код.
+- Код и артефакты пишутся так, чтобы новичок мог проследить путь от требования
+  к реализации.
+
+**Зачем**: цель проекта — освоить spec-driven development, а не только получить
+работающую программу.
+
+## Ограничения
+
+- Минимум зависимостей: по возможности только стандартная библиотека выбранного
+  языка; каждая сторонняя зависимость обосновывается в plan.md.
+- Интерфейс по умолчанию консольный.
+- Без аутентификации, многопользовательского режима и сетевых функций, если spec
+  явно не требует иного (и тогда требуется поправка к конституции).
+
+## Процесс разработки
+
+- Цикл фичи: `/speckit-specify` → `/speckit-clarify` → `/speckit-plan` →
+  `/speckit-tasks` → (`/speckit-analyze`) → `/speckit-implement`.
+- Каждая фича ведётся в отдельной ветке `NNN-имя-фичи`.
+- В plan.md раздел Constitution Check ДОЛЖЕН пройти до начала реализации; нарушения
+  либо устраняются, либо явно обосновываются.
+- Перед коммитом реализации все тесты ДОЛЖНЫ проходить.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Конституция имеет приоритет над остальными практиками и договорённостями проекта.
+- Поправки вносятся через `/speckit-constitution` с описанием причины; версия
+  меняется по semver:
+  - MAJOR: удаление или переопределение принципа;
+  - MINOR: новый принцип или раздел, существенное расширение правил;
+  - PATCH: уточнения формулировок без изменения смысла.
+- На шагах plan и analyze проверяется соответствие конституции; несоответствие —
+  блокирующая проблема.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-05
