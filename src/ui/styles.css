@@ -35,13 +35,22 @@ body,
   height: 100%;
 }
 
-/* Палитра — плавающее окно с вкладками (фича 002, FR-005) */
+/* Палитра — горизонтальная полоса внизу по центру, между кнопками масштаба и мини-картой
+   (фича 002, FR-005, research R11) */
 .palette {
-  width: 340px;
+  width: max(480px, min(1200px, calc(100vw - 480px)));
   font-size: 13px;
 }
 .palette .floating__body {
-  max-height: 60vh;
+  max-height: 30vh;
+}
+.palette__group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+.palette__group .palette__item {
+  margin-bottom: 0;
 }
 .palette__hint {
   margin: 0 0 8px;
@@ -322,12 +331,11 @@ body,
 /* Плашки хранилища поверх холста не блокируют его (FR-006a) */
 .main__banners {
   position: absolute;
-  /* внизу по центру: углы заняты кнопками масштаба и мини-картой, верх — рабочая часть холста */
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
+  /* правый верхний угол: низ занят палитрой, левый верх — панелью инструментов (research R12) */
+  top: 8px;
+  right: 8px;
   z-index: 6;
-  max-width: calc(100% - 32px);
+  max-width: min(560px, calc(100% - 32px));
   pointer-events: none;
 }
 .main__banners > * {

@@ -5,24 +5,13 @@ async function blurActive(page: Page) {
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
 }
 
-/**
- * Открывает палитру Пробелом (если закрыта) и отодвигает её в правый нижний угол,
- * чтобы она не закрывала середину холста. Положение окна живёт до перезагрузки страницы.
- */
+/** Открывает палитру Пробелом (если закрыта): полоса внизу по центру холста. */
 export async function openPalette(page: Page): Promise<Locator> {
   const palette = page.getByTestId('palette');
   if (await palette.isVisible()) return palette;
   await blurActive(page);
   await page.keyboard.press('Space');
   await expect(palette).toBeVisible();
-  const header = (await palette.locator('.floating__header').boundingBox())!;
-  const vp = page.viewportSize()!;
-  if (header.x + header.width < vp.width - 4) {
-    await page.mouse.move(header.x + 20, header.y + header.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(vp.width - 1, vp.height - 1, { steps: 4 });
-    await page.mouse.up();
-  }
   return palette;
 }
 
@@ -38,7 +27,18 @@ export async function paletteItem(page: Page, title: string): Promise<Locator> {
   throw new Error(`В палитре нет нода «${title}»`);
 }
 
-/** Перетаскивает нод из палитры на холст в точку (x, y) относительно холста. */
+/** Закрывает палитру, если она открыта. */
+export async function closePalette(page: Page) {
+  if (!(await page.getByTestId('palette').isVisible())) return;
+  await blurActive(page);
+  await page.keyboard.press('Space');
+  await expect(page.getByTestId('palette')).toHaveCount(0);
+}
+
+/**
+ * Перетаскивает нод из палитры на холст в точку (x, y) относительно холста и закрывает
+ * палитру: полоса палитры внизу иначе закрывала бы ноды в нижней части холста.
+ */
 export async function addNode(page: Page, title: string, x: number, y: number): Promise<Locator> {
   await closeSidebar(page); // левая панель стоит у левого края и закрыла бы точку броска
   const before = await page.locator('.react-flow__node').count();
@@ -46,6 +46,7 @@ export async function addNode(page: Page, title: string, x: number, y: number): 
   await item.dragTo(page.locator('.react-flow__pane'), { targetPosition: { x, y } });
   const node = page.locator('.react-flow__node').nth(before);
   await expect(node).toBeVisible();
+  await closePalette(page);
   return node;
 }
 

@@ -26,7 +26,8 @@ export function defaultPosition(id: WindowId, size: Size, viewport: Size): Point
   const top = TOP_BAR_HEIGHT + GAP;
   const wanted: Record<WindowId, Point> = {
     sidebar: { x: GAP, y: top },
-    palette: { x: (viewport.width - size.width) / 2, y: (viewport.height - size.height) / 2 },
+    // Палитра — полоса внизу по центру, между кнопками масштаба и мини-картой (research R11)
+    palette: { x: (viewport.width - size.width) / 2, y: viewport.height - size.height - GAP * 2 },
     properties: { x: viewport.width - size.width - GAP, y: top },
     edges: { x: (viewport.width - size.width) / 2, y: (viewport.height - size.height) / 2 },
   };

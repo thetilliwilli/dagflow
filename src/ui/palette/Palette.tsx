@@ -53,9 +53,12 @@ export function Palette() {
   }
 
   function addAtCenter(type: string) {
+    // Центр видимой части холста — над палитрой, которая стоит полосой внизу (FR-006)
     const rect = document.querySelector('.react-flow')?.getBoundingClientRect();
+    const paletteTop = document.querySelector('.palette')?.getBoundingClientRect().top;
+    const bottom = rect && paletteTop && paletteTop > rect.top ? Math.min(paletteTop, rect.bottom) : rect?.bottom;
     const center = rect
-      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
+      ? { x: rect.left + rect.width / 2, y: (rect.top + bottom!) / 2 }
       : { x: 0, y: 0 };
     const p = screenToFlowPosition(center);
     const shift = (count % 10) * 24;

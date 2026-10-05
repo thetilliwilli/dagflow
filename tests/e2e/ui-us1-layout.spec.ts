@@ -49,7 +49,6 @@ test('US1 #6: при открытой панели холст двигается
   await page.goto('/');
   const vp = page.viewportSize()!;
   const node = await addNode(page, 'Число', vp.width / 2, 200);
-  await page.keyboard.press('Space'); // убрать палитру
   await openSidebar(page);
   const before = await transform(page);
   await page.mouse.move(vp.width - 300, vp.height - 150);

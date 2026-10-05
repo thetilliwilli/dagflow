@@ -47,8 +47,8 @@ describe('defaultPosition', () => {
     expect(p.y).toBeGreaterThanOrEqual(TOP_BAR_HEIGHT);
   });
 
-  it('палитра — по центру', () => {
-    expect(defaultPosition('palette', size, viewport)).toEqual({ x: 350, y: 200 });
+  it('палитра — внизу по центру', () => {
+    expect(defaultPosition('palette', size, viewport)).toEqual({ x: 350, y: 384 });
   });
 
   it('окно свойств — у правого края под полосой вкладок', () => {
