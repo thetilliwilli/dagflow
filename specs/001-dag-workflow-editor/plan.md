@@ -53,7 +53,7 @@ workflow и составных нодов; около 30 встроенных т
 | Принцип / раздел | Проверка | До дизайна | После дизайна |
 |---|---|---|---|
 | I. Простота (YAGNI) | только требования спеки; каждая зависимость обоснована (таблица ниже); без асинхронных нодов, нодов с переменным числом портов и серверной части | ✅ | ✅ одна реализация хранилища на оба бэкенда (R7), снапшоты вместо патчей (R5) |
-| II. Тесты для бизнес-логики | движок, проверки, составные ноды, импорт — чистые модули с unit-тестами; каждый acceptance-сценарий → тест | ✅ | ✅ гарантии E1–E8 в [engine-api](./contracts/engine-api.md); матрица сценариев будет в tasks.md |
+| II. Тесты для бизнес-логики | движок, проверки, составные ноды, импорт — чистые модули с unit-тестами; каждый acceptance-сценарий → тест | ✅ | ✅ гарантии E1–E9 в [engine-api](./contracts/engine-api.md); матрица сценариев будет в tasks.md |
 | III. Только локальные данные | FS Access / OPFS / IndexedDB — локальные; сторонних сервисов, CDN и аналитики нет | ✅ | ✅ шрифты и ресурсы собираются в бандл |
 | IV. Понятные ошибки | все отказы и ошибки нодов — тексты для пользователя на русском; ошибка показывается на ноде, связи или поле; приложение не падает | ✅ | ✅ `Rejection.message`, `NodeError.userMessage`, тексты проверяются тестами |
 | V. Учебная прозрачность | структура `src/` повторяет разделы спеки; FR-номера упоминаются в контрактах и тестах | ✅ | ✅ |
@@ -70,7 +70,12 @@ workflow и составных нодов; около 30 встроенных т
 | Immer | неизменяемые правки документа | без него много шаблонного кода и ошибок при вложенных обновлениях |
 | Valibot | проверка импортируемых файлов | типобезопасные схемы с путями ошибок; руками — много хрупкого кода |
 | idb-keyval | хранить дескриптор папки в IndexedDB | сырой IndexedDB API многословен; библиотека ~600 байт |
-| Vite, Vitest, Testing Library, Playwright | сборка и тесты (dev-зависимости) | стандартный инструментарий |
+| Vite, @vitejs/plugin-react | сборка и dev-сервер (dev) | стандартный сборщик для React + TS |
+| Vitest, jsdom | unit- и компонентные тесты (dev) | тест-раннер, совместимый с Vite; jsdom — DOM для компонентных тестов |
+| @testing-library/react, @testing-library/user-event, @testing-library/jest-dom | компонентные тесты (dev) | проверка UI через поведение пользователя, читаемые утверждения |
+| @playwright/test | e2e-тесты в реальном Chromium (dev) | без него нельзя проверить OPFS, перетаскивание и перф-критерии |
+| eslint, typescript-eslint, eslint-plugin-react-hooks | статический анализ (dev) | правило `no-restricted-imports` обеспечивает изоляцию движка; правила хуков ловят ошибки React |
+| prettier | единое форматирование (dev) | устраняет споры о стиле и шум в диффах |
 
 **Результат**: нарушений нет, Complexity Tracking не требуется.
 
@@ -121,23 +126,26 @@ src/
 ├── storage/
 │   ├── directory-storage.ts  # чтение/запись раскладки поверх FileSystemDirectoryHandle
 │   ├── location.ts        # выбор папки, OPFS, восстановление доступа, idb-keyval
-│   └── autosave.ts        # debounce 300 мс + сброс на pagehide
+│   ├── autosave.ts        # debounce 300 мс + сброс на pagehide
+│   └── opfs-write-worker.ts  # только если Safari не поддерживает createWritable в OPFS (риск R7)
 ├── store/
 │   ├── store.ts           # Zustand: workspace, tabs, history, nodeStates
 │   ├── actions.ts         # правки графа через engine-проверки
 │   ├── history.ts         # снапшоты, объединение правок значения
-│   └── evaluation.ts      # связка стор ↔ Evaluator ↔ requestAnimationFrame
+│   ├── evaluation.ts      # связка стор ↔ Evaluator ↔ requestAnimationFrame
+│   └── persistence.ts     # загрузка при старте, автосохранение, смена хранилища и слияние
 ├── ui/
 │   ├── App.tsx
-│   ├── layout/            # WorkflowList, TabBar, StorageIndicator, баннеры
-│   ├── canvas/            # Canvas (ReactFlow), FlowNode, PortHandle, ValueView, ValueEditor
+│   ├── ErrorBoundary.tsx  # перехват ошибок отрисовки (принцип IV)
+│   ├── layout/            # WorkflowList, TabBar, StorageIndicator, AccessScreen, FolderBanner, Notifications, ExportImport
+│   ├── canvas/            # Canvas (ReactFlow + MiniMap), FlowNode, NodeStatus, PortHandle, ValueView, ValueEditor, IoPortsEditor, useShortcuts
 │   ├── palette/           # Palette
-│   ├── dialogs/           # подтверждения, ошибки импорта, имя составного нода
+│   ├── dialogs/           # ConfirmDialog, ImportErrorDialog, CompositeNameDialog
 │   └── messages.ts        # тексты UI
 └── main.tsx
 
 tests/
-├── unit/                  # Vitest (node): engine/*, model/*, storage/* (фейковый DirectoryHandle)
+├── unit/                  # Vitest (node): engine/*, model/*, storage/* (фейковый DirectoryHandle в storage/fake-directory.ts)
 ├── component/             # Vitest (jsdom) + Testing Library: store, FlowNode, Palette, TabBar
 └── e2e/                   # Playwright: us1-…us5-*.spec.ts, perf.spec.ts
 ```
@@ -159,7 +167,7 @@ tests/
    нодах.
 5. **US3**: model (схемы, сериализация, импорт), storage (DirectoryStorage,
    location, autosave), список workflow, вкладки, экспорт и импорт.
-6. **US4**: composite (collapse/expand/ports/разворачивание, E8), вкладка
+6. **US4**: composite (collapse/expand/ports/разворачивание, E8, E9), вкладка
    составного нода, палитра составных нодов, слияние при импорте.
 7. **US5**: undo/redo, групповое выделение и удаление, навигация по холсту.
 8. **Сквозное**: e2e по quickstart, перф-тесты SC-002/SC-003, проверка Safari

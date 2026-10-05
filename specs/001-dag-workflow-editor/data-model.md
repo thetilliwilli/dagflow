@@ -25,7 +25,7 @@ type PortType = 'number' | 'text' | 'boolean' | 'array' | 'object' | 'any';
 |---|---|---|
 | `name` | string | уникально среди входов (или среди выходов) нода; 1–40 символов |
 | `type` | PortType | тип данных |
-| `required` | boolean | только для входов: без значения нод «ожидает входов» |
+| `required` | boolean | только для входов: незаполненный вход (нет связи, нет значения в `values`, нет `default`) переводит нод в `waiting`; `null` — обычное значение (FR-017) |
 | `default` | JsonValue? | только для входов: значение, если вход не подключён и не задан вручную |
 
 ## NodeTypeDef — тип нода
@@ -99,7 +99,7 @@ type PortType = 'number' | 'text' | 'boolean' | 'array' | 'object' | 'any';
 | Поле | Тип | Описание |
 |---|---|---|
 | `id` | string | uuid; тип нода — `composite:<id>` |
-| `name` | string | имя в палитре; уникально в палитре (при конфликте импорта получает суффикс « (2)», « (3)»…) |
+| `name` | string | 1–100 символов; уникально в палитре (FR-023a): при сворачивании и переименовании занятое имя отклоняется, при конфликте импорта получает суффикс « (2)», « (3)»… |
 | `description` | string | необязательное описание |
 | `graph` | Graph | внутренний граф, может содержать `builtin:input` / `builtin:output` и другие составные ноды |
 | `createdAt` / `updatedAt` | string (ISO 8601) | метки времени |
@@ -142,7 +142,7 @@ type PortType = 'number' | 'text' | 'boolean' | 'array' | 'object' | 'any';
 | `status` | `'ok' \| 'computing' \| 'waiting' \| 'error' \| 'blocked'` | FR-016 |
 | `inputs` | `Record<string, JsonValue>` | фактические значения входов |
 | `outputs` | `Record<string, JsonValue>` | значения выходов (при `ok`) |
-| `message` | string? | при `error` — текст ошибки; при `waiting` — какой вход не заполнен; при `blocked` — какой нод выше по графу не вычислен |
+| `message` | string? | при `error` — текст ошибки; при `waiting` — какой вход не заполнен; при `blocked` — какой нод выше по графу не вычислен и почему |
 
 ### Переходы состояний
 
@@ -159,14 +159,16 @@ computing ──(все входы есть, compute ок)──────▶ 
 
 - `waiting`, `error` и `blocked` не терминальные: при устранении причины нод
   автоматически снова проходит через `computing` (FR-019);
-- `blocked` отображается как «не вычислен из-за ошибки выше по графу».
+- `blocked` отображается как «не вычислен: проблема выше по графу»; источник может быть в `error`, `waiting` или
+  `blocked`.
+- Сводный статус экземпляра составного нода — по приоритету: есть `error` → `error`, иначе есть `blocked` → `blocked`, иначе есть `waiting` → `waiting`, иначе есть `computing` → `computing`, иначе `ok`.
 
 ## StorageLocation — где хранятся данные
 
 | Значение | Описание |
 |---|---|
 | `{kind: 'folder', name: string}` | выбранная папка (FileSystemDirectoryHandle в IndexedDB) |
-| `{kind: 'folder-pending', name: string}` | папка выбрана, но нужен повторный доступ (FR-028d) |
+| `{kind: 'folder-pending', name: string}` | папка выбрана, но браузер требует повторного подтверждения доступа; данные не загружаются и не записываются, показывается экран восстановления доступа (FR-028d) |
 | `{kind: 'browser'}` | внутреннее хранилище браузера (OPFS) |
 
 ## Связи между сущностями
