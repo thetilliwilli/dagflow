@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   clampToViewport,
   defaultPosition,
+  peekPosition,
   TOP_BAR_HEIGHT,
 } from '../../../src/ui/floating/geometry';
 
@@ -63,5 +64,34 @@ describe('defaultPosition', () => {
       const p = defaultPosition(id, { width: 2000, height: 2000 }, viewport);
       expect(p).toEqual({ x: 0, y: 0 });
     }
+  });
+});
+
+describe('peekPosition (временное окно при связывании, FR-018)', () => {
+  const win = { width: 300, height: 200 };
+  const vp = { width: 1000, height: 800 };
+
+  it('справа от нода, если места справа больше', () => {
+    const p = peekPosition({ x: 100, y: 100, width: 150, height: 80 }, win, vp);
+    expect(p.x).toBeGreaterThanOrEqual(250);
+    expect(p.y).toBe(100);
+  });
+
+  it('слева от нода, если места слева больше', () => {
+    const p = peekPosition({ x: 700, y: 300, width: 150, height: 80 }, win, vp);
+    expect(p.x + win.width).toBeLessThanOrEqual(700);
+  });
+
+  it('не перекрывает нод и остаётся во вьюпорте', () => {
+    const node = { x: 400, y: 700, width: 150, height: 80 };
+    const p = peekPosition(node, win, vp);
+    const overlaps =
+      p.x < node.x + node.width &&
+      p.x + win.width > node.x &&
+      p.y < node.y + node.height &&
+      p.y + win.height > node.y;
+    expect(overlaps).toBe(false);
+    expect(p.y + win.height).toBeLessThanOrEqual(vp.height);
+    expect(p.x).toBeGreaterThanOrEqual(0);
   });
 });

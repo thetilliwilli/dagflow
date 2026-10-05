@@ -1,14 +1,14 @@
 // SC-008: изменения, сделанные больше чем за 1 с до закрытия, сохраняются — в папке и в браузере
 import type { Page } from '@playwright/test';
-import { addNode, openSidebar } from './helpers';
+import { addNode, openSidebar, setInput, inputField } from './helpers';
 import { expect, test } from './persistent';
 
 async function changeWaitReload(page: Page) {
   const n = await addNode(page, 'Число', 60, 60);
-  await n.getByLabel('value').fill('4242');
+  await setInput(page, n, 'value', '4242');
   await page.waitForTimeout(1000);
   await page.reload();
-  await expect(page.locator('.react-flow__node').getByLabel('value')).toHaveValue('4242');
+  await expect(await inputField(page, page.locator('.react-flow__node').first(), 'value')).toHaveValue('4242');
 }
 
 test('SC-008: режим рабочей папки', async ({ page }) => {

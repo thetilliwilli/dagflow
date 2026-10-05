@@ -12,7 +12,8 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { activeTab, tabGraph, type AppStore } from './store';
 import * as logic from './ui-logic';
-import type { Point, StorageHint, UiState, WindowId } from './ui-logic';
+import type { LinkEnd } from '../engine';
+import type { LinkIntent, Point, StorageHint, UiState, WindowId } from './ui-logic';
 
 export type UiStoreApi = StoreApi<UiState>;
 
@@ -44,6 +45,13 @@ export interface UiActions {
   setSelection(selection: string[]): void;
   openEdgeWindow(source: string, target: string, at: Point): void;
   escape(): void;
+  pressLink(from: LinkEnd, at: Point, onMarker: boolean): void;
+  movePointer(at: Point): void;
+  releasePointer(): void;
+  setPeek(peek: string | null): void;
+  /** Бросок/щелчок по строке временного окна; возвращает, что сделать (связать или объяснить). */
+  linkTo(to: LinkEnd, check: { ok: true } | { ok: false; message: string }): LinkIntent;
+  cancelLinking(): void;
 }
 
 export function createUiActions(ui: UiStoreApi): UiActions {
@@ -62,6 +70,16 @@ export function createUiActions(ui: UiStoreApi): UiActions {
     setSelection: (selection) => apply(logic.setSelection(s(), selection)),
     openEdgeWindow: (source, target, at) => apply(logic.openEdgeWindow(s(), source, target, at)),
     escape: () => apply(logic.escape(s())),
+    pressLink: (from, at, onMarker) => apply(logic.pressLink(s(), from, at, onMarker)),
+    movePointer: (at) => apply(logic.movePointer(s(), at)),
+    releasePointer: () => apply(logic.releasePointer(s())),
+    setPeek: (peek) => apply(logic.setPeek(s(), peek)),
+    linkTo: (to, check) => {
+      const r = logic.linkTo(s(), to, check);
+      apply(r.state);
+      return r.intent;
+    },
+    cancelLinking: () => apply(logic.cancelLinking(s())),
   };
 }
 

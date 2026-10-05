@@ -20,7 +20,7 @@ import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
 import { canConnect } from '../../engine';
 import { useActions, useApp, useAppState } from '../../store/react';
-import { useUi, useUiActions } from '../../store/ui';
+import { useUi, useUiActions, useUiStore } from '../../store/ui';
 import { tryConnect } from './connection';
 import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
 import { compositeMessages, historyMessages } from '../messages';
@@ -47,8 +47,16 @@ export function Canvas() {
   const { screenToFlowPosition } = useReactFlow();
   const [rfNodes, setRfNodes] = useState<RfNode[]>([]);
   const ui = useUiActions();
+  const uiStore = useUiStore();
+  const app = useApp();
   // Выделение живёт в сторе интерфейса (research R4): React Flow лишь показывает его
   const selection = useUi((s) => s.selection);
+  // Во время связывания ноды нельзя двигать и выделять (US4, research R5)
+  const linkingKind = useUi((s) => s.linking.kind);
+  const linking = linkingKind !== 'idle';
+  const peek = useUi((s) =>
+    s.linking.kind === 'dragging' || s.linking.kind === 'picking' ? s.linking.peek : null,
+  );
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set());
 
   // Синхронизация нодов React Flow с графом, с сохранением размеров и выделения
@@ -84,8 +92,13 @@ export function Canvas() {
   // Удаление нодов и связей приходит одним вызовом onDelete — один шаг истории
   const nodes = useMemo(() => {
     const selected = new Set(selection);
-    return rfNodes.map((n) => (!!n.selected === selected.has(n.id) ? n : { ...n, selected: selected.has(n.id) }));
-  }, [rfNodes, selection]);
+    return rfNodes.map((n) => {
+      const className = n.id === peek ? 'is-link-target' : undefined;
+      return !!n.selected === selected.has(n.id) && n.className === className
+        ? n
+        : { ...n, selected: selected.has(n.id), className };
+    });
+  }, [rfNodes, selection, peek]);
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -97,9 +110,13 @@ export function Canvas() {
       );
       const select = changes.filter((c) => c.type === 'select');
       if (select.length > 0) {
-        const next = new Set(selection);
+        // Текущее выделение — из стора (не из замыкания) и только ноды графа этой вкладки:
+        // React Flow прежней вкладки может прислать изменение уже после сброса выделения
+        const state = app.store.getState();
+        const ids = new Set(tabGraph(state, activeTab(state))?.nodes.map((n) => n.id));
+        const next = new Set(uiStore.getState().selection.filter((id) => ids.has(id)));
         for (const c of select) {
-          if (c.selected) next.add(c.id);
+          if (c.selected && ids.has(c.id)) next.add(c.id);
           else next.delete(c.id);
         }
         ui.setSelection([...next]);
@@ -109,7 +126,7 @@ export function Canvas() {
           actions.moveNode(c.id, { x: c.position.x, y: c.position.y });
       }
     },
-    [actions, selection, ui],
+    [actions, app, ui, uiStore],
   );
 
   const onDelete = useCallback(
@@ -135,7 +152,6 @@ export function Canvas() {
     [rfEdges],
   );
 
-  const app = useApp();
   const toRefs = (c: {
     source: string;
     sourceHandle?: string | null;
@@ -195,6 +211,18 @@ export function Canvas() {
     [actions, screenToFlowPosition],
   );
 
+  // Режим привязки: щелчок по ноду показывает его временное окно, по пустому холсту — отмена.
+  // Стабильные обработчики: новые функции на каждую перерисовку перерисовывали бы все ноды.
+  const onNodeClick = useCallback(
+    (_e: unknown, n: RfNode) => {
+      if (linkingKind === 'picking') ui.setPeek(n.id);
+    },
+    [linkingKind, ui],
+  );
+  const onPaneClick = useCallback(() => {
+    if (linkingKind === 'picking') ui.cancelLinking();
+  }, [linkingKind, ui]);
+
   const [collapsing, setCollapsing] = useState<string[] | null>(null);
   const selected = selection;
 
@@ -240,6 +268,10 @@ export function Canvas() {
         // Пробел открывает палитру (FR-005), поэтому не панорамирует холст (research R7)
         panActivationKeyCode={null}
         onMoveEnd={(_e, vp) => tab && actions.setViewport(tab.id, vp)}
+        nodesDraggable={!linking}
+        elementsSelectable={!linking}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >

@@ -1,7 +1,13 @@
 // Стор интерфейса: окна, z-порядок, выделение, Escape, сброс (data-model UiState, FR-002, FR-003, FR-012)
 import { describe, expect, it } from 'vitest';
 import {
+  cancelLinking,
   closeWindow,
+  linkTo,
+  movePointer,
+  pressLink,
+  releasePointer,
+  setPeek,
   escape,
   focusWindow,
   initialUiState,
@@ -198,5 +204,92 @@ describe('сброс и удалённые ноды', () => {
   it('pruneMissing без изменений возвращает тот же объект', () => {
     const s = setSelection(initialUiState(), ['A']);
     expect(pruneMissing(s, graphOf(['A']))).toBe(s);
+  });
+});
+
+describe('машина связывания (US4, research R5)', () => {
+  const A = { node: 'A', port: 'value', side: 'out' as const };
+  const B_a = { node: 'B', port: 'a', side: 'in' as const };
+  const ok = { ok: true as const };
+  const bad = { ok: false as const, message: 'Несовместимые типы: текст → число.' };
+  const picking = () => releasePointer(pressLink(initialUiState(), A, { x: 0, y: 0 }, true));
+  const dragging = () =>
+    movePointer(pressLink(initialUiState(), A, { x: 0, y: 0 }, false), { x: 10, y: 0 });
+
+  it('нажатие на строку — pressed', () => {
+    expect(pressLink(initialUiState(), A, { x: 5, y: 5 }, true).linking).toMatchObject({
+      kind: 'pressed',
+      from: A,
+    });
+  });
+
+  it('сдвиг больше 4 px — перетаскивание; меньше — ещё нажатие', () => {
+    const p = pressLink(initialUiState(), A, { x: 0, y: 0 }, false);
+    expect(movePointer(p, { x: 2, y: 2 }).linking.kind).toBe('pressed');
+    const d = movePointer(p, { x: 5, y: 0 });
+    expect(d.linking).toEqual({ kind: 'dragging', from: A, pointer: { x: 5, y: 0 }, peek: null });
+    expect(movePointer(d, { x: 40, y: 7 }).linking).toMatchObject({ pointer: { x: 40, y: 7 } });
+  });
+
+  it('отпускание без сдвига: на маркере — режим привязки (US4 #9), на имени — ничего', () => {
+    expect(picking().linking).toEqual({ kind: 'picking', from: A, peek: null });
+    expect(releasePointer(pressLink(initialUiState(), A, { x: 0, y: 0 }, false)).linking).toEqual({
+      kind: 'idle',
+    });
+  });
+
+  it('наведение на нод задаёт и переключает временное окно (US4 #8, #10)', () => {
+    let s = setPeek(dragging(), 'B');
+    expect(s.linking).toMatchObject({ peek: 'B' });
+    s = setPeek(s, 'C');
+    expect(s.linking).toMatchObject({ peek: 'C' });
+    expect(setPeek(picking(), 'B').linking).toMatchObject({ kind: 'picking', peek: 'B' });
+    expect(setPeek(initialUiState(), 'B').linking).toEqual({ kind: 'idle' });
+  });
+
+  it('бросок или щелчок на доступной строке — намерение connect и конец связывания (US4 #3, #10)', () => {
+    for (const start of [dragging(), picking()]) {
+      const r = linkTo(setPeek(start, 'B'), B_a, ok);
+      expect(r.intent).toEqual({ kind: 'connect', from: A, to: B_a });
+      expect(r.state.linking).toEqual({ kind: 'idle' });
+    }
+  });
+
+  it('на недоступной строке — сообщение; перетаскивание кончается, режим привязки — нет (US4 #5, #11)', () => {
+    const d = linkTo(dragging(), B_a, bad);
+    expect(d.intent).toEqual({ kind: 'notify', message: 'Несовместимые типы: текст → число.' });
+    expect(d.state.linking).toEqual({ kind: 'idle' });
+    const p = linkTo(setPeek(picking(), 'B'), B_a, bad);
+    expect(p.intent).toEqual({ kind: 'notify', message: 'Несовместимые типы: текст → число.' });
+    expect(p.state.linking).toMatchObject({ kind: 'picking', peek: 'B' });
+  });
+
+  it('вне связывания linkTo ничего не делает', () => {
+    const s = initialUiState();
+    expect(linkTo(s, B_a, ok)).toEqual({ state: s, intent: null });
+  });
+
+  it('отмена: cancelLinking, Escape, повторный щелчок по тому же маркеру (US4 #6, #12)', () => {
+    expect(cancelLinking(dragging()).linking).toEqual({ kind: 'idle' });
+    expect(cancelLinking(picking()).linking).toEqual({ kind: 'idle' });
+    // Escape сначала отменяет связывание и не закрывает окна
+    const withWindow = { ...openWindow(picking(), 'palette') };
+    const e = escape(withWindow);
+    expect(e.linking).toEqual({ kind: 'idle' });
+    expect(e.windows.palette.open).toBe(true);
+    const again = releasePointer(pressLink(picking(), A, { x: 0, y: 0 }, true));
+    expect(again.linking).toEqual({ kind: 'idle' });
+  });
+
+  it('в режиме привязки начать перетаскивание другого параметра — перетаскивание', () => {
+    const other = { node: 'A', port: 'x', side: 'in' as const };
+    const s = movePointer(pressLink(picking(), other, { x: 0, y: 0 }, false), { x: 20, y: 0 });
+    expect(s.linking).toMatchObject({ kind: 'dragging', from: other });
+  });
+
+  it('смена вкладки и удаление нода-источника завершают связывание', () => {
+    expect(resetForTab(picking()).linking).toEqual({ kind: 'idle' });
+    expect(pruneMissing(picking(), graphOf(['B'])).linking).toEqual({ kind: 'idle' });
+    expect(pruneMissing(picking(), graphOf(['A', 'B'])).linking.kind).toBe('picking');
   });
 });

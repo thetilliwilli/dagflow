@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect, paletteItem } from './helpers';
+import { addNode, connect, paletteItem, setInput } from './helpers';
 
 test('US5: большой граф, выделение рамкой, удаление, отмена и повтор, масштаб и мини-карта', async ({ page }) => {
   await page.setViewportSize({ width: 1500, height: 900 });
@@ -12,8 +12,8 @@ test('US5: большой граф, выделение рамкой, удале�
   // Отдельная пара нодов внизу холста
   const sum = await addNode(page, 'Сложить', 40, 560);
   const show = await addNode(page, 'Показать', 320, 560);
-  await sum.getByLabel('a').fill('2');
-  await sum.getByLabel('b').fill('5');
+  await setInput(page, sum, 'a', '2');
+  await setInput(page, sum, 'b', '5');
   await connect(page, sum, 'result', show, 'value');
   await expect(show.getByTestId('show-value')).toHaveText('7');
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);

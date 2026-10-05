@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect, openSidebar, tabBar, paletteItem } from './helpers';
+import { addNode, connect, openSidebar, tabBar, paletteItem, setInput } from './helpers';
 
 test('US4: свернуть, второй экземпляр, правка внутри, отказ рекурсии, выгрузка/загрузка', async ({ page }, info) => {
   await page.setViewportSize({ width: 1600, height: 900 });
@@ -10,9 +10,9 @@ test('US4: свернуть, второй экземпляр, правка вн�
   const add = await addNode(page, 'Сложить', 260, 120);
   const mul = await addNode(page, 'Умножить', 500, 120);
   const show = await addNode(page, 'Показать', 740, 120);
-  await n1.getByLabel('value').fill('2');
-  await n2.getByLabel('value').fill('3');
-  await mul.getByLabel('b').fill('2');
+  await setInput(page, n1, 'value', '2');
+  await setInput(page, n2, 'value', '3');
+  await setInput(page, mul, 'b', '2');
   await connect(page, n1, 'value', add, 'a');
   await connect(page, n2, 'value', add, 'b');
   await connect(page, add, 'result', mul, 'a');
@@ -34,15 +34,15 @@ test('US4: свернуть, второй экземпляр, правка вн�
 
   // 2. Второй экземпляр
   const second = await addNode(page, 'Удвоенная сумма', 500, 420);
-  await second.getByLabel('a').fill('1');
-  await second.getByLabel('b').fill('1');
+  await setInput(page, second, 'a', '1');
+  await setInput(page, second, 'b', '1');
   await expect(second.getByTestId('out-result')).toHaveText('4');
 
   // 3. Правка внутри: ×2 → ×3
   await page.getByRole('button', { name: 'Открыть составной нод «Удвоенная сумма»' }).first().click();
   await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('Составной нод: Удвоенная сумма');
   const innerMul = page.locator('.react-flow__node').filter({ hasText: 'Умножить' });
-  await innerMul.getByLabel('b').fill('3');
+  await setInput(page, innerMul, 'b', '3');
 
   // 4. Отказ рекурсии
   await addNodeExpectRejection();

@@ -787,3 +787,52 @@ button.link {
   color: var(--muted);
   font-size: 11px;
 }
+
+/* ── Связывание (US4, FR-018 – FR-020) ── */
+.prop-name {
+  cursor: grab;
+  user-select: none;
+}
+.prop-row.is-linking {
+  background: #ddf4ff;
+}
+.prop-row.is-linking .prop-marker {
+  outline: 2px solid var(--t-number);
+  outline-offset: 1px;
+}
+/* Недоступная строка: серая, но на месте — состав и размеры строк не меняются (FR-020) */
+.prop-row.is-disabled {
+  opacity: 0.35;
+}
+.prop-grid--peek {
+  border-color: var(--t-number);
+}
+.prop-grid--peek .prop-name {
+  cursor: default;
+}
+.prop-row.is-target:not(.is-disabled) {
+  cursor: pointer;
+}
+.prop-row.is-target:not(.is-disabled):hover {
+  background: #ddf4ff;
+}
+.prop-grid__hint {
+  margin: 0 0 8px;
+  padding: 4px 6px;
+  background: #ddf4ff;
+  font-size: 12px;
+}
+.link-ghost {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  padding: 2px 6px;
+  background: var(--text);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.react-flow__node.is-link-target {
+  outline: 2px dashed var(--t-number);
+  outline-offset: 2px;
+}

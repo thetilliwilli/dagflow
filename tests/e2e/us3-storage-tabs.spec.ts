@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './persistent';
 import { readFileSync } from 'node:fs';
-import { addNode, connect, openSidebar, tabBar } from './helpers';
+import { addNode, connect, openSidebar, tabBar, setInput } from './helpers';
 
 /** Диалог выбора папки → подпапка OPFS «picked-folder» (системный диалог в тестах недоступен). */
 async function stubFolderPicker(page: Page, opts: { permission?: 'prompt' } = {}) {
@@ -42,8 +42,8 @@ async function buildSum(page: Page, a: string, b: string) {
   const n1 = await addNode(page, 'Число', 30, 40);
   const sum = await addNode(page, 'Сложить', 260, 40);
   const show = await addNode(page, 'Показать', 500, 40);
-  await n1.getByLabel('value').fill(a);
-  await sum.getByLabel('b').fill(b);
+  await setInput(page, n1, 'value', a);
+  await setInput(page, sum, 'b', b);
   await connect(page, n1, 'value', sum, 'a');
   await connect(page, sum, 'result', show, 'value');
   return show;

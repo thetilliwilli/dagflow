@@ -33,3 +33,14 @@ export function defaultPosition(id: WindowId, size: Size, viewport: Size): Point
   };
   return clampToViewport({ ...wanted[id], ...size }, viewport);
 }
+
+/**
+ * Временное окно свойств при связывании (FR-018): рядом с нодом, со стороны, где больше места,
+ * не перекрывая нод и не выходя за край экрана.
+ */
+export function peekPosition(node: Rect, size: Size, viewport: Size): Point {
+  const right = viewport.width - (node.x + node.width);
+  const left = node.x;
+  const x = right >= left ? node.x + node.width + GAP : node.x - GAP - size.width;
+  return clampToViewport({ x, y: node.y, ...size }, viewport);
+}

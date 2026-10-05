@@ -1,9 +1,11 @@
 // Пробел и Escape (US1 #3, #8; FR-003, FR-005; research R6, R7)
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { createActions } from '../../src/store/actions';
 import { AppProvider } from '../../src/store/react';
+import type { UiActions } from '../../src/store/ui';
 import { Workbench } from '../../src/ui/Workbench';
-import { testStore } from './helpers';
+import { testStore, UiProbe } from './helpers';
 
 function setup() {
   render(
@@ -78,5 +80,34 @@ describe('Escape (FR-003)', () => {
     key(input, 'Escape');
     expect(paletteOpen()).toBe(true);
     input.remove();
+  });
+});
+
+describe('Пробел во время связывания (граничный случай, перенесено из T018 в T037)', () => {
+  it('в режиме привязки Пробел не открывает палитру', () => {
+    const app = testStore();
+    const actions = createActions(app);
+    let ui!: UiActions;
+    render(
+      <AppProvider app={app}>
+        <Workbench />
+        <UiProbe onReady={(u) => (ui = u)} />
+      </AppProvider>,
+    );
+    let id = '';
+    act(() => {
+      const r = actions.addNode('builtin:number', { x: 0, y: 0 });
+      if (r.ok) id = r.id;
+    });
+    act(() => ui.setSelection([id]));
+    const out = screen
+      .getByRole('dialog', { name: 'Свойства' })
+      .querySelector<HTMLElement>('li.prop-row[data-side="out"][data-port="value"]')!;
+    const marker = within(out).getByRole('button', { name: 'Связать «value»' });
+    fireEvent.pointerDown(marker, { button: 0, clientX: 0, clientY: 0, pointerId: 1 });
+    fireEvent.pointerUp(document, { button: 0, clientX: 0, clientY: 0, pointerId: 1 });
+    expect(marker).toHaveAttribute('aria-pressed', 'true');
+    key(document.body, ' ');
+    expect(paletteOpen()).toBe(false);
   });
 });
