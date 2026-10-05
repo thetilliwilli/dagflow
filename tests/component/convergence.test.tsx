@@ -48,7 +48,7 @@ describe('недоступные данные (T100)', () => {
     act(() => {
       app.store.setState((d: AppState) => {
         const wf = Object.values(d.workflows)[0]!;
-        wf.graph.nodes.push({ id: 'ghost', type: 'composite:missing', position: { x: 0, y: 0 }, values: {} });
+        wf.graph.nodes.push({ id: 'ghost', type: 'composite:missing', name: 'Призрак', position: { x: 0, y: 0 }, values: {} });
       });
     });
     act(() => frames.flushFrames());

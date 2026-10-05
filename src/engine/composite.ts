@@ -123,6 +123,7 @@ export function collapse(
       defNodes.push({
         id: ioId,
         type: IO_INPUT,
+        name: registry.get(IO_INPUT)?.title ?? IO_INPUT,
         position: { x: minX - 400, y: minY + (inByTarget.size - 1) * 170 },
         values: {},
         ports: [{ name: portName, type: target?.type ?? 'any', required: true }],
@@ -147,6 +148,7 @@ export function collapse(
       defNodes.push({
         id: ioId,
         type: IO_OUTPUT,
+        name: registry.get(IO_OUTPUT)?.title ?? IO_OUTPUT,
         position: { x: maxX + 320, y: minY + (outBySource.size - 1) * 170 },
         values: {},
         ports: [{ name: portName, type: source?.type ?? 'any', required: true }],
@@ -167,6 +169,7 @@ export function collapse(
   const instance: NodeInstance = {
     id: instanceId,
     type: `${COMPOSITE_PREFIX}${composite.id}`,
+    name,
     position: { x: xs.reduce((a, b) => a + b, 0) / xs.length, y: ys.reduce((a, b) => a + b, 0) / ys.length },
     values: {},
   };
@@ -271,7 +274,7 @@ export function flatten(graph: Graph, composites: CompositeDef[]): Flattened {
         const ports = n.ports ?? [];
         const values: Record<string, JsonValue> = {};
         if (n.type === IO_INPUT) for (const p of ports) if (Object.hasOwn(instanceValues, p.name)) values[p.name] = instanceValues[p.name]!;
-        nodes.push({ id: path, type: PASSTHROUGH, position: n.position, values, ports });
+        nodes.push({ id: path, type: PASSTHROUGH, name: n.name, position: n.position, values, ports });
       } else {
         nodes.push({ ...n, id: path });
       }

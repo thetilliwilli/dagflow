@@ -78,9 +78,9 @@ export function createEvaluator(source: RegistrySource): Evaluator {
     return result;
   }
 
+  /** Как назвать нод в сообщении: по имени экземпляра (E15). */
   function title(id: string): string {
-    const n = nodes.get(id);
-    return (n && registry.get(n.type)?.title) ?? id;
+    return nodes.get(id)?.name ?? id;
   }
 
   function blockedMessage(sourceId: string, source: NodeState | undefined): string {

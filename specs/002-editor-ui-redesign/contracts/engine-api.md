@@ -18,7 +18,10 @@ interface NodeInstance {
 
 type PortSide = 'in' | 'out';
 interface LinkEnd { node: string; port: string; side: PortSide }
-type LinkCandidate = { ok: true; replaces?: Edge } | Rejection;
+
+// validate.ts (рядом с Rejection: errors.ts сам импортирует types.ts)
+// replaces — id заменяемой связи, как в canConnect
+type LinkCandidate = { ok: true; replaces?: string } | Rejection;
 ```
 
 ## Функции

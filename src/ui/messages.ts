@@ -131,3 +131,8 @@ export const historyMessages = {
   redo: 'Повторить',
   minimap: 'Мини-карта графа',
 };
+
+/** Плавающие окна (фича 002, contracts/ui-contract.md). */
+export const windowMessages = {
+  close: 'Закрыть',
+};

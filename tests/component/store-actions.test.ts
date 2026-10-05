@@ -28,7 +28,7 @@ describe('действия редактирования графа', () => {
     const { actions, graph } = setup();
     const r = actions.addNode('builtin:add', { x: 10, y: 20 });
     expect(r.ok).toBe(true);
-    expect(graph().nodes).toEqual([{ id: expect.any(String), type: 'builtin:add', position: { x: 10, y: 20 }, values: {} }]);
+    expect(graph().nodes).toEqual([{ id: expect.any(String), type: 'builtin:add', name: 'Сложить', position: { x: 10, y: 20 }, values: {} }]);
   });
 
   it('addNode отклоняет «Вход» вне составного нода', () => {

@@ -1,6 +1,6 @@
 // Файлы ↔ объекты модели (contracts/file-formats.md)
 import * as v from 'valibot';
-import { compositeDependencies, compositeIdOf, type CompositeDef, type Workflow, type Workspace } from '../engine';
+import { compositeDependencies, compositeIdOf, type CompositeDef, type Graph, type NodeInstance, type Workflow, type Workspace } from '../engine';
 import { CompositeFileSchema, ExportFileSchema, WorkflowFileSchema, WorkspaceFileSchema } from './schemas';
 
 export const FORMAT_VERSION = 1;
@@ -39,8 +39,17 @@ function strip<T extends { format: string; version: number }>(file: T): Omit<T, 
   return rest;
 }
 
+/** Нод с ключами в порядке контракта: id, type, name, position, values, ports. */
+function orderedNode({ id, type, name, position, values, ports }: NodeInstance): NodeInstance {
+  return ports === undefined ? { id, type, name, position, values } : { id, type, name, position, values, ports };
+}
+
+function orderedGraph(graph: Graph): Graph {
+  return { nodes: graph.nodes.map(orderedNode), edges: graph.edges };
+}
+
 export function workflowToFile(wf: Workflow): WorkflowFile {
-  return { format: 'dagflow-workflow', version: FORMAT_VERSION, ...wf };
+  return { format: 'dagflow-workflow', version: FORMAT_VERSION, ...wf, graph: orderedGraph(wf.graph) };
 }
 
 export function fileToWorkflow(data: unknown): Workflow {
@@ -48,7 +57,7 @@ export function fileToWorkflow(data: unknown): Workflow {
 }
 
 export function compositeToFile(def: CompositeDef): CompositeFile {
-  return { format: 'dagflow-composite', version: FORMAT_VERSION, ...def };
+  return { format: 'dagflow-composite', version: FORMAT_VERSION, ...def, graph: orderedGraph(def.graph) };
 }
 
 export function fileToComposite(data: unknown): CompositeDef {
@@ -73,5 +82,11 @@ export function buildExport(workflow: Workflow, composites: CompositeDef[], expo
     used.add(id);
     for (const d of deps.get(id) ?? []) used.add(d);
   }
-  return { format: 'dagflow-export', version: FORMAT_VERSION, exportedAt, workflow, composites: composites.filter((c) => used.has(c.id)) };
+  return {
+    format: 'dagflow-export',
+    version: FORMAT_VERSION,
+    exportedAt,
+    workflow: { ...workflow, graph: orderedGraph(workflow.graph) },
+    composites: composites.filter((c) => used.has(c.id)).map((c) => ({ ...c, graph: orderedGraph(c.graph) })),
+  };
 }

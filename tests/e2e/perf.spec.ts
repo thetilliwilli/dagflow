@@ -3,13 +3,13 @@
 import { expect, test } from '@playwright/test';
 
 function chainExport() {
-  const nodes = [{ id: 'src', type: 'builtin:number', position: { x: 0, y: 0 }, values: { value: 1 } }];
+  const nodes = [{ id: 'src', type: 'builtin:number', name: 'Число', position: { x: 0, y: 0 }, values: { value: 1 } }];
   const edges = [];
   for (let i = 1; i <= 98; i++) {
-    nodes.push({ id: `n${i}`, type: 'builtin:add', position: { x: 260 * (i % 10), y: 160 * Math.floor(i / 10) }, values: { b: 1 } as never });
+    nodes.push({ id: `n${i}`, type: 'builtin:add', name: 'Сложить', position: { x: 260 * (i % 10), y: 160 * Math.floor(i / 10) }, values: { b: 1 } as never });
     edges.push({ id: `e${i}`, source: { node: i === 1 ? 'src' : `n${i - 1}`, port: i === 1 ? 'value' : 'result' }, target: { node: `n${i}`, port: 'a' } });
   }
-  nodes.push({ id: 'show', type: 'builtin:show', position: { x: 0, y: 1700 }, values: {} as never });
+  nodes.push({ id: 'show', type: 'builtin:show', name: 'Показать', position: { x: 0, y: 1700 }, values: {} as never });
   edges.push({ id: 'e99', source: { node: 'n98', port: 'result' }, target: { node: 'show', port: 'value' } });
   const workflow = { id: 'perf', name: 'Perf 100', createdAt: '', updatedAt: '', graph: { nodes, edges } };
   return JSON.stringify({ format: 'dagflow-export', version: 1, exportedAt: '', workflow, composites: [] });

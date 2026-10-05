@@ -2,8 +2,9 @@ import type { Edge, Graph, JsonValue, NodeInstance } from '../../../src/engine/t
 
 let edgeSeq = 0;
 
-export function node(id: string, type: string, values: Record<string, JsonValue> = {}): NodeInstance {
-  return { id, type, position: { x: 0, y: 0 }, values };
+/** Имя по умолчанию — id: в тестах так проще узнать нод в сообщениях. */
+export function node(id: string, type: string, values: Record<string, JsonValue> = {}, name = id): NodeInstance {
+  return { id, type, name, position: { x: 0, y: 0 }, values };
 }
 
 export function edge(source: string, sourcePort: string, target: string, targetPort: string): Edge {

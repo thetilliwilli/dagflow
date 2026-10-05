@@ -113,7 +113,7 @@ src/
 ├── engine/
 │   ├── ~ types.ts           # NodeInstance.name (обязательное), PortSide, LinkEnd, LinkCandidate
 │   ├── ~ validate.ts        # linkCandidates, normalizeNodeName
-│   ├── ~ errors.ts          # same-side, empty-name, name-too-long
+│   ├── ~ errors.ts          # same-side, empty-name, name-too-long; MAX_NODE_NAME
 │   ├── ~ composite.ts       # collapse: имя экземпляра = имя составного нода
 │   ├── ~ evaluator.ts       # сообщения о нодах выше по графу — по отображаемому имени
 │   └── ~ index.ts           # экспорт новых функций и типов
@@ -121,7 +121,8 @@ src/
 │   └── ~ schemas.ts         # name: обязательное, trim, 1..100
 ├── store/
 │   ├── ~ actions.ts         # renameNode, disconnectMany (удаление пучка одним шагом); addNode ставит name
-│   ├── + ui.ts              # стор интерфейса (Zustand vanilla) + useUi/useUiActions
+│   ├── ~ react.ts           # AppProvider оборачивает UiProvider: стор интерфейса есть везде, где есть основной (и в компонентных тестах)
+│   ├── + ui.ts              # стор интерфейса (Zustand vanilla) + UiProvider, useUi/useUiActions, bindUiToApp
 │   └── + ui-logic.ts        # чистые редьюсеры: окна, z-порядок, Escape, выделение, связывание
 ├── ui/
 │   ├── ~ Workbench.tsx      # полоса (☰ + TabBar) + холст; SidebarWindow; плашки поверх холста

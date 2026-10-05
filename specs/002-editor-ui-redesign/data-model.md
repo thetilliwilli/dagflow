@@ -48,8 +48,8 @@
 `unknown-type`, если тип нода неизвестен; иначе для каждого порта нода
 `targetNodeId` (`side`: `'in' | 'out'`, `port`):
 
-- `{ ok: true, replaces?: Edge }` — связать можно (`replaces` — связь, которую
-  заменит новая на занятом входе);
+- `{ ok: true, replaces?: string }` — связать можно (`replaces` — id связи,
+  которую заменит новая на занятом входе);
 - `Rejection` с кодом `same-side` | `same-node` | `type-mismatch` | `cycle` |
   `unknown-port` и понятным текстом.
 

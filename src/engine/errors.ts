@@ -18,7 +18,10 @@ export type RejectCode =
   | 'input-occupied'
   | 'duplicate-port-name'
   | 'composite-recursion'
-  | 'io-node-outside-composite';
+  | 'io-node-outside-composite'
+  | 'same-side'
+  | 'empty-name'
+  | 'name-too-long';
 
 export type Rejection = { ok: false; code: RejectCode; message: string };
 
@@ -30,6 +33,9 @@ export const typeNames: Record<PortType, string> = {
   object: 'объект',
   any: 'любое',
 };
+
+/** Наибольшая длина имени нода (FR-009). */
+export const MAX_NODE_NAME = 100;
 
 function reject(code: RejectCode, message: string): Rejection {
   return { ok: false, code, message };
@@ -50,6 +56,13 @@ export const rejections = {
     reject('composite-recursion', `Нельзя поместить составной нод «${title}» внутрь самого себя (напрямую или через другие составные ноды).`),
   ioOutsideComposite: () =>
     reject('io-node-outside-composite', 'Ноды «Вход» и «Выход» можно добавлять только внутри составного нода.'),
+  sameSide: (side: 'in' | 'out') =>
+    reject(
+      'same-side',
+      `${side === 'in' ? 'Нельзя соединить вход со входом' : 'Нельзя соединить выход с выходом'}: связь идёт от выхода одного нода ко входу другого.`,
+    ),
+  emptyName: () => reject('empty-name', 'Имя нода не может быть пустым. Введите хотя бы один символ.'),
+  nameTooLong: () => reject('name-too-long', `Имя нода длиннее ${MAX_NODE_NAME} символов. Сократите его.`),
 };
 
 export function internalErrorMessage(title: string): string {

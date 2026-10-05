@@ -330,7 +330,8 @@ export function createActions({ store, deps }: AppStore) {
       if (!check.ok) return check;
       const id = deps.newId();
       editGraph((g) => {
-        const node: Graph['nodes'][number] = { id, type, position, values: {} };
+        // Имя экземпляра по умолчанию — название типа (FR-009)
+        const node: Graph['nodes'][number] = { id, type, name: registryOf(state).get(type)?.title ?? type, position, values: {} };
         if (type === IO_INPUT || type === IO_OUTPUT) {
           // Новый нод «Вход»/«Выход» — с одним портом и уникальным именем (FR-021c)
           const taken = g.nodes

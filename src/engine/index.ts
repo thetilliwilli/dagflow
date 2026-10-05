@@ -1,10 +1,10 @@
 // Публичный API движка (contracts/engine-api.md)
 export * from './types';
-export { NodeError, rejections, typeNames, plural, type Rejection, type RejectCode } from './errors';
+export { NodeError, rejections, typeNames, plural, MAX_NODE_NAME, type Rejection, type RejectCode } from './errors';
 export { matchesType, isCompatible, deepEqual, describeKind, formatCompact, isPlainObject } from './values';
 export { builtinNodes, categories } from './builtins';
 export { createRegistry } from './registry';
-export { canConnect, canAddNode, validateGraph, nodePorts, topologicalOrder, IO_NODE_TYPES } from './validate';
+export { canConnect, canAddNode, validateGraph, nodePorts, topologicalOrder, normalizeNodeName, IO_NODE_TYPES } from './validate';
 export { createEvaluator, type Evaluator, type RegistrySource } from './evaluator';
 export { collapse, expand, compositePorts, compositeDependencies, compositeIdOf, validateIoPorts, flatten, COMPOSITE_PREFIX } from './composite';
 export { IO_INPUT, IO_OUTPUT, PASSTHROUGH } from './builtins/io';

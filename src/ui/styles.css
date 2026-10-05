@@ -584,3 +584,51 @@ button.link {
 .io-ports__default .value-editor {
   width: 120px;
 }
+
+/* ── Плавающие окна (фича 002, contracts/ui-contract.md) ── */
+.floating-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+.floating {
+  position: absolute;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 16px);
+  min-width: 220px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+.floating__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.floating__title {
+  flex: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.floating__close {
+  border: none;
+  background: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.floating__body {
+  overflow: auto;
+  padding: 8px;
+}
