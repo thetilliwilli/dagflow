@@ -9,7 +9,8 @@ export function FolderBanner() {
   const prompt = useAppState((s) => s.storagePrompt);
   const location = useAppState((s) => s.storageLocation);
   const supported = useAppState((s) => s.folderSupported);
-  const [hidden, setHidden] = useState(false);
+  /** Подсказка о папке → напоминание о выгрузке → скрыто (US3 #2). */
+  const [stage, setStage] = useState<'hint' | 'reminder' | 'hidden'>('hint');
   if (!persistence) return null;
 
   if (prompt?.kind === 'copy-to-empty') {
@@ -38,17 +39,37 @@ export function FolderBanner() {
       </div>
     );
   }
-  if (hidden || location?.kind !== 'browser') return null;
-  return (
-    <div className="banner banner--muted" role="region" aria-label="Хранилище">
-      <span>{supported ? m.firstRunHint : m.browserReminder}</span>
-      {supported && (
+  if (location?.kind === 'none') {
+    return (
+      <div className="banner banner--warning" role="region" aria-label="Хранилище">
+        <span>{m.unavailableBanner}</span>
+        {supported && (
+          <button type="button" className="primary" onClick={() => void persistence.chooseFolder()}>
+            {m.chooseFolder}
+          </button>
+        )}
+      </div>
+    );
+  }
+  if (stage === 'hidden' || location?.kind !== 'browser') return null;
+  if (supported && stage === 'hint') {
+    return (
+      <div className="banner banner--muted" role="region" aria-label="Хранилище">
+        <span>{m.firstRunHint}</span>
         <button type="button" className="primary" onClick={() => void persistence.chooseFolder()}>
           {m.chooseFolder}
         </button>
-      )}
-      <button type="button" onClick={() => setHidden(true)}>
-        {m.later}
+        <button type="button" onClick={() => setStage('reminder')}>
+          {m.later}
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="banner banner--muted" role="region" aria-label="Хранилище">
+      <span>{m.browserReminder}</span>
+      <button type="button" onClick={() => setStage('hidden')}>
+        {m.gotIt}
       </button>
     </div>
   );

@@ -372,3 +372,13 @@ Task: "Создать src/ui/palette/Palette.tsx"
 - Коммит после каждой задачи или логической группы
 - На любом checkpoint можно остановиться и проверить историю независимо
 - Тексты для пользователя — только из `src/ui/messages.ts` и `src/engine/errors.ts`
+
+---
+
+## Phase 9: Convergence
+
+- [X] T098 CRITICAL: перехватывать ошибки операций хранения (`start`, `chooseFolder`, `confirmPrompt`, `dismissPrompt`, `restoreAccess`, `useBrowser`) в `src/store/persistence.ts` и UI (`src/ui/App.tsx`, `src/ui/layout/StorageIndicator.tsx`, `src/ui/layout/FolderBanner.tsx`, `src/ui/layout/AccessScreen.tsx`): понятное уведомление вместо молчаливого сбоя; при сбое старта (например, OPFS недоступен в приватном режиме) — экран с объяснением и возможностью работать без сохранения или выгружать в файл; отказ в доступе на экране восстановления — сообщение «Доступ не предоставлен»; тесты в `tests/unit/storage/switch-storage.test.ts` per Constitution IV, FR-032 (contradicts)
+- [X] T099 Отклонять при импорте определения составных нодов с прямой или косвенной рекурсией (шаг 4 алгоритма импорта) в `src/model/import.ts` с понятным сообщением; тест в `tests/unit/model/import-merge.test.ts` per FR-026, contracts/file-formats.md (partial)
+- [X] T100 Показывать недоступные (повреждённые) составные ноды с причиной в палитре (`src/ui/palette/Palette.tsx`) и рисовать нод неизвестного типа заглушкой с ошибкой вместо `return null` в `src/ui/canvas/FlowNode.tsx`; компонентные тесты per Edge case «повреждённый файл», FR-032 (partial)
+- [X] T101 Показывать напоминание о выгрузке в файл в режиме браузера и тогда, когда выбор папки поддерживается, но пользователь отказался («Позже»), в `src/ui/layout/FolderBanner.tsx` per US3/AC2 (partial)
+- [X] T102 Решить судьбу кнопки «Открыть» (↗) у составного нода в палитре (`src/ui/palette/Palette.tsx`): вписать в спеку (FR-024) или убрать per FR-024, FR-027 (unrequested)

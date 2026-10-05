@@ -72,3 +72,14 @@ describe('импорт и выгрузка с составными нодами'
     expect(exp.composites.map((d) => d.id).sort()).toEqual(['B', 'C']);
   });
 });
+
+describe('рекурсия определений в файле (FR-026)', () => {
+  it('файл с составным нодом внутри самого себя (прямо или косвенно) отклоняется', () => {
+    const a = def('A', 'A', graph([node('b', 'composite:B')]));
+    const b = def('B', 'B', graph([node('a', 'composite:A')]));
+    const file = toJsonText(buildExport(workflowUsing('composite:A'), [a, b], 't'));
+    const r = importExport(file, { workflows: {}, composites: {}, newId: seqId(), now: () => 't' });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.message).toMatch(/внутри самого себя/);
+  });
+});

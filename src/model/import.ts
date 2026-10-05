@@ -1,7 +1,7 @@
 // Импорт файла выгрузки: шаги 1–6 алгоритма из contracts/file-formats.md.
 // Шаги 1–4 только проверяют; результат применяет вызывающий код (FR-030).
 import * as v from 'valibot';
-import { createRegistry, validateGraph, type CompositeDef, type Graph, type Workflow } from '../engine';
+import { compositeDependencies, createRegistry, validateGraph, type CompositeDef, type Graph, type Workflow } from '../engine';
 import { ExportFileSchema } from './schemas';
 import { FORMAT_VERSION, issuePath } from './serialize';
 
@@ -23,6 +23,8 @@ export const importMessages = {
   schema: (path: string) => `Файл не похож на выгрузку workflow: ${path}`,
   unknownTypes: (types: string[]) => `В файле есть неизвестные типы нодов: ${types.join(', ')}`,
   invalidGraph: (reason: string) => `Граф в файле некорректен: ${reason}`,
+  recursion: (name: string) =>
+    `Составной нод «${name}» в файле содержит сам себя, а составной нод не может быть внутри самого себя (напрямую или через другие).`,
   compositeRenamed: (name: string, renamed: string) =>
     `Составной нод «${name}» уже есть в палитре с другим содержимым — добавлен как «${renamed}».`,
 };
@@ -139,6 +141,9 @@ export function importExport(text: string, ctx: ImportContext): ImportResult {
     ...file.composites.flatMap((c) => validateGraph(c.graph, registry, { insideComposite: true })),
   ];
   if (problems.length > 0) return { ok: false, message: importMessages.invalidGraph(problems[0]!.message) };
+  const deps = compositeDependencies(file.composites);
+  const recursive = file.composites.find((c) => deps.get(c.id)?.has(c.id));
+  if (recursive) return { ok: false, message: importMessages.recursion(recursive.name) };
 
   // 5. Составные ноды
   const merged = mergeComposites(file.composites, ctx.composites, ctx.newId);

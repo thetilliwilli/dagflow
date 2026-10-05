@@ -166,3 +166,49 @@ describe('сбой папки во время работы', () => {
     expect(dagflow.file(`workflows/${id}.workflow.json`)!.content).toContain('Важная работа');
   });
 });
+
+describe('ошибки хранилища видны пользователю (Constitution IV, FR-032)', () => {
+  it('сбой старта (OPFS недоступен): работа без сохранения, понятное сообщение', async () => {
+    const f = setup({ picker: false });
+    f.env.getOpfsRoot = async () => {
+      throw new DOMException('Security error', 'SecurityError');
+    };
+    await f.p.start();
+    expect(f.state().storageLocation).toMatchObject({ kind: 'none' });
+    expect(f.state().notifications.at(-1)).toMatchObject({ kind: 'error' });
+    expect(f.state().notifications.at(-1)!.text).toMatch(/Сохранение недоступно/);
+    expect(f.state().workflowOrder).toHaveLength(1); // редактор работает
+  });
+
+  it('ошибка диалога выбора папки (не отказ) — уведомление, хранилище не меняется', async () => {
+    const f = setup();
+    await f.p.start();
+    f.env.showDirectoryPicker = async () => {
+      throw new DOMException('blocked', 'SecurityError');
+    };
+    await f.p.chooseFolder();
+    expect(f.state().storageLocation).toEqual({ kind: 'browser' });
+    expect(f.state().notifications.at(-1)).toMatchObject({ kind: 'error' });
+  });
+
+  it('отказ в доступе на экране восстановления — сообщение «Доступ не предоставлен»', async () => {
+    const folder = new FakeDirectory('my-flows');
+    folder.permission = 'prompt';
+    const f = setup({ folder, saved: folder });
+    await f.p.start();
+    folder.permission = 'denied';
+    await f.p.restoreAccess();
+    expect(f.state().storageLocation).toEqual({ kind: 'folder-pending', name: 'my-flows' });
+    expect(f.state().notifications.at(-1)!.text).toMatch(/Доступ не предоставлен/);
+  });
+
+  it('сбой при переносе в папку — уведомление, данные остаются в прежнем хранилище', async () => {
+    const f = setup();
+    await f.p.start();
+    await f.p.chooseFolder();
+    f.folder.failWith = new DOMException('gone', 'NotFoundError');
+    await f.p.confirmPrompt();
+    expect(f.state().storageLocation).toEqual({ kind: 'browser' });
+    expect(f.state().notifications.at(-1)).toMatchObject({ kind: 'error' });
+  });
+});

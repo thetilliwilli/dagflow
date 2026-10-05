@@ -5,7 +5,9 @@ import { createOpfsWorkerWriter, type FallbackWrite } from './opfs-writer';
 export type StorageLocation =
   | { kind: 'folder'; name: string }
   | { kind: 'folder-pending'; name: string }
-  | { kind: 'browser' };
+  | { kind: 'browser' }
+  /** Хранилище недоступно (например, приватный режим): работа идёт без сохранения. */
+  | { kind: 'none'; reason: string };
 
 /** Окружение браузера; в тестах подменяется фейками. */
 export interface LocationEnv {

@@ -11,7 +11,8 @@ import { NameDialog } from '../dialogs/NameDialog';
 import { compositeMessages, messages, typeLabels, workflowMessages } from '../messages';
 
 function portsSummary(def: NodeTypeDef): string {
-  const fmt = (ps: NodeTypeDef['inputs']) => ps.map((p) => `${p.name}: ${typeLabels[p.type]}`).join(', ') || '—';
+  const fmt = (ps: NodeTypeDef['inputs']) =>
+    ps.map((p) => `${p.name}: ${typeLabels[p.type]}`).join(', ') || '—';
   return `Входы: ${fmt(def.inputs)}. Выходы: ${fmt(def.outputs)}.`;
 }
 
@@ -20,6 +21,7 @@ export function Palette() {
   const registry = useAppState(registryOf);
   const count = useAppState((s) => tabGraph(s, activeTab(s))?.nodes.length ?? 0);
   const insideComposite = useAppState((s) => activeTab(s)?.kind === 'composite');
+  const unavailable = useAppState((s) => s.unavailable).filter((u) => u.kind === 'composite');
   const { screenToFlowPosition } = useReactFlow();
   const [renaming, setRenaming] = useState<NodeTypeDef | null>(null);
   const [deleting, setDeleting] = useState<NodeTypeDef | null>(null);
@@ -35,7 +37,9 @@ export function Palette() {
 
   function addAtCenter(type: string) {
     const rect = document.querySelector('.react-flow')?.getBoundingClientRect();
-    const center = rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 3 } : { x: 0, y: 0 };
+    const center = rect
+      ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 3 }
+      : { x: 0, y: 0 };
     const p = screenToFlowPosition(center);
     const shift = (count % 10) * 24;
     const r = actions.addNode(type, { x: p.x + shift, y: p.y + shift });
@@ -43,6 +47,7 @@ export function Palette() {
   }
 
   const compositeId = (def: NodeTypeDef) => def.id.slice('composite:'.length);
+  if (unavailable.length > 0 && !groups.has(COMPOSITE_CATEGORY)) groups.set(COMPOSITE_CATEGORY, []);
 
   function onDragStart(e: DragEvent, type: string) {
     e.dataTransfer.setData(NODE_DRAG_TYPE, type);
@@ -69,19 +74,41 @@ export function Palette() {
               <span className="palette__item-desc">{def.description}</span>
               {category === COMPOSITE_CATEGORY && (
                 <span className="palette__item-actions">
-                  <button type="button" aria-label={compositeMessages.open(def.title)} title={compositeMessages.open(def.title)} onClick={() => actions.openComposite(compositeId(def))}>
+                  <button
+                    type="button"
+                    aria-label={compositeMessages.open(def.title)}
+                    title={compositeMessages.open(def.title)}
+                    onClick={() => actions.openComposite(compositeId(def))}
+                  >
                     ↗
                   </button>
-                  <button type="button" aria-label={compositeMessages.rename(def.title)} title={compositeMessages.rename(def.title)} onClick={() => setRenaming(def)}>
+                  <button
+                    type="button"
+                    aria-label={compositeMessages.rename(def.title)}
+                    title={compositeMessages.rename(def.title)}
+                    onClick={() => setRenaming(def)}
+                  >
                     ✎
                   </button>
-                  <button type="button" aria-label={compositeMessages.remove(def.title)} title={compositeMessages.remove(def.title)} onClick={() => setDeleting(def)}>
+                  <button
+                    type="button"
+                    aria-label={compositeMessages.remove(def.title)}
+                    title={compositeMessages.remove(def.title)}
+                    onClick={() => setDeleting(def)}
+                  >
                     ✕
                   </button>
                 </span>
               )}
             </div>
           ))}
+          {category === COMPOSITE_CATEGORY &&
+            unavailable.map((u) => (
+              <div key={`bad-${u.id}`} className="palette__item palette__item--unavailable">
+                <span className="palette__item-title">{workflowMessages.unavailable(u.id)}</span>
+                <span className="palette__item-desc">{u.reason}</span>
+              </div>
+            ))}
         </section>
       ))}
       {renaming && (
@@ -97,7 +124,10 @@ export function Palette() {
       {deleting && (
         <ConfirmDialog
           title={compositeMessages.removeTitle}
-          text={compositeMessages.removeText(deleting.title, actions.compositeUsage(compositeId(deleting)))}
+          text={compositeMessages.removeText(
+            deleting.title,
+            actions.compositeUsage(compositeId(deleting)),
+          )}
           confirmLabel={workflowMessages.deleteButton}
           onCancel={() => setDeleting(null)}
           onConfirm={() => {

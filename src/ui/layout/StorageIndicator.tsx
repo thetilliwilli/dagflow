@@ -8,7 +8,13 @@ export function StorageIndicator() {
   const location = useAppState((s) => s.storageLocation);
   const supported = useAppState((s) => s.folderSupported);
   if (!persistence) return null;
-  const text = !location ? m.loading : location.kind === 'browser' ? m.browser : m.folder(location.name);
+  const text = !location
+    ? m.loading
+    : location.kind === 'browser'
+      ? m.browser
+      : location.kind === 'none'
+        ? m.none
+        : m.folder(location.name);
   return (
     <div className="storage-indicator" data-testid="storage-indicator">
       <span>{text}</span>

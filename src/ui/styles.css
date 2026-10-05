@@ -562,3 +562,13 @@ button.link {
   color: var(--error);
   font-size: 12px;
 }
+
+/* Convergence */
+.banner--warning {
+  background: #fff8c5;
+}
+.palette__item--unavailable {
+  cursor: default;
+  opacity: 0.7;
+  border-style: dashed;
+}

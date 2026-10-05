@@ -61,6 +61,14 @@ export const storageMessages = {
   folderLost: (folder: string) => `Рабочая папка «${folder}» недоступна. Работа продолжается и сохраняется в браузере.`,
   saveFailed: (reason: string) => `Не удалось сохранить изменения: ${reason}`,
   copyName: (name: string) => `${name} (из браузера)`.slice(0, 100),
+  none: 'Сохранение недоступно',
+  unavailable: (reason: string) =>
+    `Сохранение недоступно: браузер не дал доступ к хранилищу (${reason}). Редактор работает, но изменения не сохранятся после закрытия — выгружайте workflow в файл.`,
+  unavailableBanner:
+    'Сохранение недоступно: изменения не сохранятся после закрытия страницы. Чтобы не потерять работу, выгрузите workflow в файл.',
+  operationFailed: (reason: string) => `Не удалось выполнить операцию с хранилищем: ${reason}`,
+  accessDenied: (folder: string) => `Доступ не предоставлен: браузер не разрешил работать с папкой «${folder}». Попробуйте ещё раз или работайте в браузере.`,
+  gotIt: 'Понятно',
 };
 
 export const workflowMessages = {
@@ -110,6 +118,9 @@ export const compositeMessages = {
   portName: 'Имя порта',
   portType: 'Тип порта',
   removePort: (name: string) => `Удалить порт «${name}»`,
+  unknownNode: 'Неизвестный нод',
+  unknownType: (type: string) =>
+    `Тип «${type}» не найден: составной нод удалён или его файл повреждён. Удалите нод или загрузите определение из файла.`,
 };
 
 export const historyMessages = {

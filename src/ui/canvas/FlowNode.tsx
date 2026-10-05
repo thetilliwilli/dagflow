@@ -25,7 +25,20 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
       .sort()
       .join('\u0000'),
   );
-  if (!node || !def) return null;
+  if (!node) return null;
+  if (!def) {
+    // Тип не найден: составной нод удалён или его файл повреждён — нод не должен молча исчезать
+    return (
+      <div className="flow-node status-error">
+        <div className="flow-node__header">
+          <span className="flow-node__title">{compositeMessages.unknownNode}</span>
+        </div>
+        <div className="node-message node-message--error">
+          {compositeMessages.unknownType(node.type)}
+        </div>
+      </div>
+    );
+  }
   const ports = nodePorts(node, registry)!;
   const compositeId = compositeIdOf(node.type);
   const isIo = node.type === IO_INPUT || node.type === IO_OUTPUT;
@@ -40,10 +53,20 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
       </div>
       {compositeId && (
         <div className="flow-node__actions">
-          <button type="button" className="nodrag" aria-label={compositeMessages.open(def.title)} onClick={() => actions.openComposite(compositeId)}>
+          <button
+            type="button"
+            className="nodrag"
+            aria-label={compositeMessages.open(def.title)}
+            onClick={() => actions.openComposite(compositeId)}
+          >
             Открыть
           </button>
-          <button type="button" className="nodrag" aria-label={compositeMessages.expand(def.title)} onClick={() => actions.expandInstance(id)}>
+          <button
+            type="button"
+            className="nodrag"
+            aria-label={compositeMessages.expand(def.title)}
+            onClick={() => actions.expandInstance(id)}
+          >
             Развернуть
           </button>
         </div>

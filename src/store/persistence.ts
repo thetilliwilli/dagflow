@@ -26,7 +26,10 @@ function sameContent(a: Workflow, b: Workflow): boolean {
 }
 
 /** Какие workflow текущего хранилища предложить добавить в папку с данными (FR-028c). */
-export function planMerge(current: Workflow[], target: Workflow[]): { add: Workflow[]; copies: Workflow[] } {
+export function planMerge(
+  current: Workflow[],
+  target: Workflow[],
+): { add: Workflow[]; copies: Workflow[] } {
   const byId = new Map(target.map((w) => [w.id, w]));
   const add: Workflow[] = [];
   const copies: Workflow[] = [];
@@ -38,7 +41,11 @@ export function planMerge(current: Workflow[], target: Workflow[]): { add: Workf
   return { add, copies };
 }
 
-export function createPersistence(app: AppStore, env: LocationEnv = browserEnv(), opts: PersistenceOptions = {}) {
+export function createPersistence(
+  app: AppStore,
+  env: LocationEnv = browserEnv(),
+  opts: PersistenceOptions = {},
+) {
   const { store, deps } = app;
   let storage: DirectoryStorage | null = null;
   let pendingHandle: FileSystemDirectoryHandle | null = null;
@@ -65,9 +72,24 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
     });
   }
 
+  const reasonOf = (e: unknown) => (e instanceof Error ? e.message || e.name : String(e));
+
+  /** Ошибка операции хранения — понятное уведомление вместо молчаливого сбоя (принцип IV). */
+  async function guard(fn: () => Promise<void>) {
+    try {
+      await fn();
+    } catch (e) {
+      notify('error', storageMessages.operationFailed(reasonOf(e)));
+    }
+  }
+
   function currentData() {
     const s = store.getState();
-    return { workspace: workspaceOf(s), workflows: Object.values(s.workflows), composites: Object.values(s.composites) };
+    return {
+      workspace: workspaceOf(s),
+      workflows: Object.values(s.workflows),
+      composites: Object.values(s.composites),
+    };
   }
 
   /** Заменить состояние стора загруженными данными. */
@@ -88,8 +110,12 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
     const ws = data.workspace;
     const order = (ws?.workflowOrder ?? []).filter((id) => workflows[id]);
     for (const w of data.workflows) if (!order.includes(w.id)) order.push(w.id);
-    const tabs = (ws?.tabs ?? []).filter((t) => (t.kind === 'workflow' ? workflows[t.targetId] : composites[t.targetId]));
-    const activeTabId = tabs.some((t) => t.id === ws?.activeTabId) ? ws!.activeTabId : (tabs[0]?.id ?? null);
+    const tabs = (ws?.tabs ?? []).filter((t) =>
+      t.kind === 'workflow' ? workflows[t.targetId] : composites[t.targetId],
+    );
+    const activeTabId = tabs.some((t) => t.id === ws?.activeTabId)
+      ? ws!.activeTabId
+      : (tabs[0]?.id ?? null);
     store.setState((d: AppState) => {
       d.workflows = workflows;
       d.composites = composites;
@@ -103,7 +129,8 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
     autosave.resetBaseline();
   }
 
-  const browserStorage = async () => new DirectoryStorage(await browserStorageHandle(env), env.opfsFallbackWrite);
+  const browserStorage = async () =>
+    new DirectoryStorage(await browserStorageHandle(env), env.opfsFallbackWrite);
 
   async function use(target: DirectoryStorage, location: StorageLocation) {
     pendingHandle = null;
@@ -148,7 +175,11 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
   return {
     /** Определить хранилище и загрузить данные; повторные вызовы возвращают тот же результат. */
     start(): Promise<void> {
-      started ??= doStart();
+      started ??= doStart().catch((e: unknown) => {
+        storage = null;
+        setLocation({ kind: 'none', reason: reasonOf(e) });
+        notify('error', storageMessages.unavailable(reasonOf(e)));
+      });
       return started;
     },
 
@@ -156,71 +187,93 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
     async restoreAccess() {
       if (!pendingHandle) return;
       const handle = pendingHandle;
-      if (await requestAccess(handle)) await use(new DirectoryStorage(handle), { kind: 'folder', name: handle.name });
+      await guard(async () => {
+        if (await requestAccess(handle))
+          await use(new DirectoryStorage(handle), { kind: 'folder', name: handle.name });
+        else notify('warning', storageMessages.accessDenied(handle.name));
+      });
     },
 
     /** Явное переключение на хранилище браузера. */
     async useBrowser() {
-      await autosave.flush();
-      await use(await browserStorage(), { kind: 'browser' });
+      await guard(async () => {
+        await autosave.flush();
+        await use(await browserStorage(), { kind: 'browser' });
+      });
     },
 
     /** Выбор или смена рабочей папки (FR-028c). */
-    async chooseFolder() {
-      const handle = await pickFolder(env);
-      if (!handle) return;
-      await autosave.flush();
-      const target = new DirectoryStorage(handle);
-      if (!(await target.hasData())) {
-        pendingTarget = target;
-        store.setState({ storagePrompt: { kind: 'copy-to-empty', folderName: handle.name } });
-        return;
-      }
-      const current = Object.values(store.getState().workflows);
-      const data = await target.loadAll();
-      const plan = planMerge(current, data.workflows);
-      const currentComposites = Object.values(store.getState().composites);
-      await use(target, { kind: 'folder', name: handle.name });
-      pendingCompositeSource = currentComposites;
-      if (plan.add.length > 0 || plan.copies.length > 0) {
-        store.setState({ storagePrompt: { kind: 'add-from-browser', folderName: handle.name, ...plan } });
-      }
-    },
+    chooseFolder: () =>
+      guard(async () => {
+        const handle = await pickFolder(env);
+        if (!handle) return;
+        await autosave.flush();
+        const target = new DirectoryStorage(handle);
+        if (!(await target.hasData())) {
+          pendingTarget = target;
+          store.setState({ storagePrompt: { kind: 'copy-to-empty', folderName: handle.name } });
+          return;
+        }
+        const current = Object.values(store.getState().workflows);
+        const data = await target.loadAll();
+        const plan = planMerge(current, data.workflows);
+        const currentComposites = Object.values(store.getState().composites);
+        await use(target, { kind: 'folder', name: handle.name });
+        pendingCompositeSource = currentComposites;
+        if (plan.add.length > 0 || plan.copies.length > 0) {
+          store.setState({
+            storagePrompt: { kind: 'add-from-browser', folderName: handle.name, ...plan },
+          });
+        }
+      }),
 
-    async confirmPrompt() {
-      const prompt = store.getState().storagePrompt;
-      if (!prompt) return;
-      if (prompt.kind === 'copy-to-empty' && pendingTarget) {
-        const target = pendingTarget;
-        pendingTarget = null;
-        await target.saveAll(currentData());
-        storage = target;
-        setLocation({ kind: 'folder', name: target.name });
-        autosave.resetBaseline();
-      } else if (prompt.kind === 'add-from-browser') {
-        const merged = mergeComposites(pendingCompositeSource, store.getState().composites, deps.newId);
-        const fix = (wf: Workflow): Workflow => ({ ...wf, graph: rewriteCompositeRefs(wf.graph, merged.idMap) });
-        const copies = prompt.copies.map((wf) => ({ ...fix(wf), id: deps.newId(), name: storageMessages.copyName(wf.name) }));
-        store.setState((d: AppState) => {
-          for (const c of merged.added) d.composites[c.id] = c;
-          for (const wf of [...prompt.add.map(fix), ...copies]) {
-            d.workflows[wf.id] = wf;
-            d.workflowOrder.push(wf.id);
-          }
-        });
-      }
-      store.setState({ storagePrompt: null });
-    },
+    confirmPrompt: () =>
+      guard(async () => {
+        const prompt = store.getState().storagePrompt;
+        if (!prompt) return;
+        store.setState({ storagePrompt: null });
+        if (prompt.kind === 'copy-to-empty' && pendingTarget) {
+          const target = pendingTarget;
+          pendingTarget = null;
+          await target.saveAll(currentData());
+          storage = target;
+          setLocation({ kind: 'folder', name: target.name });
+          autosave.resetBaseline();
+        } else if (prompt.kind === 'add-from-browser') {
+          const merged = mergeComposites(
+            pendingCompositeSource,
+            store.getState().composites,
+            deps.newId,
+          );
+          const fix = (wf: Workflow): Workflow => ({
+            ...wf,
+            graph: rewriteCompositeRefs(wf.graph, merged.idMap),
+          });
+          const copies = prompt.copies.map((wf) => ({
+            ...fix(wf),
+            id: deps.newId(),
+            name: storageMessages.copyName(wf.name),
+          }));
+          store.setState((d: AppState) => {
+            for (const c of merged.added) d.composites[c.id] = c;
+            for (const wf of [...prompt.add.map(fix), ...copies]) {
+              d.workflows[wf.id] = wf;
+              d.workflowOrder.push(wf.id);
+            }
+          });
+        }
+      }),
 
-    async dismissPrompt() {
-      const prompt = store.getState().storagePrompt;
-      store.setState({ storagePrompt: null });
-      if (prompt?.kind === 'copy-to-empty' && pendingTarget) {
-        const target = pendingTarget;
-        pendingTarget = null;
-        await use(target, { kind: 'folder', name: target.name }); // начать с чистого листа; данные браузера остаются в браузере
-      }
-    },
+    dismissPrompt: () =>
+      guard(async () => {
+        const prompt = store.getState().storagePrompt;
+        store.setState({ storagePrompt: null });
+        if (prompt?.kind === 'copy-to-empty' && pendingTarget) {
+          const target = pendingTarget;
+          pendingTarget = null;
+          await use(target, { kind: 'folder', name: target.name }); // начать с чистого листа; данные браузера остаются в браузере
+        }
+      }),
 
     async flush() {
       await autosave.flush();
