@@ -207,19 +207,19 @@ description: "Task list for 002-editor-ui-redesign"
 
 ### Тесты US5 (писать первыми)
 
-- [ ] T061 [P] [US5] Написать `tests/unit/ui/bundles.test.ts`: `bundleEdges` даёт один пучок на упорядоченную пару, `id` = `bundle:<source>-><target>`, связи в порядке графа (SC-004); `bundleLabel` — строки «&lt;выход&gt;→&lt;вход&gt;», не больше 5, затем «ещё N» (FR-024)
-- [ ] T062 [P] [US5] Написать `tests/unit/ui/edge-geometry.test.ts`: `borderPoint(rect, toward)` лежит на рамке прямоугольника для целей справа, слева, сверху, снизу и по диагонали, на линии между центрами
-- [ ] T063 [P] [US5] Написать `tests/component/edge-list.test.tsx`: окно «Связи: &lt;A&gt; → &lt;B&gt;», `li` на каждую связь, крестик `aria-label="Удалить связь «выход→вход»"` удаляет только её (#5); список обновляется, если связь удалена извне; окно закрывается, когда связей не осталось
-- [ ] T064 [P] [US5] Написать `tests/e2e/ui-us5-edges.spec.ts`: #1 — одна `.react-flow__edge` на пару со стрелкой к получателю; #2 — подпись из 2 строк; #3 — после перемещения нода линия прямая (путь `M … L …`), подпись едет; #4 — щелчок по линии и по подписи открывает окно связей; #5 и SC-006 — удаление крестиком за 2 щелчка, получатель пересчитан; #6 — Ctrl+Z возвращает связь; #7 — щелчок по пустому холсту, Escape, «Закрыть»; #8 — при масштабе 0,4 подписей нет, щелчок по линии работает, при 0,5 и больше подписи возвращаются; выделенная линия + Delete удаляет все связи пучка одним шагом отмены
+- [X] T061 [P] [US5] Написать `tests/unit/ui/bundles.test.ts`: `bundleEdges` даёт один пучок на упорядоченную пару, `id` = `bundle:<source>-><target>`, связи в порядке графа (SC-004); `bundleLabel` — строки «&lt;выход&gt;→&lt;вход&gt;», не больше 5, затем «ещё N» (FR-024)
+- [X] T062 [P] [US5] Написать `tests/unit/ui/edge-geometry.test.ts`: `borderPoint(rect, toward)` лежит на рамке прямоугольника для целей справа, слева, сверху, снизу и по диагонали, на линии между центрами
+- [X] T063 [P] [US5] Написать `tests/component/edge-list.test.tsx`: окно «Связи: &lt;A&gt; → &lt;B&gt;», `li` на каждую связь, крестик `aria-label="Удалить связь «выход→вход»"` удаляет только её (#5); список обновляется, если связь удалена извне; окно закрывается, когда связей не осталось
+- [X] T064 [P] [US5] Написать `tests/e2e/ui-us5-edges.spec.ts`: #1 — одна `.react-flow__edge` на пару со стрелкой к получателю; #2 — подпись из 2 строк; #3 — после перемещения нода линия прямая (путь `M … L …`), подпись едет; #4 — щелчок по линии и по подписи открывает окно связей; #5 и SC-006 — удаление крестиком за 2 щелчка, получатель пересчитан; #6 — Ctrl+Z возвращает связь; #7 — щелчок по пустому холсту, Escape, «Закрыть»; #8 — при масштабе 0,4 подписей нет, щелчок по линии работает, при 0,5 и больше подписи возвращаются; выделенная линия + Delete удаляет все связи пучка одним шагом отмены
 
 ### Реализация US5
 
-- [ ] T065 [P] [US5] Создать `src/ui/canvas/bundles.ts` (`bundleEdges`, `bundleLabel`); T061 зелёный
-- [ ] T066 [P] [US5] Создать `src/ui/canvas/edge-geometry.ts` (`borderPoint`); T062 зелёный
-- [ ] T067 [US5] Создать `src/ui/canvas/BundleEdge.tsx` по research R2, R10: концы через `useInternalNode` и `borderPoint`, `getStraightPath`, `BaseEdge` с `markerEnd` `MarkerType.ArrowClosed`, `interactionWidth` 12; подпись `.bundle-label` через `EdgeLabelRenderer`, скрыта при `transform[2] < LABEL_MIN_ZOOM` (0.5); `data-testid="bundle-<A>-><B>"`
-- [ ] T068 [US5] В `src/ui/canvas/Canvas.tsx` строить рёбра из `bundleEdges`, `edgeTypes = { bundle: BundleEdge }`; `onEdgeClick` → открыть окно связей у точки щелчка; щелчок по пустому холсту закрывает его; удаление выделенного пучка — все его связи одним шагом через `deleteElements`
-- [ ] T069 [US5] Создать `src/ui/canvas/EdgeListWindow.tsx` (`FloatingWindow` у точки щелчка, крестики → `actions.disconnect`), рендерить из `FloatingLayer` при `edgeWindow`; тексты — в `src/ui/messages.ts`, стили линии и `.bundle-label` — в `src/ui/styles.css`; T063 зелёный
-- [ ] T070 [US5] Обновить подсчёт `.react-flow__edge` в `tests/e2e/us5-editing.spec.ts` под пучки; T064 и все e2e зелёные
+- [X] T065 [P] [US5] Создать `src/ui/canvas/bundles.ts` (`bundleEdges`, `bundleLabel`); T061 зелёный
+- [X] T066 [P] [US5] Создать `src/ui/canvas/edge-geometry.ts` (`borderPoint`); T062 зелёный
+- [X] T067 [US5] Создать `src/ui/canvas/BundleEdge.tsx` по research R2, R10: концы через `useInternalNode` и `borderPoint`, `getStraightPath`, `BaseEdge` с `markerEnd` `MarkerType.ArrowClosed`, `interactionWidth` 12; подпись `.bundle-label` через `EdgeLabelRenderer`, скрыта при `transform[2] < LABEL_MIN_ZOOM` (0.5); `data-testid="bundle-<A>-><B>"`
+- [X] T068 [US5] В `src/ui/canvas/Canvas.tsx` строить рёбра из `bundleEdges`, `edgeTypes = { bundle: BundleEdge }`; `onEdgeClick` → открыть окно связей у точки щелчка; щелчок по пустому холсту закрывает его; удаление выделенного пучка — все его связи одним шагом через `deleteElements`
+- [X] T069 [US5] Создать `src/ui/canvas/EdgeListWindow.tsx` (`FloatingWindow` у точки щелчка, крестики → `actions.disconnect`), рендерить из `FloatingLayer` при `edgeWindow`; тексты — в `src/ui/messages.ts`, стили линии и `.bundle-label` — в `src/ui/styles.css`; T063 зелёный
+- [X] T070 [US5] Обновить подсчёт `.react-flow__edge` в `tests/e2e/us5-editing.spec.ts` под пучки (правка не понадобилась: в тесте одна связь — один пучок); T064 и все e2e зелёные
 
 **Checkpoint**: все пять историй работают независимо
 

@@ -4,6 +4,7 @@ import { ReactFlowProvider } from '@xyflow/react';
 import { useUi } from '../store/ui';
 import { propertiesNodeId } from '../store/ui-logic';
 import { Canvas } from './canvas/Canvas';
+import { EdgeListWindow } from './canvas/EdgeListWindow';
 import { ErrorBoundary } from './ErrorBoundary';
 import { Palette } from './palette/Palette';
 import { LinkGhost } from './properties/LinkGhost';
@@ -23,6 +24,7 @@ export function Editor() {
         </ErrorBoundary>
         {paletteOpen && <Palette />}
         {selectedNode && <PropertyGrid key={selectedNode} nodeId={selectedNode} />}
+        <EdgeListWindow />
         <PeekGrid />
         <LinkGhost />
       </div>

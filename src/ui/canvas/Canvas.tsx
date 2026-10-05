@@ -5,6 +5,7 @@ import {
   applyNodeChanges,
   Background,
   Controls,
+  MarkerType,
   MiniMap,
   ReactFlow,
   useReactFlow,
@@ -20,10 +21,15 @@ import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
 import { compositeMessages, historyMessages } from '../messages';
 import { useShortcuts } from './useShortcuts';
 import { FlowNode } from './FlowNode';
+import { BundleEdge, type BundleRfEdge } from './BundleEdge';
+import { bundleEdges } from './bundles';
 
 export const NODE_DRAG_TYPE = 'application/dagflow-node';
 
 const nodeTypes = { flow: FlowNode };
+const edgeTypes = { bundle: BundleEdge };
+/** Стрелка у нода-получателя (FR-023). */
+const ARROW = { type: MarkerType.ArrowClosed, color: '#1f2328', width: 18, height: 18 };
 
 export function Canvas() {
   const actions = useActions();
@@ -65,13 +71,17 @@ export function Canvas() {
     });
   }, [graphNodes]);
 
-  const rfEdges = useMemo<RfEdge[]>(
+  // Одно ребро React Flow на пучок — все связи от нода A к ноду B (FR-023, research R2)
+  const rfEdges = useMemo<BundleRfEdge[]>(
     () =>
-      (graph?.edges ?? []).map((e) => ({
-        id: e.id,
-        source: e.source.node,
-        target: e.target.node,
-        selected: selectedEdges.has(e.id),
+      bundleEdges(graph?.edges ?? []).map((bundle) => ({
+        id: bundle.id,
+        type: 'bundle',
+        source: bundle.source,
+        target: bundle.target,
+        data: { bundle },
+        markerEnd: ARROW,
+        selected: selectedEdges.has(bundle.id),
       })),
     [graph?.edges, selectedEdges],
   );
@@ -122,9 +132,10 @@ export function Canvas() {
 
   const onDelete = useCallback(
     ({ nodes, edges }: { nodes: RfNode[]; edges: RfEdge[] }) => {
+      // Выделенная линия — это пучок: удаляются все его связи одним шагом
       actions.deleteElements(
         nodes.map((n) => n.id),
-        edges.map((e) => e.id),
+        (edges as BundleRfEdge[]).flatMap((e) => e.data?.bundle.edges.map((x) => x.id) ?? []),
       );
     },
     [actions],
@@ -167,7 +178,14 @@ export function Canvas() {
     },
     [linkingKind, ui],
   );
+  // Щелчок по линии открывает окно связей рядом с точкой щелчка (FR-025)
+  const onEdgeClick = useCallback(
+    (e: { clientX: number; clientY: number }, edge: RfEdge) =>
+      ui.openEdgeWindow(edge.source, edge.target, { x: e.clientX, y: e.clientY }),
+    [ui],
+  );
   const onPaneClick = useCallback(() => {
+    ui.closeWindow('edges');
     if (linkingKind === 'picking') ui.cancelLinking();
   }, [linkingKind, ui]);
 
@@ -201,6 +219,8 @@ export function Canvas() {
         nodes={nodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        onEdgeClick={onEdgeClick}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onDelete={onDelete}
@@ -212,6 +232,8 @@ export function Canvas() {
         defaultViewport={initialViewport}
         fitView={fitOnOpen}
         fitViewOptions={{ maxZoom: 1 }}
+        // Ниже 50% подписи линий скрываются (FR-024) — значит, уменьшать холст можно и сильнее
+        minZoom={0.1}
         // Пробел открывает палитру (FR-005), поэтому не панорамирует холст (research R7)
         panActivationKeyCode={null}
         onMoveEnd={(_e, vp) => tab && actions.setViewport(tab.id, vp)}

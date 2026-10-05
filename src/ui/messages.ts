@@ -174,3 +174,11 @@ export const typeAbbr: Record<PortType, string> = {
   object: 'obj',
   any: 'any',
 };
+
+/** Линии связей и окно связей (US5, FR-023 – FR-025). */
+export const edgeMessages = {
+  more: (n: number) => `ещё ${n}`,
+  windowTitle: (source: string, target: string) => `Связи: ${source} → ${target}`,
+  link: (out: string, input: string) => `${out}→${input}`,
+  remove: (link: string) => `Удалить связь «${link}»`,
+};
