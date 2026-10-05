@@ -103,7 +103,8 @@ specs/001-dag-workflow-editor/
 
 ```text
 package.json
-vite.config.ts
+vite.config.ts             # base: /dagflow/ для production-сборки (GitHub Pages)
+.github/workflows/pages.yml  # сборка и публикация на GitHub Pages при push в master
 tsconfig.json              # приложение (DOM)
 tsconfig.engine.json       # только src/engine, без lib DOM — гарантирует независимость движка
 playwright.config.ts
