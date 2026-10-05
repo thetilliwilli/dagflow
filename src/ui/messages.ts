@@ -102,6 +102,8 @@ export const compositeMessages = {
   renameTitle: 'Переименовать составной нод',
   renameButton: 'Переименовать',
   open: (name: string) => `Открыть составной нод «${name}»`,
+  openButton: 'Открыть',
+  expandButton: 'Развернуть',
   expand: (name: string) => `Развернуть «${name}»`,
   rename: (name: string) => `Переименовать составной нод «${name}»`,
   remove: (name: string) => `Удалить составной нод «${name}»`,
@@ -139,4 +141,26 @@ export const windowMessages = {
   sidebar: 'Workflow и хранилище',
   paletteCategories: 'Категории',
   noComposites: 'Составных нодов пока нет: выделите ноды на холсте и сверните их в составной нод.',
+};
+
+/** Окно свойств выделенного нода (US3, contracts/ui-contract.md). */
+export const propertiesMessages = {
+  title: 'Свойства',
+  inputs: 'Входы',
+  outputs: 'Выходы',
+  noInputs: 'Нет входов',
+  noOutputs: 'Нет выходов',
+  link: (port: string) => `Связать «${port}»`,
+  /** Откуда приходит значение подключённого входа. */
+  source: (node: string, port: string) => `← ${node}.${port}`,
+};
+
+/** Краткие обозначения типов портов в окне свойств (FR-013b). */
+export const typeAbbr: Record<PortType, string> = {
+  number: 'num',
+  text: 'str',
+  boolean: 'bool',
+  array: 'arr',
+  object: 'obj',
+  any: 'any',
 };

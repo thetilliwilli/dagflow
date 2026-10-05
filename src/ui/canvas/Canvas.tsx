@@ -20,6 +20,7 @@ import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
 import { canConnect } from '../../engine';
 import { useActions, useApp, useAppState } from '../../store/react';
+import { useUi, useUiActions } from '../../store/ui';
 import { tryConnect } from './connection';
 import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
 import { compositeMessages, historyMessages } from '../messages';
@@ -45,6 +46,9 @@ export function Canvas() {
   });
   const { screenToFlowPosition } = useReactFlow();
   const [rfNodes, setRfNodes] = useState<RfNode[]>([]);
+  const ui = useUiActions();
+  // Выделение живёт в сторе интерфейса (research R4): React Flow лишь показывает его
+  const selection = useUi((s) => s.selection);
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set());
 
   // Синхронизация нодов React Flow с графом, с сохранением размеров и выделения
@@ -78,20 +82,34 @@ export function Canvas() {
   const canRedo = useAppState((s) => (s.history[s.activeTabId ?? '']?.future.length ?? 0) > 0);
 
   // Удаление нодов и связей приходит одним вызовом onDelete — один шаг истории
+  const nodes = useMemo(() => {
+    const selected = new Set(selection);
+    return rfNodes.map((n) => (!!n.selected === selected.has(n.id) ? n : { ...n, selected: selected.has(n.id) }));
+  }, [rfNodes, selection]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       setRfNodes((nodes) =>
         applyNodeChanges(
-          changes.filter((c) => c.type !== 'remove'),
+          changes.filter((c) => c.type !== 'remove' && c.type !== 'select'),
           nodes,
         ),
       );
+      const select = changes.filter((c) => c.type === 'select');
+      if (select.length > 0) {
+        const next = new Set(selection);
+        for (const c of select) {
+          if (c.selected) next.add(c.id);
+          else next.delete(c.id);
+        }
+        ui.setSelection([...next]);
+      }
       for (const c of changes) {
         if (c.type === 'position' && c.position)
           actions.moveNode(c.id, { x: c.position.x, y: c.position.y });
       }
     },
-    [actions],
+    [actions, selection, ui],
   );
 
   const onDelete = useCallback(
@@ -178,7 +196,7 @@ export function Canvas() {
   );
 
   const [collapsing, setCollapsing] = useState<string[] | null>(null);
-  const selected = rfNodes.filter((n) => n.selected).map((n) => n.id);
+  const selected = selection;
 
   return (
     <div className="canvas" data-testid="canvas">
@@ -204,7 +222,7 @@ export function Canvas() {
         <CompositeNameDialog nodeIds={collapsing} onClose={() => setCollapsing(null)} />
       )}
       <ReactFlow
-        nodes={rfNodes}
+        nodes={nodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}

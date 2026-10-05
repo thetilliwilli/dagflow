@@ -164,7 +164,7 @@ tests/
 │   ├── model/  ~ serialize.test.ts, import.test.ts (name; файл без имён отклоняется)
 │   ├── store/  + ui-logic.test.ts
 │   └── ui/     + bundles.test.ts, edge-geometry.test.ts, floating-geometry.test.ts
-├── component/  ~ FlowNode.test.tsx, phase10.test.tsx, convergence.test.tsx, workflows-tabs.test.tsx;
+├── component/  ~ helpers.ts → helpers.tsx (UiProbe, openSidebar, openPalette); ~ FlowNode.test.tsx, phase10.test.tsx, convergence.test.tsx, workflows-tabs.test.tsx;
 │               + property-grid.test.tsx, palette-tabs.test.tsx, floating-window.test.tsx, edge-list.test.tsx
 └── e2e/        ~ helpers.ts (addNode, connect, linkByClick, setInput, openSidebar), us1–us5, perf, autosave, opfs;
                 + ui-us1-layout, ui-us2-node, ui-us3-properties, ui-us4-linking, ui-us5-edges

@@ -1,4 +1,6 @@
 import { fireEvent, screen, within } from '@testing-library/react';
+import { useEffect } from 'react';
+import { useUiActions, type UiActions } from '../../src/store/ui';
 import { createAppStore, type AppStore } from '../../src/store/store';
 
 /** Планировщик кадров для тестов: вместо requestAnimationFrame копит колбэки до flushFrames(). */
@@ -35,4 +37,13 @@ export function openPalette(category?: string) {
   const palette = screen.getByRole('dialog', { name: 'Палитра' });
   if (category) fireEvent.click(within(palette).getByRole('tab', { name: category }));
   return palette;
+}
+
+/** Отдаёт тесту действия стора интерфейса (выделение, окна) — рендерится внутри AppProvider. */
+export function UiProbe({ onReady }: { onReady: (ui: UiActions) => void }) {
+  const ui = useUiActions();
+  useEffect(() => {
+    onReady(ui);
+  }, [ui, onReady]);
+  return null;
 }

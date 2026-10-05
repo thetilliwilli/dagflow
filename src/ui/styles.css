@@ -686,3 +686,96 @@ button.link {
   overflow: auto;
   padding: 8px;
 }
+
+/* ── Окно свойств (US3, FR-013, FR-013a) ── */
+:root {
+  --linked: #2da44e;
+}
+.prop-grid {
+  width: 320px;
+  font-size: 13px;
+}
+.prop-grid .floating__body {
+  max-height: calc(100vh - 120px);
+}
+.prop-grid__head {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+.prop-grid__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.prop-grid__type {
+  color: var(--muted);
+  font-size: 12px;
+}
+.prop-grid__status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.prop-grid__actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.prop-grid__panel h3 {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prop-grid__panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.prop-grid__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.prop-row {
+  display: grid;
+  grid-template-columns: 14px 32px minmax(48px, auto) 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--bg);
+}
+/* Маркер: квадрат с рамкой; зелёная заливка — у порта есть связь (FR-013a) */
+.prop-marker {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 1px solid var(--text);
+  border-radius: 0;
+  background: #d0d7de;
+  cursor: pointer;
+}
+.prop-marker.is-linked {
+  background: var(--linked);
+}
+.prop-type {
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+.prop-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prop-value {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prop-source {
+  color: var(--muted);
+  font-size: 11px;
+}

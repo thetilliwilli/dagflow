@@ -69,6 +69,15 @@ export function tabBar(page: Page): Locator {
   return page.getByTestId('tab-bar');
 }
 
+/** Выделяет нод щелчком по его заголовку и вводит значение входа в окне «Свойства». */
+export async function setInput(page: Page, node: Locator, port: string, value: string) {
+  await node.locator('.flow-node__title').click();
+  const row = page
+    .getByRole('dialog', { name: 'Свойства' })
+    .locator(`li.prop-row[data-side="in"][data-port="${port}"]`);
+  await row.getByLabel(port, { exact: true }).fill(value);
+}
+
 /** Тянет связь от выхода одного нода ко входу другого. */
 export async function connect(page: Page, from: Locator, out: string, to: Locator, input: string) {
   const a = (await from.locator(`[data-handleid="out:${out}"]`).boundingBox())!;
