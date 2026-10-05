@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
-export default defineConfig({
+// Сборка публикуется на GitHub Pages по адресу /dagflow/; dev-сервер и e2e — в корне.
+export default defineConfig(({ command, isPreview }) => ({
+  base: command === 'build' || isPreview ? '/dagflow/' : '/',
   plugins: [react()],
   test: {
     globals: true,
@@ -25,4 +27,4 @@ export default defineConfig({
       },
     ],
   },
-});
+}));
