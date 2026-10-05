@@ -31,7 +31,7 @@
 | `builtin:concat` | Склеить | `a*: text`, `b*: text` | `result: text` | a + b |
 | `builtin:text-length` | Длина текста | `text*: text` | `length: number` | число символов |
 | `builtin:to-text` | В текст | `value*: any` | `text: text` | строка как есть, иначе компактный JSON |
-| `builtin:to-number` | В число | `text*: text` | `value: number` | не число → ошибка «"<text>" не является числом» |
+| `builtin:to-number` | В число | `text*: text` | `value: number` | не число → ошибка «"&lt;text&gt;" не является числом» |
 
 ## Сравнение и логика
 
@@ -55,10 +55,10 @@
 | id | Название | Входы | Выходы | Поведение |
 |---|---|---|---|---|
 | `builtin:array-append` | Добавить в массив | `array: array = []`, `item*: any` | `array: array` | новый массив с элементом в конце |
-| `builtin:array-get` | Элемент массива | `array*: any`, `index*: number` | `item: any` | не массив → ошибка «Ожидался массив, получено: <вид>» (FR-005b); индекс вне диапазона или не целый → ошибка |
+| `builtin:array-get` | Элемент массива | `array*: any`, `index*: number` | `item: any` | не массив → ошибка «Ожидался массив, получено: &lt;вид&gt;» (FR-005b); индекс вне диапазона или не целый → ошибка |
 | `builtin:array-length` | Длина массива | `array*: array` | `length: number` | — |
 | `builtin:object-set` | Установить поле | `object: object = {}`, `key*: text`, `value*: any` | `object: object` | новый объект с полем |
-| `builtin:object-get` | Поле объекта | `object*: any`, `key*: text` | `value: any` | не объект → ошибка «Ожидался объект, получено: <вид>»; нет поля → ошибка «Поле "<key>" не найдено» |
+| `builtin:object-get` | Поле объекта | `object*: any`, `key*: text` | `value: any` | не объект → ошибка «Ожидался объект, получено: &lt;вид&gt;»; нет поля → ошибка «Поле "&lt;key&gt;" не найдено» |
 
 ## Отображение
 
