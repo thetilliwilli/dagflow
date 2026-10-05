@@ -6,6 +6,7 @@ import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
 import { useUi } from '../../store/ui';
 import { IoPortsEditor } from '../canvas/IoPortsEditor';
+import { NodeNameEditor } from '../canvas/NodeNameEditor';
 import { NodeMessage, NodeStatusBadge } from '../canvas/NodeStatus';
 import { ManagedWindow } from '../floating/ManagedWindow';
 import { compositeMessages, propertiesMessages as m } from '../messages';
@@ -28,9 +29,12 @@ export function PropertyGrid({ nodeId }: { nodeId: string }) {
   return (
     <ManagedWindow id="properties" label={m.title} title={m.title} className="prop-grid">
       <div className="prop-grid__head">
-        <span className="prop-grid__name" data-testid="prop-grid-name" title={node.name}>
-          {node.name}
-        </span>
+        <NodeNameEditor
+          className="prop-grid__name"
+          testId="prop-grid-name"
+          name={node.name}
+          onRename={(name) => actions.renameNode(nodeId, name)}
+        />
         <span className="prop-grid__type" data-testid="prop-grid-type">
           {def?.title ?? compositeMessages.unknownNode}
         </span>

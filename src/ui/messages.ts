@@ -160,6 +160,9 @@ export const propertiesMessages = {
   peekTitle: (node: string) => `Свойства: ${node}`,
   /** Метка за курсором при перетаскивании параметра. */
   ghost: (port: string, type: string) => `${port} (${type})`,
+  /** Поле переименования нода (FR-009). */
+  nodeNameLabel: 'Имя нода',
+  renameHint: 'Двойной щелчок — переименовать',
 };
 
 /** Краткие обозначения типов портов в окне свойств (FR-013b). */

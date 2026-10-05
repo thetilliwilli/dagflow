@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect, paletteItem, setInput } from './helpers';
+import { addNode, connect, paletteItem, setInput, valueOf } from './helpers';
 
 test('US5: большой граф, выделение рамкой, удаление, отмена и повтор, масштаб и мини-карта', async ({ page }) => {
   await page.setViewportSize({ width: 1500, height: 900 });
@@ -15,7 +15,7 @@ test('US5: большой граф, выделение рамкой, удале�
   await setInput(page, sum, 'a', '2');
   await setInput(page, sum, 'b', '5');
   await connect(page, sum, 'result', show, 'value');
-  await expect(show.getByTestId('show-value')).toHaveText('7');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('7');
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);
 
   // Выделение рамкой (Shift + перетаскивание) вокруг пары
@@ -37,7 +37,7 @@ test('US5: большой граф, выделение рамкой, удале�
   await page.keyboard.press('Control+z');
   await expect(page.locator('.react-flow__node')).toHaveCount(22);
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);
-  await expect(page.locator('.react-flow__node').filter({ hasText: 'Показать' }).getByTestId('show-value')).toHaveText('7');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('7');
   await page.keyboard.press('Control+Shift+z');
   await expect(page.locator('.react-flow__node')).toHaveCount(20);
   await page.getByRole('button', { name: 'Отменить' }).click();

@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from './persistent';
 import { readFileSync } from 'node:fs';
-import { addNode, connect, openSidebar, tabBar, setInput } from './helpers';
+import { addNode, connect, openSidebar, tabBar, setInput, valueOf } from './helpers';
 
 /** Диалог выбора папки → подпапка OPFS «picked-folder» (системный диалог в тестах недоступен). */
 async function stubFolderPicker(page: Page, opts: { permission?: 'prompt' } = {}) {
@@ -57,10 +57,10 @@ test('US3: рабочая папка, два workflow во вкладках, п�
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
 
   const show1 = await buildSum(page, '2', '3');
-  await expect(show1.getByTestId('show-value')).toHaveText('5');
+  await expect(await valueOf(page, show1, 'in', 'value')).toHaveText('5');
   await (await openSidebar(page)).getByRole('button', { name: 'Создать workflow' }).click();
   const show2 = await buildSum(page, '10', '20');
-  await expect(show2.getByTestId('show-value')).toHaveText('30');
+  await expect(await valueOf(page, show2, 'in', 'value')).toHaveText('30');
 
   await expect.poll(() => listFolder(page)).toHaveLength(3);
   await page.waitForTimeout(500); // автосохранение (300 мс)
@@ -68,9 +68,9 @@ test('US3: рабочая папка, два workflow во вкладках, п�
 
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
   await expect(tabBar(page).getByRole('tab')).toHaveCount(2);
-  await expect(page.locator('[data-testid="show-value"]')).toHaveText('30');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('30');
   await tabBar(page).getByRole('tab', { name: /^Новый workflow$/ }).click();
-  await expect(page.locator('[data-testid="show-value"]')).toHaveText('5');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('5');
   expect(await listFolder(page)).toEqual(
     expect.arrayContaining(['workspace.json', expect.stringMatching(/^workflows\/.+\.workflow\.json$/)]),
   );
@@ -79,7 +79,7 @@ test('US3: рабочая папка, два workflow во вкладках, п�
 test('US3: выгрузка → загрузка даёт идентичный граф; некорректный файл — ошибка (#6, #7)', async ({ page }, info) => {
   await page.goto('/');
   const show = await buildSum(page, '4', '5');
-  await expect(show.getByTestId('show-value')).toHaveText('9');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('9');
 
   const downloadPromise = page.waitForEvent('download');
   await (await openSidebar(page)).getByRole('button', { name: 'Выгрузить в файл' }).click();
@@ -91,7 +91,7 @@ test('US3: выгрузка → загрузка даёт идентичный �
   await (await openSidebar(page)).getByLabel('Загрузить из файла').setInputFiles(path);
   await expect(tabBar(page).getByRole('tab')).toHaveCount(2);
   await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('Новый workflow');
-  await expect(page.locator('[data-testid="show-value"]')).toHaveText('9');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('9');
   await expect(page.locator('.react-flow__node')).toHaveCount(3);
   const exported = JSON.parse(readFileSync(path, 'utf8'));
   expect(exported).toMatchObject({ format: 'dagflow-export', version: 1 });
@@ -110,10 +110,10 @@ test('US3: без поддержки папок — индикатор «Дан�
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
   await expect((await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' })).toHaveCount(0);
   const show = await buildSum(page, '1', '1');
-  await expect(show.getByTestId('show-value')).toHaveText('2');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('2');
   await page.waitForTimeout(500);
   await page.reload();
-  await expect(page.locator('[data-testid="show-value"]')).toHaveText('2');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('2');
 });
 
 test('US3: браузер требует подтверждения — экран восстановления доступа, затем данные загружены (#3)', async ({ page }) => {
@@ -123,13 +123,13 @@ test('US3: браузер требует подтверждения — экра
   await (await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
   await (await openSidebar(page)).getByRole('button', { name: 'Перенести' }).click();
   const show = await buildSum(page, '7', '8');
-  await expect(show.getByTestId('show-value')).toHaveText('15');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('15');
   await page.waitForTimeout(500);
 
   await page.reload(); // granted сбрасывается — нужен повторный доступ
   await expect(page.getByRole('heading', { name: 'Восстановите доступ к рабочей папке' })).toBeVisible();
   await expect(page.getByText('В браузере хранится отдельный набор данных; данные папки останутся нетронутыми')).toBeVisible();
   await page.getByRole('button', { name: 'Восстановить доступ' }).click();
-  await expect(page.locator('[data-testid="show-value"]')).toHaveText('15');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('15');
   await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
 });

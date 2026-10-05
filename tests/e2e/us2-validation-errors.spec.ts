@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect, setInput } from './helpers';
+import { addNode, connect, setInput, valueOf } from './helpers';
 
 test('US2: связь, образующая цикл, отклоняется с объяснением', async ({ page }) => {
   await page.goto('/');
@@ -38,9 +38,9 @@ test('US2: деление на ноль → ошибка на ноде, испр
 
   await expect(div.getByTestId('node-message')).toHaveText('Деление на ноль: задайте ненулевой делитель');
   await expect(show.getByTestId('node-status')).toContainText('не вычислен: проблема выше по графу');
-  await expect(show2.getByTestId('show-value')).toHaveText('5');
+  await expect(await valueOf(page, show2, 'in', 'value')).toHaveText('5');
 
   await setInput(page, div, 'b', '4');
   await expect(div.getByTestId('node-message')).toHaveCount(0);
-  await expect(show.getByTestId('show-value')).toHaveText('0.25');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('0.25');
 });

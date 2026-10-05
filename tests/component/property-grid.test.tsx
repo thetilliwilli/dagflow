@@ -141,6 +141,24 @@ describe('окно свойств (US3)', () => {
     expect(a.querySelector('.prop-source')).toHaveTextContent('← Число.value');
   });
 
+  it('FR-007a: большое значение — компактно, раскрывается по щелчку', () => {
+    const h = setup();
+    const j = h.add('builtin:json');
+    act(() => {
+      h.actions.setInputValue(
+        j,
+        'value',
+        Array.from({ length: 50 }, (_, i) => i),
+      );
+    });
+    h.flush();
+    h.select(j);
+    const out = row('out', 'value').querySelector<HTMLElement>('.value-view')!;
+    expect(out).toHaveTextContent('[50 элементов]');
+    fireEvent.click(within(out).getByRole('button', { name: 'показать' }));
+    expect(out.querySelector('pre')).toHaveTextContent('49');
+  });
+
   it('#5: пустая панель — «Нет выходов»', () => {
     const h = setup();
     h.select(h.add('builtin:show'));

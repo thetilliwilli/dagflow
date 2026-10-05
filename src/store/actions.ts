@@ -16,6 +16,7 @@ import {
   canConnect,
   matchesType,
   nodePorts,
+  normalizeNodeName,
   type Graph,
   type JsonValue,
   type PortRef,
@@ -555,6 +556,20 @@ export function createActions({ store, deps }: AppStore) {
         if (value === undefined) delete n.values[port];
         else n.values[port] = value;
       }, `value:${nodeId}:${port}`);
+      return { ok: true };
+    },
+
+    /** Переименовать экземпляр нода (фича 002, FR-009, FR-010); правки одного имени подряд — один шаг. */
+    renameNode(nodeId: string, name: string): Result {
+      const { graph } = current();
+      if (!graph?.nodes.some((n) => n.id === nodeId)) {
+        return { ok: false, code: 'unknown-port', message: `Нод «${nodeId}» не найден.` };
+      }
+      const check = normalizeNodeName(name);
+      if (!check.ok) return check;
+      editGraph((g) => {
+        g.nodes.find((x) => x.id === nodeId)!.name = check.name;
+      }, `name:${nodeId}`);
       return { ok: true };
     },
   };

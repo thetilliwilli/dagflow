@@ -13,8 +13,13 @@ const icons: Record<NodeState['status'], string> = {
 export function NodeStatusBadge({ state }: { state: NodeState | undefined }) {
   const status = state?.status ?? 'computing';
   return (
-    <span className={`node-status node-status--${status}`} data-testid="node-status" title={statusLabels[status]}>
-      <span aria-hidden="true">{icons[status]}</span> {statusLabels[status]}
+    <span
+      className={`node-status node-status--${status}`}
+      data-testid="node-status"
+      title={statusLabels[status]}
+    >
+      <span aria-hidden="true">{icons[status]}</span>{' '}
+      <span className="node-status__label">{statusLabels[status]}</span>
     </span>
   );
 }

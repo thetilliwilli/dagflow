@@ -66,6 +66,31 @@ describe('история отмены (FR-009)', () => {
     expect(graph().nodes[0]!.values).toEqual({});
   });
 
+  it('переименование нода отменяется и повторяется (US2 #3)', () => {
+    const { actions, graph, add } = setup();
+    const n = add('builtin:add');
+    expect(actions.renameNode(n, 'Итого').ok).toBe(true);
+    expect(graph().nodes[0]!.name).toBe('Итого');
+    actions.undo();
+    expect(graph().nodes[0]!.name).toBe('Сложить');
+    actions.redo();
+    expect(graph().nodes[0]!.name).toBe('Итого');
+  });
+
+  it('переименования одного нода чаще 500 мс — один шаг; отказ шага не создаёт', () => {
+    const { actions, graph, add, state } = setup();
+    const n = add('builtin:add');
+    for (const name of ['И', 'Ит', 'Итого']) {
+      actions.renameNode(n, name);
+      vi.advanceTimersByTime(200);
+    }
+    const before = state().history[state().activeTabId!]!.past.length;
+    expect(actions.renameNode(n, '  ').ok).toBe(false);
+    expect(state().history[state().activeTabId!]!.past.length).toBe(before);
+    actions.undo();
+    expect(graph().nodes[0]!.name).toBe('Сложить');
+  });
+
   it('перемещение нода (много событий подряд) — один шаг', () => {
     const { actions, graph, add } = setup();
     const n = add('builtin:number');

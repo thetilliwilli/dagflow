@@ -8,25 +8,18 @@ import {
   MiniMap,
   ReactFlow,
   useReactFlow,
-  type Connection,
-  type FinalConnectionState,
-  type IsValidConnection,
   type Edge as RfEdge,
   type EdgeChange,
   type Node as RfNode,
   type NodeChange,
 } from '@xyflow/react';
-import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
-import { canConnect } from '../../engine';
 import { useActions, useApp, useAppState } from '../../store/react';
 import { useUi, useUiActions, useUiStore } from '../../store/ui';
-import { tryConnect } from './connection';
 import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
 import { compositeMessages, historyMessages } from '../messages';
 import { useShortcuts } from './useShortcuts';
 import { FlowNode } from './FlowNode';
-import { inHandle, outHandle, portOfHandle } from './PortHandle';
 
 export const NODE_DRAG_TYPE = 'application/dagflow-node';
 
@@ -77,9 +70,7 @@ export function Canvas() {
       (graph?.edges ?? []).map((e) => ({
         id: e.id,
         source: e.source.node,
-        sourceHandle: outHandle(e.source.port),
         target: e.target.node,
-        targetHandle: inHandle(e.target.port),
         selected: selectedEdges.has(e.id),
       })),
     [graph?.edges, selectedEdges],
@@ -152,49 +143,6 @@ export function Canvas() {
     [rfEdges],
   );
 
-  const toRefs = (c: {
-    source: string;
-    sourceHandle?: string | null;
-    target: string;
-    targetHandle?: string | null;
-  }) => ({
-    source: { node: c.source, port: portOfHandle(c.sourceHandle) },
-    target: { node: c.target, port: portOfHandle(c.targetHandle) },
-  });
-
-  // Подсветка недопустимого порта во время перетаскивания связи
-  const isValidConnection = useCallback<IsValidConnection>(
-    (c) => {
-      const state = app.store.getState();
-      const g = tabGraph(state, activeTab(state));
-      return !!g && canConnect(g, toRefs(c), registryOf(state)).ok;
-    },
-    [app],
-  );
-
-  const onConnect = useCallback(
-    (c: Connection) => {
-      const { source, target } = toRefs(c);
-      tryConnect(actions, source, target);
-    },
-    [actions],
-  );
-
-  // Связь отпущена на недопустимый порт: React Flow не вызывает onConnect — объясняем причину
-  const onConnectEnd = useCallback(
-    (_e: MouseEvent | TouchEvent, s: FinalConnectionState) => {
-      if (s.isValid || !s.fromHandle || !s.toHandle) return;
-      const from = s.fromHandle.type === 'source' ? s.fromHandle : s.toHandle;
-      const to = s.fromHandle.type === 'source' ? s.toHandle : s.fromHandle;
-      tryConnect(
-        actions,
-        { node: from.nodeId, port: portOfHandle(from.id) },
-        { node: to.nodeId, port: portOfHandle(to.id) },
-      );
-    },
-    [actions],
-  );
-
   const onDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -259,9 +207,8 @@ export function Canvas() {
         deleteKeyCode={['Delete', 'Backspace']}
         selectionKeyCode="Shift"
         multiSelectionKeyCode={['Shift', 'Meta', 'Control']}
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        isValidConnection={isValidConnection}
+        // Порты на карточке убраны: связи создаются в окнах свойств (US4)
+        nodesConnectable={false}
         defaultViewport={initialViewport}
         fitView={fitOnOpen}
         fitViewOptions={{ maxZoom: 1 }}

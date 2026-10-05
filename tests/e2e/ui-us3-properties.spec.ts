@@ -1,20 +1,20 @@
 // US3 (фича 002): окно свойств выделенного нода
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { addNode, connect } from './helpers';
+import { addNode, connect, setInput } from './helpers';
 
 const grid = (page: Page) => page.getByRole('dialog', { name: 'Свойства' });
 const row = (page: Page, side: 'in' | 'out', port: string) =>
   grid(page).locator(`li.prop-row[data-side="${side}"][data-port="${port}"]`);
-const select = (node: Locator) => node.locator('.flow-node__title').click();
+const select = (node: Locator) => node.locator('.flow-node__name').click();
 
-/** «Число 2», «Число 3» → «Сложить» (связи пока через порты карточки — до US4). */
+/** «Число 2», «Число 3» → «Сложить». */
 async function sumGraph(page: Page) {
   await page.goto('/');
   const n1 = await addNode(page, 'Число', 40, 40);
   const n2 = await addNode(page, 'Число', 40, 240);
   const sum = await addNode(page, 'Сложить', 380, 120);
-  await n1.getByLabel('value').fill('2');
-  await n2.getByLabel('value').fill('3');
+  await setInput(page, n1, 'value', '2');
+  await setInput(page, n2, 'value', '3');
   await connect(page, n1, 'value', sum, 'a');
   await connect(page, n2, 'value', sum, 'b');
   return { n1, n2, sum };

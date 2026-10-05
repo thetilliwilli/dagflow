@@ -71,7 +71,7 @@ export function tabBar(page: Page): Locator {
 
 /** Выделяет нод щелчком по заголовку карточки. */
 export async function selectNode(node: Locator) {
-  await node.locator('.flow-node__title').click();
+  await node.locator('.flow-node__name').click();
 }
 
 const propsRow = (page: Page, side: 'in' | 'out', port: string) =>
@@ -95,6 +95,17 @@ export async function setInput(page: Page, node: Locator, port: string, value: s
   await propsRow(page, 'in', port).getByLabel(port, { exact: true }).fill(value);
 }
 
+/** Значение параметра нода: выделить нод и взять значение строки в окне «Свойства» (US2: на карточке значений нет). */
+export async function valueOf(
+  page: Page,
+  node: Locator,
+  side: 'in' | 'out',
+  port: string,
+): Promise<Locator> {
+  await selectNode(node);
+  return propsRow(page, side, port).locator('.prop-value .value-view');
+}
+
 /** Поле ввода входа выделенного нода в окне «Свойства» (для проверки значения). */
 export async function inputField(page: Page, node: Locator, port: string): Promise<Locator> {
   await selectNode(node);
@@ -111,7 +122,7 @@ export async function connect(page: Page, from: Locator, out: string, to: Locato
   await page.mouse.move(src.x, src.y);
   await page.mouse.down();
   // К ноду — сверху: временное окно нода, над которым прошёл курсор, может закрыть цель
-  const over = await centerOf(to.locator('.flow-node__title'));
+  const over = await centerOf(to.locator('.flow-node__name'));
   const pane = (await page.locator('.react-flow__pane').boundingBox())!;
   await page.mouse.move(over.x, pane.y + 4, { steps: 4 });
   await page.mouse.move(over.x, over.y, { steps: 4 });
@@ -135,6 +146,6 @@ export async function linkByClick(
 ) {
   await selectNode(from);
   await propsRow(page, side, port).locator('.prop-marker').click();
-  await to.locator('.flow-node__title').click();
+  await to.locator('.flow-node__name').click();
   await (await peekRow(page, to, toSide, toPort)).click();
 }

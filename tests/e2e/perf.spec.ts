@@ -60,7 +60,7 @@ test('SC-002/SC-003: граф из 100 нодов', async ({ page }) => {
   });
 
   // SC-002: перемещение нода (стрелкой с клавиатуры) отображается < 100 мс
-  await page.locator('.react-flow__node[data-id="n5"] .flow-node__title').click();
+  await page.locator('.react-flow__node[data-id="n5"] .flow-node__name').click();
   const move = await page.evaluate(async () => {
     const node = document.querySelector<HTMLElement>('.react-flow__node[data-id="n5"]')!;
     const runs: number[] = [];
