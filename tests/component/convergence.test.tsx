@@ -7,7 +7,7 @@ import { PersistenceProvider } from '../../src/store/persistence-react';
 import { AppProvider } from '../../src/store/react';
 import type { AppState } from '../../src/store/store';
 import { Workbench } from '../../src/ui/Workbench';
-import { manualScheduler, testStore } from './helpers';
+import { manualScheduler, openPalette, openSidebar, testStore } from './helpers';
 
 const fakePersistence = {
   start: async () => {},
@@ -38,7 +38,7 @@ function setup(state: Partial<AppState> = {}) {
 describe('недоступные данные (T100)', () => {
   it('повреждённый составной нод показан в палитре с причиной', () => {
     setup({ unavailable: [{ id: 'broken', kind: 'composite', reason: 'Файл повреждён: некорректный JSON' }] });
-    const palette = within(screen.getByTestId('palette'));
+    const palette = within(openPalette('Мои составные ноды'));
     expect(palette.getByText(/Недоступен: broken/)).toBeInTheDocument();
     expect(palette.getByText(/Файл повреждён/)).toBeInTheDocument();
   });
@@ -71,6 +71,7 @@ describe('напоминание о выгрузке (T101, US3 #2)', () => {
 
   it('сохранение недоступно — баннер с объяснением', () => {
     setup({ storageLocation: { kind: 'none', reason: 'SecurityError' }, folderSupported: false });
+    openSidebar();
     expect(screen.getByTestId('storage-indicator')).toHaveTextContent('Сохранение недоступно');
     expect(screen.getByRole('region', { name: 'Хранилище' })).toHaveTextContent(/выгрузите/);
   });

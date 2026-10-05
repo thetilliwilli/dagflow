@@ -6,7 +6,7 @@ import { startEvaluation } from '../../src/store/evaluation';
 import { AppProvider } from '../../src/store/react';
 import { activeTab, tabGraph } from '../../src/store/store';
 import { Workbench } from '../../src/ui/Workbench';
-import { manualScheduler, testStore } from './helpers';
+import { manualScheduler, openPalette, testStore } from './helpers';
 
 function setup() {
   const app = testStore();
@@ -67,10 +67,11 @@ describe('составные ноды: действия', () => {
         <Workbench />
       </AppProvider>,
     );
-    const palette = within(screen.getByTestId('palette'));
-    expect(palette.getByText('Мои составные ноды')).toBeInTheDocument();
+    const palette = within(openPalette('Мои составные ноды'));
+    expect(palette.getByRole('tab', { name: 'Мои составные ноды' })).toBeInTheDocument();
     expect(palette.getByText('Удвоенная сумма')).toBeInTheDocument();
     expect(palette.queryByText('Вход')).toBeNull();
+    expect(palette.queryByRole('tab', { name: 'Интерфейс составного нода' })).toBeNull();
   });
 
   it('открытие — вкладка вида composite; правка внутри применяется во всех вкладках (FR-031b)', () => {
@@ -167,9 +168,10 @@ describe('составные ноды: действия', () => {
         <Workbench />
       </AppProvider>,
     );
+    openPalette('Мои составные ноды');
     await user.click(screen.getByRole('button', { name: 'Удалить составной нод «Удвоенная сумма»' }));
-    expect(screen.getByRole('dialog')).toHaveTextContent('Используется в 1 месте');
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Удалить' }));
+    expect(screen.getByRole('dialog', { name: 'Удалить составной нод?' })).toHaveTextContent('Используется в 1 месте');
+    await user.click(within(screen.getByRole('dialog', { name: 'Удалить составной нод?' })).getByRole('button', { name: 'Удалить' }));
     expect(state().composites[ids.compositeId]).toBeUndefined();
     expect(Object.values(state().workflows)[0]!.graph.nodes.some((n) => n.id === ids.inst)).toBe(false);
   });

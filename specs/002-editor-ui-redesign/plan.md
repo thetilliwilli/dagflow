@@ -131,7 +131,8 @@ src/
 │   ├── ~ styles.css         # новая раскладка, карточка без скруглений, окна, строки свойств
 │   ├── floating/
 │   │   ├── + FloatingWindow.tsx  # заголовок, закрытие, перетаскивание, z-порядок
-│   │   ├── + FloatingLayer.tsx   # слой окон поверх холста (pointer-events: none)
+│   │   ├── + FloatingLayer.tsx   # слой окон поверх холста (pointer-events: none); окна попадают в него порталом — один слой на приложение, чтобы окна из Workbench и Editor правильно перекрывались
+│   │   ├── + ManagedWindow.tsx   # FloatingWindow, связанное со стором интерфейса по WindowId: положение, z-порядок, закрытие
 │   │   ├── + geometry.ts         # clampToViewport, defaultPosition, peekPosition
 │   │   └── + useGlobalKeys.ts    # Пробел (палитра), Escape (приоритет)
 │   ├── canvas/

@@ -10,6 +10,8 @@ import {
 } from 'react';
 import type { Point } from '../../store/ui-logic';
 import { windowMessages } from '../messages';
+import { createPortal } from 'react-dom';
+import { useFloatingLayer } from './FloatingLayer';
 import { clampToViewport, type Size } from './geometry';
 
 export interface FloatingWindowProps extends Omit<HTMLAttributes<HTMLElement>, 'title'> {
@@ -43,6 +45,7 @@ export function FloatingWindow({
   className,
   ...rest
 }: FloatingWindowProps) {
+  const layer = useFloatingLayer();
   const ref = useRef<HTMLElement>(null);
   const [placed, setPlaced] = useState<Point | null>(null);
   const [dragPos, setDragPos] = useState<Point | null>(null);
@@ -101,7 +104,7 @@ export function FloatingWindow({
     else setPlaced(final);
   };
 
-  return (
+  const win = (
     <section
       {...rest}
       ref={ref}
@@ -132,4 +135,5 @@ export function FloatingWindow({
       <div className="floating__body">{children}</div>
     </section>
   );
+  return layer ? createPortal(win, layer) : win;
 }

@@ -219,6 +219,8 @@ export function Canvas() {
         defaultViewport={initialViewport}
         fitView={fitOnOpen}
         fitViewOptions={{ maxZoom: 1 }}
+        // Пробел открывает палитру (FR-005), поэтому не панорамирует холст (research R7)
+        panActivationKeyCode={null}
         onMoveEnd={(_e, vp) => tab && actions.setViewport(tab.id, vp)}
         onDragOver={onDragOver}
         onDrop={onDrop}

@@ -6,7 +6,7 @@ import { startEvaluation } from '../../src/store/evaluation';
 import { AppProvider } from '../../src/store/react';
 import { activeTab, tabGraph } from '../../src/store/store';
 import { Workbench } from '../../src/ui/Workbench';
-import { manualScheduler, testStore } from './helpers';
+import { manualScheduler, openSidebar, testStore } from './helpers';
 
 function setup() {
   const app = testStore();
@@ -19,6 +19,7 @@ function setup() {
     </AppProvider>,
   );
   const state = () => app.store.getState();
+  openSidebar();
   const list = () => within(screen.getByTestId('workflow-list'));
   const tabs = () => within(screen.getByTestId('tab-bar'));
   return { app, actions, state, list, tabs, user: userEvent.setup() };
@@ -103,11 +104,11 @@ describe('список workflow и вкладки', () => {
     await user.click(screen.getByRole('button', { name: 'Создать workflow' }));
     const id = state().workflowOrder[1]!;
     await user.click(list().getByRole('button', { name: 'Удалить «Новый workflow 2»' }));
-    const dialog = screen.getByRole('dialog');
+    const dialog = screen.getByRole('dialog', { name: 'Удалить workflow?' });
     await user.click(within(dialog).getByRole('button', { name: 'Отмена' }));
     expect(state().workflows[id]).toBeDefined();
     await user.click(list().getByRole('button', { name: 'Удалить «Новый workflow 2»' }));
-    await user.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Удалить' }));
+    await user.click(within(screen.getByRole('dialog', { name: 'Удалить workflow?' })).getByRole('button', { name: 'Удалить' }));
     expect(state().workflows[id]).toBeUndefined();
     expect(tabs().getAllByRole('tab')).toHaveLength(1);
   });

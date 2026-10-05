@@ -6,7 +6,7 @@ import { startEvaluation } from '../../src/store/evaluation';
 import { AppProvider } from '../../src/store/react';
 import { activeTab, tabGraph } from '../../src/store/store';
 import { Workbench } from '../../src/ui/Workbench';
-import { manualScheduler, testStore } from './helpers';
+import { manualScheduler, openPalette, testStore } from './helpers';
 
 function setup() {
   const app = testStore();
@@ -26,10 +26,9 @@ function setup() {
 describe('T103: входы и выходы на карточке палитры (FR-001)', () => {
   it('у каждого нода видна строка портов', () => {
     setup();
-    const palette = within(screen.getByTestId('palette'));
-    const add = palette.getByText('Сложить').closest('.palette__item') as HTMLElement;
+    const add = within(openPalette('Арифметика')).getByText('Сложить').closest('.palette__item') as HTMLElement;
     expect(within(add).getByText('a, b → result')).toBeVisible();
-    const show = palette.getByText('Показать').closest('.palette__item') as HTMLElement;
+    const show = within(openPalette('Отображение')).getByText('Показать').closest('.palette__item') as HTMLElement;
     expect(within(show).getByText('value → —')).toBeInTheDocument();
   });
 });

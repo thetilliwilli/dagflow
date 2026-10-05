@@ -21,7 +21,7 @@ export const typeLabels: Record<PortType, string> = {
 export const messages = {
   appTitle: 'DAG Flow',
   palette: 'Палитра',
-  paletteHint: 'Перетащите нод на холст или дважды щёлкните по нему',
+  paletteHint: 'Щёлкните по ноду или перетащите его на холст',
   showMore: 'показать',
   showLess: 'свернуть',
   invalidJson: (reason: string) => `Некорректный JSON: ${reason}`,
@@ -135,4 +135,8 @@ export const historyMessages = {
 /** Плавающие окна (фича 002, contracts/ui-contract.md). */
 export const windowMessages = {
   close: 'Закрыть',
+  menu: 'Меню',
+  sidebar: 'Workflow и хранилище',
+  paletteCategories: 'Категории',
+  noComposites: 'Составных нодов пока нет: выделите ноды на холсте и сверните их в составной нод.',
 };

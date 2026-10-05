@@ -2,7 +2,8 @@
 import { useEffect } from 'react';
 import type { Actions } from '../../store/actions';
 
-function isEditable(target: EventTarget | null): boolean {
+/** Фокус в поле ввода: горячие клавиши редактора не срабатывают. */
+export function isEditable(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
   return !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
 }

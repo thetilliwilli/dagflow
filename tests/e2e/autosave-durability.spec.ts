@@ -1,6 +1,6 @@
 // SC-008: изменения, сделанные больше чем за 1 с до закрытия, сохраняются — в папке и в браузере
 import type { Page } from '@playwright/test';
-import { addNode } from './helpers';
+import { addNode, openSidebar } from './helpers';
 import { expect, test } from './persistent';
 
 async function changeWaitReload(page: Page) {
@@ -19,9 +19,9 @@ test('SC-008: режим рабочей папки', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
   await page.getByRole('button', { name: 'Перенести' }).click();
-  await expect(page.getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
   await changeWaitReload(page);
-  await expect(page.getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
 });
 
 test('SC-008: режим хранилища браузера', async ({ page }) => {
@@ -29,6 +29,6 @@ test('SC-008: режим хранилища браузера', async ({ page }) 
     delete (window as unknown as Record<string, unknown>).showDirectoryPicker;
   });
   await page.goto('/');
-  await expect(page.getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
   await changeWaitReload(page);
 });

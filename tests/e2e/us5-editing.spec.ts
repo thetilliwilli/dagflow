@@ -1,12 +1,12 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect } from './helpers';
+import { addNode, connect, paletteItem } from './helpers';
 
 test('US5: большой граф, выделение рамкой, удаление, отмена и повтор, масштаб и мини-карта', async ({ page }) => {
   await page.setViewportSize({ width: 1500, height: 900 });
   await page.goto('/');
-  // 20 нодов двойным щелчком по палитре
-  const item = page.getByTestId('palette').locator('.palette__item-title').getByText('Число', { exact: true });
-  for (let i = 0; i < 20; i++) await item.dblclick();
+  // 20 нодов щелчком по палитре (фича 002: одиночный щелчок)
+  const item = await paletteItem(page, 'Число');
+  for (let i = 0; i < 20; i++) await item.click();
   await expect(page.locator('.react-flow__node')).toHaveCount(20);
 
   // Отдельная пара нодов внизу холста
