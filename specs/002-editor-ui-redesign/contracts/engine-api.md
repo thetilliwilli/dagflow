@@ -31,7 +31,9 @@ function linkCandidates(
   from: LinkEnd,
   targetNode: string,
   registry: Registry,
-): { inputs: Record<string, LinkCandidate>; outputs: Record<string, LinkCandidate> };
+): { inputs: Record<string, LinkCandidate>; outputs: Record<string, LinkCandidate> } | Rejection;
+// Rejection (`unknown-type`, текст rejections.unknownType) — если тип targetNode
+// не найден в реестре: у такого нода нет портов, связать с ним нельзя.
 
 /** Проверка и нормализация нового имени (FR-009). */
 function normalizeNodeName(name: string): { ok: true; name: string } | Rejection;
@@ -52,9 +54,11 @@ function normalizeNodeName(name: string): { ok: true; name: string } | Rejection
   прыгают», FR-020).
 - **E11**: если `linkCandidates(...)[side][port].ok`, то соответствующий
   `canConnect` тоже `ok`, и наоборот, для всех портов противоположной стороны.
-- **E12**: при `targetNode === from.node` все записи — `same-node`; иначе каждый
-  порт той же стороны, что `from`, — `same-side`; остальные проверяются
-  `canConnect` (тип, цикл).
+- **E12**: если тип `targetNode` неизвестен — `Rejection` с кодом `unknown-type`;
+  при `targetNode === from.node` все записи — `same-node`; иначе каждый порт той же
+  стороны, что `from`, — `same-side`; остальные проверяются `canConnect` (тип,
+  цикл). У каждого отказа — текст из `rejections.*`; тексты проверяются тестами
+  (принцип IV).
 - **E13**: `normalizeNodeName` — `trim`; пусто → `empty-name`; > 100 → `name-too-long`;
   иначе `{ ok: true, name: <обрезанное имя> }` (совпадение с названием типа
   допустимо).

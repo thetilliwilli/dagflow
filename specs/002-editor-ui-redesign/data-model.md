@@ -44,7 +44,8 @@
 
 ## LinkCandidate — доступность параметра для связи (выводится)
 
-`linkCandidates(graph, from, targetNodeId, registry)` → для каждого порта нода
+`linkCandidates(graph, from, targetNodeId, registry)` → `Rejection` с кодом
+`unknown-type`, если тип нода неизвестен; иначе для каждого порта нода
 `targetNodeId` (`side`: `'in' | 'out'`, `port`):
 
 - `{ ok: true, replaces?: Edge }` — связать можно (`replaces` — связь, которую
