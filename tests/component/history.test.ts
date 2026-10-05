@@ -117,4 +117,33 @@ describe('история отмены (FR-009)', () => {
     actions.redo();
     expect(graph().nodes.map((n) => n.type)).toEqual([`composite:${r.compositeId}`]);
   });
+
+  it('правки значения по умолчанию порта «Вход» чаще 500 мс — один шаг (T105, plan R5)', () => {
+    const { actions, state, add } = setup();
+    const a = add('builtin:add');
+    const sh = add('builtin:show');
+    actions.connect({ node: a, port: 'result' }, { node: sh, port: 'value' });
+    vi.advanceTimersByTime(1000);
+    const r = actions.collapseSelection([a], 'Сумма');
+    if (!r.ok) throw new Error(r.message);
+    actions.openComposite(r.compositeId);
+    const out = state().composites[r.compositeId]!.graph.nodes.find((n) => n.type === 'builtin:output')!;
+    expect(out).toBeDefined();
+    const ir = actions.addNode('builtin:input', { x: 0, y: 0 });
+    if (!ir.ok) throw new Error(ir.message);
+    vi.advanceTimersByTime(1000);
+    const portsWith = (v?: number) => [{ name: 'in', type: 'number' as const, required: true, ...(v === undefined ? {} : { default: v }) }];
+    // Сначала тип порта (отдельный шаг), затем серия правок значения по умолчанию
+    expect(actions.editIoPorts(ir.id, portsWith()).ok).toBe(true);
+    vi.advanceTimersByTime(1000);
+    for (const v of [1, 15]) {
+      expect(actions.editIoPorts(ir.id, portsWith(v)).ok).toBe(true);
+      vi.advanceTimersByTime(200);
+    }
+    const input = () => state().composites[r.compositeId]!.graph.nodes.find((n) => n.id === ir.id)!;
+    expect(input().ports![0]!.default).toBe(15);
+    actions.undo();
+    expect(input().ports![0]!.default).toBeUndefined();
+  });
 });
+

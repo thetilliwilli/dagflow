@@ -36,6 +36,13 @@ export function Canvas() {
   const graph = useAppState((s) => tabGraph(s, activeTab(s)));
   const tab = useAppState(activeTab);
   const [initialViewport] = useState(() => tab?.viewport);
+  // Вкладка открыта впервые (положение холста не сохранено) и граф не пуст — показать его целиком.
+  // На пустом графе не подгоняем: иначе вид «прыгнет» при добавлении первого нода.
+  const [fitOnOpen] = useState(() => {
+    const v = initialViewport;
+    const isDefault = !v || (v.x === 0 && v.y === 0 && v.zoom === 1);
+    return isDefault && (graph?.nodes.length ?? 0) > 0;
+  });
   const { screenToFlowPosition } = useReactFlow();
   const [rfNodes, setRfNodes] = useState<RfNode[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set());
@@ -210,6 +217,8 @@ export function Canvas() {
         onConnectEnd={onConnectEnd}
         isValidConnection={isValidConnection}
         defaultViewport={initialViewport}
+        fitView={fitOnOpen}
+        fitViewOptions={{ maxZoom: 1 }}
         onMoveEnd={(_e, vp) => tab && actions.setViewport(tab.id, vp)}
         onDragOver={onDragOver}
         onDrop={onDrop}

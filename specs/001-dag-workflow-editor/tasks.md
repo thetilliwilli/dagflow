@@ -382,3 +382,16 @@ Task: "Создать src/ui/palette/Palette.tsx"
 - [X] T100 Показывать недоступные (повреждённые) составные ноды с причиной в палитре (`src/ui/palette/Palette.tsx`) и рисовать нод неизвестного типа заглушкой с ошибкой вместо `return null` в `src/ui/canvas/FlowNode.tsx`; компонентные тесты per Edge case «повреждённый файл», FR-032 (partial)
 - [X] T101 Показывать напоминание о выгрузке в файл в режиме браузера и тогда, когда выбор папки поддерживается, но пользователь отказался («Позже»), в `src/ui/layout/FolderBanner.tsx` per US3/AC2 (partial)
 - [X] T102 Решить судьбу кнопки «Открыть» (↗) у составного нода в палитре (`src/ui/palette/Palette.tsx`): вписать в спеку (FR-024) или убрать per FR-024, FR-027 (unrequested)
+
+---
+
+## Phase 10: Convergence
+
+- [X] T103 Показывать входы и выходы нода прямо на карточке палитры (кратко, например «a, b → result»), а не только во всплывающей подсказке, в `src/ui/palette/Palette.tsx` per FR-001 (partial)
+- [X] T104 Решить судьбу значений по умолчанию у портов нода «Вход»: добавить поле значения по умолчанию в `src/ui/canvas/IoPortsEditor.tsx` или убрать выдачу значений по умолчанию из `src/engine/evaluator.ts` и зафиксировать решение в research R3 per data-model PortDef, research R3 (unrequested)
+
+---
+
+## Phase 11: Convergence
+
+- [X] T105 Объединять в один шаг истории серию правок значения по умолчанию одного порта нода «Вход» быстрее 500 мс (ключ вида `default:<нод>:<порт>` в `editIoPorts`, `src/store/actions.ts`); тест в `tests/component/history.test.ts` per plan R5, FR-009 (partial)

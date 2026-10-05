@@ -442,7 +442,22 @@ export function createActions({ store, deps }: AppStore) {
       if (!graph || !node || (node.type !== IO_INPUT && node.type !== IO_OUTPUT)) {
         return { ok: false, code: 'unknown-port', message: 'Нод «Вход»/«Выход» не найден' };
       }
-      const cleaned = ports.map((p) => ({ ...p, name: p.name.trim() }));
+      const previous = new Map((node.ports ?? []).map((p) => [p.name, p]));
+      const cleaned: PortDef[] = [];
+      for (const p of ports) {
+        const port: PortDef = { ...p, name: p.name.trim() };
+        if (port.default !== undefined && !matchesType(port.default, port.type)) {
+          // Сменили тип — старое значение по умолчанию больше не подходит, сбрасываем; иначе — отказ
+          if (previous.get(port.name)?.type !== port.type) delete port.default;
+          else
+            return {
+              ok: false,
+              code: 'type-mismatch',
+              message: compositeMessages.defaultTypeMismatch(port.name),
+            };
+        }
+        cleaned.push(port);
+      }
       const candidate = {
         ...graph,
         nodes: graph.nodes.map((n) => (n.id === nodeId ? { ...n, ports: cleaned } : n)),
@@ -450,6 +465,13 @@ export function createActions({ store, deps }: AppStore) {
       const bad = validateIoPorts(candidate);
       if (bad) return bad;
       const names = new Set(cleaned.map((p) => p.name));
+      // Меняется только значение по умолчанию одного порта — серия таких правок один шаг истории (R5)
+      const old = node.ports ?? [];
+      const sameShape =
+        old.length === cleaned.length &&
+        old.every((p, i) => p.name === cleaned[i]!.name && p.type === cleaned[i]!.type);
+      const changed = sameShape ? cleaned.filter((p, i) => p.default !== old[i]!.default) : [];
+      const historyKey = changed.length === 1 ? `default:${nodeId}:${changed[0]!.name}` : null;
       editGraph((g) => {
         g.nodes.find((n) => n.id === nodeId)!.ports = cleaned;
         g.edges = g.edges.filter((e) =>
@@ -457,7 +479,7 @@ export function createActions({ store, deps }: AppStore) {
             ? !(e.source.node === nodeId && !names.has(e.source.port))
             : !(e.target.node === nodeId && !names.has(e.target.port)),
         );
-      });
+      }, historyKey);
       return { ok: true };
     },
 

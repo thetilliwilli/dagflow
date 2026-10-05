@@ -10,6 +10,12 @@ import { ConfirmDialog } from '../dialogs/ConfirmDialog';
 import { NameDialog } from '../dialogs/NameDialog';
 import { compositeMessages, messages, typeLabels, workflowMessages } from '../messages';
 
+/** Краткая строка портов для карточки: «a, b → result» (FR-001). */
+function portsLine(def: NodeTypeDef): string {
+  const names = (ps: NodeTypeDef['inputs']) => ps.map((p) => p.name).join(', ') || '—';
+  return `${names(def.inputs)} → ${names(def.outputs)}`;
+}
+
 function portsSummary(def: NodeTypeDef): string {
   const fmt = (ps: NodeTypeDef['inputs']) =>
     ps.map((p) => `${p.name}: ${typeLabels[p.type]}`).join(', ') || '—';
@@ -72,6 +78,9 @@ export function Palette() {
             >
               <span className="palette__item-title">{def.title}</span>
               <span className="palette__item-desc">{def.description}</span>
+              {def.paletteScope !== 'composite' && (
+                <span className="palette__item-ports">{portsLine(def)}</span>
+              )}
               {category === COMPOSITE_CATEGORY && (
                 <span className="palette__item-actions">
                   <button

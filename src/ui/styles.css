@@ -572,3 +572,15 @@ button.link {
   opacity: 0.7;
   border-style: dashed;
 }
+.palette__item-ports {
+  margin-top: 2px;
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  color: var(--t-number);
+}
+.io-ports__row {
+  flex-wrap: wrap;
+}
+.io-ports__default .value-editor {
+  width: 120px;
+}

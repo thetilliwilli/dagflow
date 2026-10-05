@@ -1,12 +1,26 @@
 // Редактор портов нода «Вход»/«Выход» (FR-021a, FR-021c)
 import { useState } from 'react';
 import type { PortDef, PortType } from '../../engine';
+import { ValueEditor } from './ValueEditor';
 import { useActions } from '../../store/react';
 import { compositeMessages as m, typeLabels } from '../messages';
 
 const TYPES: PortType[] = ['number', 'text', 'boolean', 'array', 'object', 'any'];
 
-export function IoPortsEditor({ nodeId, ports }: { nodeId: string; ports: PortDef[] }) {
+function withDefault(p: PortDef, value: PortDef['default']): PortDef {
+  const { default: _old, ...rest } = p;
+  return value === undefined ? rest : { ...rest, default: value };
+}
+
+export function IoPortsEditor({
+  nodeId,
+  ports,
+  withDefaults,
+}: {
+  nodeId: string;
+  ports: PortDef[];
+  withDefaults: boolean;
+}) {
   const actions = useActions();
   const [names, setNames] = useState<Record<number, string>>({});
 
@@ -32,19 +46,49 @@ export function IoPortsEditor({ nodeId, ports }: { nodeId: string; ports: PortDe
             value={names[i] ?? p.name}
             maxLength={40}
             onChange={(e) => setNames({ ...names, [i]: e.target.value })}
-            onBlur={() => names[i] !== undefined && names[i] !== p.name && commit(ports.map((x, j) => (j === i ? { ...x, name: names[i]! } : x)))}
+            onBlur={() =>
+              names[i] !== undefined &&
+              names[i] !== p.name &&
+              commit(ports.map((x, j) => (j === i ? { ...x, name: names[i]! } : x)))
+            }
             onKeyDown={(e) => e.key === 'Enter' && (e.target as HTMLInputElement).blur()}
           />
-          <select aria-label={m.portType} value={p.type} onChange={(e) => commit(ports.map((x, j) => (j === i ? { ...x, type: e.target.value as PortType } : x)))}>
+          <select
+            aria-label={m.portType}
+            value={p.type}
+            onChange={(e) =>
+              commit(
+                ports.map((x, j) => (j === i ? { ...x, type: e.target.value as PortType } : x)),
+              )
+            }
+          >
             {TYPES.map((t) => (
               <option key={t} value={t}>
                 {typeLabels[t]}
               </option>
             ))}
           </select>
-          <button type="button" aria-label={m.removePort(p.name)} onClick={() => commit(ports.filter((_, j) => j !== i))}>
+          <button
+            type="button"
+            aria-label={m.removePort(p.name)}
+            onClick={() => commit(ports.filter((_, j) => j !== i))}
+          >
             ✕
           </button>
+          {withDefaults && (
+            <span className="io-ports__default" title={m.defaultHint}>
+              <ValueEditor
+                port={{ name: m.defaultLabel(p.name), type: p.type }}
+                value={p.default}
+                onCommit={(v) =>
+                  actions.editIoPorts(
+                    nodeId,
+                    ports.map((x, j) => (j === i ? withDefault(x, v) : x)),
+                  )
+                }
+              />
+            </span>
+          )}
         </div>
       ))}
       <button type="button" className="io-ports__add" onClick={addPort}>

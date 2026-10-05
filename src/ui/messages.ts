@@ -118,6 +118,9 @@ export const compositeMessages = {
   portName: 'Имя порта',
   portType: 'Тип порта',
   removePort: (name: string) => `Удалить порт «${name}»`,
+  defaultLabel: (port: string) => `По умолчанию: ${port}`,
+  defaultHint: 'Значение по умолчанию: используется, если вход экземпляра не подключён и не заполнен; внутри вкладки составного нода — для отладки',
+  defaultTypeMismatch: (port: string) => `Значение по умолчанию порта «${port}» не подходит к его типу`,
   unknownNode: 'Неизвестный нод',
   unknownType: (type: string) =>
     `Тип «${type}» не найден: составной нод удалён или его файл повреждён. Удалите нод или загрузите определение из файла.`,

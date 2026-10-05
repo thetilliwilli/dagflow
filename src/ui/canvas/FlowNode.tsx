@@ -104,7 +104,9 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
           <PortHandle port={p} kind="out" />
         </div>
       ))}
-      {isIo && <IoPortsEditor nodeId={id} ports={node.ports ?? []} />}
+      {isIo && (
+        <IoPortsEditor nodeId={id} ports={node.ports ?? []} withDefaults={node.type === IO_INPUT} />
+      )}
       {node.type === 'builtin:show' && (
         <ValueView
           className="show-value"

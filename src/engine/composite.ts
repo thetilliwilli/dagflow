@@ -123,7 +123,7 @@ export function collapse(
       defNodes.push({
         id: ioId,
         type: IO_INPUT,
-        position: { x: minX - 300, y: minY + (inByTarget.size - 1) * 170 },
+        position: { x: minX - 400, y: minY + (inByTarget.size - 1) * 170 },
         values: {},
         ports: [{ name: portName, type: target?.type ?? 'any', required: true }],
       });
