@@ -1,19 +1,3 @@
-<!--
-Sync Impact Report
-==================
-Version change: (template) → 1.0.0
-Modified principles: — (first fill of the template)
-  [PRINCIPLE_1_NAME] → I. Простота прежде гибкости (YAGNI)
-  [PRINCIPLE_2_NAME] → II. Тесты для бизнес-логики (обязательно)
-  [PRINCIPLE_3_NAME] → III. Только локальные данные
-  [PRINCIPLE_4_NAME] → IV. Понятные сообщения об ошибках
-  [PRINCIPLE_5_NAME] → V. Учебная прозрачность
-Added sections: «Ограничения», «Процесс разработки», «Governance»
-Removed sections: —
-Templates: plan/spec/tasks templates read the constitution at runtime; not modified.
-Follow-up TODOs: none
--->
-
 # SDD Test Constitution
 
 ## Core Principles
