@@ -7,13 +7,18 @@ import {
   ReactFlow,
   useReactFlow,
   type Connection,
+  type FinalConnectionState,
+  type IsValidConnection,
   type Edge as RfEdge,
   type EdgeChange,
   type Node as RfNode,
   type NodeChange,
 } from '@xyflow/react';
-import { useActions, useAppState } from '../../store/react';
+import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
+import { canConnect } from '../../engine';
+import { useActions, useApp, useAppState } from '../../store/react';
+import { tryConnect } from './connection';
 import { FlowNode } from './FlowNode';
 import { inHandle, outHandle, portOfHandle } from './PortHandle';
 
@@ -59,7 +64,8 @@ export function Canvas() {
       setRfNodes((nodes) => applyNodeChanges(changes, nodes));
       const removed: string[] = [];
       for (const c of changes) {
-        if (c.type === 'position' && c.position) actions.moveNode(c.id, { x: c.position.x, y: c.position.y });
+        if (c.type === 'position' && c.position)
+          actions.moveNode(c.id, { x: c.position.x, y: c.position.y });
         if (c.type === 'remove') removed.push(c.id);
       }
       if (removed.length > 0) actions.deleteNodes(removed);
@@ -70,7 +76,9 @@ export function Canvas() {
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       setSelectedEdges((prev) => {
-        const selected = applyEdgeChanges(changes, rfEdges).filter((e) => e.selected).map((e) => e.id);
+        const selected = applyEdgeChanges(changes, rfEdges)
+          .filter((e) => e.selected)
+          .map((e) => e.id);
         const next = new Set(selected);
         return next.size === prev.size && [...next].every((id) => prev.has(id)) ? prev : next;
       });
@@ -79,9 +87,46 @@ export function Canvas() {
     [actions, rfEdges],
   );
 
+  const app = useApp();
+  const toRefs = (c: {
+    source: string;
+    sourceHandle?: string | null;
+    target: string;
+    targetHandle?: string | null;
+  }) => ({
+    source: { node: c.source, port: portOfHandle(c.sourceHandle) },
+    target: { node: c.target, port: portOfHandle(c.targetHandle) },
+  });
+
+  // Подсветка недопустимого порта во время перетаскивания связи
+  const isValidConnection = useCallback<IsValidConnection>(
+    (c) => {
+      const state = app.store.getState();
+      const g = tabGraph(state, activeTab(state));
+      return !!g && canConnect(g, toRefs(c), registryOf(state)).ok;
+    },
+    [app],
+  );
+
   const onConnect = useCallback(
     (c: Connection) => {
-      actions.connect({ node: c.source, port: portOfHandle(c.sourceHandle) }, { node: c.target, port: portOfHandle(c.targetHandle) });
+      const { source, target } = toRefs(c);
+      tryConnect(actions, source, target);
+    },
+    [actions],
+  );
+
+  // Связь отпущена на недопустимый порт: React Flow не вызывает onConnect — объясняем причину
+  const onConnectEnd = useCallback(
+    (_e: MouseEvent | TouchEvent, s: FinalConnectionState) => {
+      if (s.isValid || !s.fromHandle || !s.toHandle) return;
+      const from = s.fromHandle.type === 'source' ? s.fromHandle : s.toHandle;
+      const to = s.fromHandle.type === 'source' ? s.toHandle : s.fromHandle;
+      tryConnect(
+        actions,
+        { node: from.nodeId, port: portOfHandle(from.id) },
+        { node: to.nodeId, port: portOfHandle(to.id) },
+      );
     },
     [actions],
   );
@@ -110,6 +155,8 @@ export function Canvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onConnectEnd={onConnectEnd}
+        isValidConnection={isValidConnection}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >

@@ -4,6 +4,7 @@ import type { NodeProps } from '@xyflow/react';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
+import { NodeMessage, NodeStatusBadge } from './NodeStatus';
 import { PortHandle } from './PortHandle';
 import { ValueEditor } from './ValueEditor';
 import { ValueView } from './ValueView';
@@ -26,17 +27,37 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
 
   return (
     <div className={`flow-node status-${state?.status ?? 'computing'}`}>
-      <div className="flow-node__title">{def.title}</div>
-      {def.inputs.map((p) => (
-        <div className="port-row port-row--in" key={`in-${p.name}`}>
-          <PortHandle port={p} kind="in" />
-          {connectedSet.has(p.name) ? (
-            <ValueView testId={`in-${p.name}`} value={state?.inputs[p.name]} />
-          ) : (
-            <ValueEditor port={p} value={node.values[p.name]} onCommit={(v) => actions.setInputValue(id, p.name, v)} />
-          )}
-        </div>
-      ))}
+      <div className="flow-node__header">
+        <span className="flow-node__title">{def.title}</span>
+        <NodeStatusBadge state={state} />
+      </div>
+      <NodeMessage state={state} />
+      {def.inputs.map((p) => {
+        const isConnected = connectedSet.has(p.name);
+        const missing =
+          p.required &&
+          !isConnected &&
+          node.values[p.name] === undefined &&
+          p.default === undefined;
+        return (
+          <div
+            className={`port-row port-row--in ${missing ? 'port-row--missing' : ''}`}
+            key={`in-${p.name}`}
+            data-testid={`port-in-${p.name}`}
+          >
+            <PortHandle port={p} kind="in" />
+            {isConnected ? (
+              <ValueView testId={`in-${p.name}`} value={state?.inputs[p.name]} />
+            ) : (
+              <ValueEditor
+                port={p}
+                value={node.values[p.name]}
+                onCommit={(v) => actions.setInputValue(id, p.name, v)}
+              />
+            )}
+          </div>
+        );
+      })}
       {def.outputs.map((p) => (
         <div className="port-row port-row--out" key={`out-${p.name}`}>
           <ValueView testId={`out-${p.name}`} value={ok ? state.outputs[p.name] : undefined} />
@@ -44,7 +65,11 @@ export const FlowNode = memo(function FlowNode({ id }: NodeProps) {
         </div>
       ))}
       {node.type === 'builtin:show' && (
-        <ValueView className="show-value" testId="show-value" value={ok ? state.inputs.value : undefined} />
+        <ValueView
+          className="show-value"
+          testId="show-value"
+          value={ok ? state.inputs.value : undefined}
+        />
       )}
     </div>
   );

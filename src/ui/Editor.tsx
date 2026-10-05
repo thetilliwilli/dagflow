@@ -1,6 +1,8 @@
 // Редактор: палитра + холст активной вкладки
 import { ReactFlowProvider } from '@xyflow/react';
 import { Canvas } from './canvas/Canvas';
+import { ErrorBoundary } from './ErrorBoundary';
+import { Notifications } from './layout/Notifications';
 import { Palette } from './palette/Palette';
 
 export function Editor() {
@@ -8,8 +10,11 @@ export function Editor() {
     <ReactFlowProvider>
       <div className="editor">
         <Palette />
-        <Canvas />
+        <ErrorBoundary>
+          <Canvas />
+        </ErrorBoundary>
       </div>
+      <Notifications />
     </ReactFlowProvider>
   );
 }

@@ -183,3 +183,85 @@ body,
   color: var(--error);
   font-size: 11px;
 }
+
+/* Статусы нодов (US2) */
+.flow-node__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.flow-node__header .flow-node__title {
+  padding: 0;
+  border: none;
+}
+.node-status {
+  font-size: 10px;
+  white-space: nowrap;
+  color: var(--computing);
+}
+.node-status--ok { color: var(--ok); }
+.node-status--waiting { color: var(--waiting); }
+.node-status--error { color: var(--error); }
+.node-status--blocked { color: var(--blocked); }
+.node-message {
+  max-width: 240px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border-bottom: 1px solid var(--border);
+}
+.node-message--waiting { color: var(--waiting); background: #fff8c5; }
+.node-message--error { color: var(--error); background: #ffebe9; }
+.node-message--blocked { color: var(--blocked); background: #fbefff; }
+.port-row--missing .port-label {
+  color: var(--waiting);
+  font-weight: 600;
+}
+.port-row--missing .port-handle {
+  outline: 2px solid var(--waiting);
+}
+.react-flow__handle.connectingto:not(.valid) {
+  background: var(--error);
+}
+
+/* Уведомления */
+.notifications {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+.notification {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 360px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--panel);
+  border-left: 4px solid var(--t-number);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
+  font-size: 13px;
+}
+.notification--warning { border-left-color: var(--waiting); }
+.notification--error { border-left-color: var(--error); }
+.notification button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Ошибка отрисовки */
+.error-boundary {
+  padding: 24px;
+}
+.error-boundary__content {
+  height: 100%;
+}

@@ -12,7 +12,7 @@ import {
 } from '../engine';
 import { messages } from '../ui/messages';
 import { registryOf } from './registry';
-import { activeTab, type AppState, type AppStore } from './store';
+import { activeTab, type AppState, type AppStore, type NotificationKind } from './store';
 
 export type Result<T = object> = ({ ok: true } & T) | Rejection;
 
@@ -45,6 +45,21 @@ export function createActions({ store, deps }: AppStore) {
   }
 
   return {
+    /** Показать уведомление; возвращает его id. */
+    notify(kind: NotificationKind, text: string): string {
+      const id = deps.newId();
+      store.setState((draft: AppState) => {
+        draft.notifications.push({ id, kind, text });
+      });
+      return id;
+    },
+
+    dismiss(id: string) {
+      store.setState((draft: AppState) => {
+        draft.notifications = draft.notifications.filter((n) => n.id !== id);
+      });
+    },
+
     addNode(type: string, position: Position): Result<{ id: string }> {
       const { state, graph, insideComposite } = current();
       if (!graph) return { ok: false, code: 'unknown-type', message: 'Нет открытой вкладки' };

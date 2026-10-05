@@ -3,6 +3,14 @@ import { createStore } from 'zustand/vanilla';
 import { immer } from 'zustand/middleware/immer';
 import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '../engine';
 
+export type NotificationKind = 'info' | 'warning' | 'error';
+
+export interface Notification {
+  id: string;
+  kind: NotificationKind;
+  text: string;
+}
+
 export interface AppState {
   workflows: Record<string, Workflow>;
   workflowOrder: string[];
@@ -11,6 +19,8 @@ export interface AppState {
   activeTabId: string | null;
   /** Состояния вычисления: tabId → nodeId → NodeState. В историю и хранилище не попадают. */
   nodeStates: Record<string, Record<string, NodeState>>;
+  /** Короткие уведомления (отказы, импорт, изменения портов). */
+  notifications: Notification[];
 }
 
 export interface StoreDeps {
@@ -27,6 +37,7 @@ function makeStore(initial?: Partial<AppState>) {
       tabs: [],
       activeTabId: null,
       nodeStates: {},
+      notifications: [],
       ...initial,
     })),
   );

@@ -28,4 +28,7 @@ export const messages = {
   valueTypeMismatch: (type: PortType) => `Значение не подходит к типу порта «${typeLabels[type]}»`,
   connected: 'подключено',
   noValue: '—',
+  closeNotification: 'Закрыть уведомление',
+  renderFailed: 'Не удалось отобразить вкладку. Ваши данные не потеряны — попробуйте перезагрузить вкладку.',
+  reloadTab: 'Перезагрузить вкладку',
 };

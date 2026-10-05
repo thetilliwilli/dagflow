@@ -138,7 +138,7 @@ src/
 │   └── persistence.ts     # загрузка при старте, автосохранение, смена хранилища и слияние
 ├── ui/
 │   ├── App.tsx
-│   ├── Editor.tsx         # палитра + холст внутри ReactFlowProvider
+│   ├── Editor.tsx         # палитра + холст (в ErrorBoundary) + уведомления внутри ReactFlowProvider
 │   ├── ErrorBoundary.tsx  # перехват ошибок отрисовки (принцип IV)
 │   ├── layout/            # WorkflowList, TabBar, StorageIndicator, AccessScreen, FolderBanner, Notifications, ExportImport
 │   ├── canvas/            # Canvas (ReactFlow + MiniMap), FlowNode, NodeStatus, PortHandle, ValueView, ValueEditor, IoPortsEditor, useShortcuts
