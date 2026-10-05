@@ -7,11 +7,13 @@
 
 ## R1. Стек и версии
 
-**Decision**: TypeScript 7.0, React 19.3, @xyflow/react 12.12, Zustand 5.0, Immer 11.1,
+**Decision**: TypeScript 6.0, React 19.3, @xyflow/react 12.12, Zustand 5.0, Immer 11.1,
 Valibot 1.5, idb-keyval 6.3, Vite 8.3 (+ @vitejs/plugin-react 6.1), Vitest 5.0,
 @testing-library/react 16.3, @playwright/test 1.63, Node.js 24 LTS для разработки.
 
-**Rationale**: стек выбран пользователем (вариант A сравнения). React Flow — самая
+**Rationale**: стек выбран пользователем (вариант A сравнения). TypeScript 6.0, а не
+7.0: typescript-eslint 8.71 поддерживает только TypeScript `<6.1`, а ESLint нужен для
+изоляции движка (уточнено на шаге implement, 2026-10-05). React Flow — самая
 зрелая библиотека холста для редакторов нодов. TypeScript нужен для типобезопасного
 описания портов и графа.
 

@@ -28,7 +28,7 @@ function createRegistry(composites: CompositeDef[]): NodeRegistry;
 ```ts
 type Rejection = { ok: false; code: RejectCode; message: string };   // message — для пользователя (FR-032)
 type RejectCode =
-  | 'cycle' | 'type-mismatch' | 'same-node' | 'unknown-port'
+  | 'cycle' | 'type-mismatch' | 'same-node' | 'unknown-port' | 'unknown-type' | 'input-occupied'
   | 'duplicate-port-name' | 'composite-recursion' | 'io-node-outside-composite';
 
 function canConnect(graph: Graph, edge: Omit<Edge, 'id'>, registry: NodeRegistry):

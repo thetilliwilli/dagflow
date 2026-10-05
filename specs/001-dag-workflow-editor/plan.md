@@ -17,7 +17,7 @@ System Access API), а без неё — в OPFS; перенос между ма
 
 ## Technical Context
 
-**Language/Version**: TypeScript 7.0, ES2023; Node.js 24 LTS для разработки
+**Language/Version**: TypeScript 6.0 (7.0 пока не поддерживается typescript-eslint, см. research R1), ES2023; Node.js 24 LTS для разработки
 
 **Primary Dependencies**: React 19.3, @xyflow/react 12.12, Zustand 5.0, Immer 11.1,
 Valibot 1.5, idb-keyval 6.3; сборка Vite 8.3 + @vitejs/plugin-react 6.1
@@ -130,12 +130,15 @@ src/
 │   └── opfs-write-worker.ts  # только если Safari не поддерживает createWritable в OPFS (риск R7)
 ├── store/
 │   ├── store.ts           # Zustand: workspace, tabs, history, nodeStates
+│   ├── react.ts           # AppProvider, useAppState, useActions — привязка стора к React
+│   ├── registry.ts        # реестр типов нодов с кэшем по набору составных нодов
 │   ├── actions.ts         # правки графа через engine-проверки
 │   ├── history.ts         # снапшоты, объединение правок значения
 │   ├── evaluation.ts      # связка стор ↔ Evaluator ↔ requestAnimationFrame
 │   └── persistence.ts     # загрузка при старте, автосохранение, смена хранилища и слияние
 ├── ui/
 │   ├── App.tsx
+│   ├── Editor.tsx         # палитра + холст внутри ReactFlowProvider
 │   ├── ErrorBoundary.tsx  # перехват ошибок отрисовки (принцип IV)
 │   ├── layout/            # WorkflowList, TabBar, StorageIndicator, AccessScreen, FolderBanner, Notifications, ExportImport
 │   ├── canvas/            # Canvas (ReactFlow + MiniMap), FlowNode, NodeStatus, PortHandle, ValueView, ValueEditor, IoPortsEditor, useShortcuts
