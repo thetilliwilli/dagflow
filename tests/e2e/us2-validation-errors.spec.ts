@@ -3,9 +3,9 @@ import { addNode, connect } from './helpers';
 
 test('US2: связь, образующая цикл, отклоняется с объяснением', async ({ page }) => {
   await page.goto('/');
-  const a = await addNode(page, 'Сложить', 60, 80);
-  const b = await addNode(page, 'Сложить', 360, 80);
-  const c = await addNode(page, 'Сложить', 660, 80);
+  const a = await addNode(page, 'Сложить', 40, 80);
+  const b = await addNode(page, 'Сложить', 260, 260);
+  const c = await addNode(page, 'Сложить', 480, 80);
   await connect(page, a, 'result', b, 'a');
   await connect(page, b, 'result', c, 'a');
   await expect(page.locator('.react-flow__edge')).toHaveCount(2);

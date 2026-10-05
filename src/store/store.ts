@@ -2,6 +2,8 @@
 import { createStore } from 'zustand/vanilla';
 import { immer } from 'zustand/middleware/immer';
 import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '../engine';
+import type { UnavailableItem } from '../storage/directory-storage';
+import type { StorageLocation } from '../storage/location';
 
 export type NotificationKind = 'info' | 'warning' | 'error';
 
@@ -10,6 +12,11 @@ export interface Notification {
   kind: NotificationKind;
   text: string;
 }
+
+/** Предложение пользователю при смене хранилища (FR-028c). */
+export type StoragePrompt =
+  | { kind: 'copy-to-empty'; folderName: string }
+  | { kind: 'add-from-browser'; folderName: string; add: Workflow[]; copies: Workflow[] };
 
 export interface AppState {
   workflows: Record<string, Workflow>;
@@ -21,6 +28,13 @@ export interface AppState {
   nodeStates: Record<string, Record<string, NodeState>>;
   /** Короткие уведомления (отказы, импорт, изменения портов). */
   notifications: Notification[];
+  /** null — хранилище ещё не определено (идёт загрузка). */
+  storageLocation: StorageLocation | null;
+  storagePrompt: StoragePrompt | null;
+  /** Есть ли в браузере выбор рабочей папки. */
+  folderSupported: boolean;
+  /** Файлы, которые не удалось прочитать. */
+  unavailable: UnavailableItem[];
 }
 
 export interface StoreDeps {
@@ -38,6 +52,10 @@ function makeStore(initial?: Partial<AppState>) {
       activeTabId: null,
       nodeStates: {},
       notifications: [],
+      storageLocation: null,
+      storagePrompt: null,
+      folderSupported: false,
+      unavailable: [],
       ...initial,
     })),
   );
@@ -60,20 +78,20 @@ export function emptyGraph(): Graph {
   return { nodes: [], edges: [] };
 }
 
+export const DEFAULT_WORKFLOW_NAME = 'Новый workflow';
+
+/** Начальное состояние: один пустой workflow, открытый во вкладке. */
+export function freshWorkspace(deps: StoreDeps): Pick<AppState, 'workflows' | 'workflowOrder' | 'tabs' | 'activeTabId'> {
+  const ts = deps.now();
+  const workflow: Workflow = { id: deps.newId(), name: DEFAULT_WORKFLOW_NAME, graph: emptyGraph(), createdAt: ts, updatedAt: ts };
+  const tab: Tab = { id: deps.newId(), kind: 'workflow', targetId: workflow.id, viewport: { x: 0, y: 0, zoom: 1 } };
+  return { workflows: { [workflow.id]: workflow }, workflowOrder: [workflow.id], tabs: [tab], activeTabId: tab.id };
+}
+
 /** Создаёт стор; если workflow нет, создаёт «Новый workflow» и открывает его во вкладке. */
 export function createAppStore(deps: StoreDeps = defaultDeps, initial?: Partial<AppState>): AppStore {
   const store = makeStore(initial);
-  if (store.getState().workflowOrder.length === 0) {
-    const ts = deps.now();
-    const workflow: Workflow = { id: deps.newId(), name: 'Новый workflow', graph: emptyGraph(), createdAt: ts, updatedAt: ts };
-    const tab: Tab = { id: deps.newId(), kind: 'workflow', targetId: workflow.id, viewport: { x: 0, y: 0, zoom: 1 } };
-    store.setState({
-      workflows: { [workflow.id]: workflow },
-      workflowOrder: [workflow.id],
-      tabs: [tab],
-      activeTabId: tab.id,
-    });
-  }
+  if (store.getState().workflowOrder.length === 0) store.setState(freshWorkspace(deps));
   return { store, deps };
 }
 

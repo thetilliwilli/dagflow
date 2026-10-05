@@ -29,6 +29,57 @@ export const messages = {
   connected: 'подключено',
   noValue: '—',
   closeNotification: 'Закрыть уведомление',
+  invalidName: 'Имя должно содержать от 1 до 100 символов',
   renderFailed: 'Не удалось отобразить вкладку. Ваши данные не потеряны — попробуйте перезагрузить вкладку.',
   reloadTab: 'Перезагрузить вкладку',
+};
+
+export const storageMessages = {
+  folder: (name: string) => `Папка: ${name}`,
+  browser: 'Данные хранятся в браузере',
+  loading: 'Загрузка…',
+  chooseFolder: 'Выбрать рабочую папку',
+  changeFolder: 'Сменить папку',
+  firstRunHint: 'Выберите рабочую папку на диске — вся работа будет сохраняться в неё автоматически.',
+  browserReminder: 'Данные хранятся в браузере. Чтобы перенести работу на другой компьютер, выгрузите workflow в файл.',
+  copyToEmpty: (folder: string) => `Папка «${folder}» пуста. Перенести в неё текущие данные?`,
+  addFromBrowser: (folder: string, add: number, copies: number) =>
+    `В папке «${folder}» уже есть данные. ` +
+    (add > 0 ? `Workflow из прежнего хранилища, которых нет в папке: ${add}. ` : '') +
+    (copies > 0 ? `Отличающихся версий (будут добавлены копиями «(из браузера)»): ${copies}. ` : '') +
+    'Добавить их в папку?',
+  move: 'Перенести',
+  dontMove: 'Не переносить',
+  add: 'Добавить',
+  dontAdd: 'Не добавлять',
+  later: 'Позже',
+  accessTitle: 'Восстановите доступ к рабочей папке',
+  accessText: (folder: string) => `Браузер просит заново подтвердить доступ к папке «${folder}».`,
+  restoreAccess: 'Восстановить доступ',
+  workInBrowser: 'Работать в браузере',
+  workInBrowserNote: 'В браузере хранится отдельный набор данных; данные папки останутся нетронутыми',
+  folderLost: (folder: string) => `Рабочая папка «${folder}» недоступна. Работа продолжается и сохраняется в браузере.`,
+  saveFailed: (reason: string) => `Не удалось сохранить изменения: ${reason}`,
+  copyName: (name: string) => `${name} (из браузера)`.slice(0, 100),
+};
+
+export const workflowMessages = {
+  list: 'Workflow',
+  create: 'Создать workflow',
+  open: (name: string) => `Открыть «${name}»`,
+  rename: (name: string) => `Переименовать «${name}»`,
+  duplicate: (name: string) => `Дублировать «${name}»`,
+  remove: (name: string) => `Удалить «${name}»`,
+  nameInput: 'Имя workflow',
+  confirmDeleteTitle: 'Удалить workflow?',
+  confirmDelete: (name: string) => `Workflow «${name}» будет удалён без возможности восстановления.`,
+  deleteButton: 'Удалить',
+  cancel: 'Отмена',
+  unavailable: (id: string) => `Недоступен: ${id}`,
+  closeTab: (name: string) => `Закрыть вкладку «${name}»`,
+  noTabs: 'Откройте workflow из списка или создайте новый',
+  exportButton: 'Выгрузить в файл',
+  importLabel: 'Загрузить из файла',
+  importErrorTitle: 'Не удалось загрузить файл',
+  close: 'Закрыть',
 };

@@ -29,6 +29,8 @@ const nodeTypes = { flow: FlowNode };
 export function Canvas() {
   const actions = useActions();
   const graph = useAppState((s) => tabGraph(s, activeTab(s)));
+  const tab = useAppState(activeTab);
+  const [initialViewport] = useState(() => tab?.viewport);
   const { screenToFlowPosition } = useReactFlow();
   const [rfNodes, setRfNodes] = useState<RfNode[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set());
@@ -157,6 +159,8 @@ export function Canvas() {
         onConnect={onConnect}
         onConnectEnd={onConnectEnd}
         isValidConnection={isValidConnection}
+        defaultViewport={initialViewport}
+        onMoveEnd={(_e, vp) => tab && actions.setViewport(tab.id, vp)}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >

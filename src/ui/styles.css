@@ -265,3 +265,228 @@ body,
 .error-boundary__content {
   height: 100%;
 }
+
+/* Рабочая область (US3) */
+.workbench {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100%;
+}
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  overflow-y: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  font-size: 13px;
+}
+.main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.main .editor {
+  flex: 1;
+  min-height: 0;
+}
+.empty-state {
+  margin: auto;
+  color: var(--muted);
+}
+button,
+.button-like {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+button.primary {
+  background: var(--t-number);
+  border-color: var(--t-number);
+  color: #fff;
+}
+button.danger {
+  background: var(--error);
+  border-color: var(--error);
+  color: #fff;
+}
+button.link {
+  border: none;
+  background: none;
+  color: var(--t-number);
+  text-decoration: underline;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.storage-indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--bg);
+}
+.workflow-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.workflow-list h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.workflow-list ul {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+.workflow-list li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.workflow-list li.active {
+  background: #ddf4ff;
+}
+.workflow-list li.unavailable {
+  flex-direction: column;
+  align-items: flex-start;
+  color: var(--muted);
+}
+.workflow-list__name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  border: none;
+  background: none;
+}
+.workflow-list__actions button {
+  padding: 2px 4px;
+  border: none;
+  background: none;
+  color: var(--muted);
+}
+.workflow-list li input {
+  flex: 1;
+  font: inherit;
+}
+.export-import {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: auto;
+}
+.button-like {
+  text-align: center;
+}
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  padding: 4px 8px 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.tab {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  background: var(--bg);
+  font-size: 13px;
+}
+.tab--active {
+  background: var(--panel);
+  font-weight: 600;
+}
+.tab__title {
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.tab__close {
+  border: none;
+  background: none;
+  padding: 0 8px 0 0;
+}
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #ddf4ff;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.banner span {
+  flex: 1;
+}
+.banner--muted {
+  background: var(--bg);
+}
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 30%);
+  z-index: 20;
+}
+.modal {
+  max-width: 420px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 20%);
+}
+.modal h2 {
+  margin-top: 0;
+  font-size: 16px;
+}
+.modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.access-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.access-screen__card {
+  max-width: 440px;
+  padding: 24px;
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 10%);
+  text-align: center;
+}
+.access-screen__card h1 {
+  font-size: 20px;
+}
+.access-screen__note {
+  color: var(--muted);
+  font-size: 12px;
+}

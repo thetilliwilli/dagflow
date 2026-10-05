@@ -73,6 +73,7 @@ workflow и составных нодов; около 30 встроенных т
 | Vite, @vitejs/plugin-react | сборка и dev-сервер (dev) | стандартный сборщик для React + TS |
 | Vitest, jsdom | unit- и компонентные тесты (dev) | тест-раннер, совместимый с Vite; jsdom — DOM для компонентных тестов |
 | @testing-library/react, @testing-library/user-event, @testing-library/jest-dom | компонентные тесты (dev) | проверка UI через поведение пользователя, читаемые утверждения |
+| @types/node | типы Node для e2e-тестов (чтение выгруженного файла) (dev) | стандартные типы, без них TypeScript не видит `node:fs` |
 | @playwright/test | e2e-тесты в реальном Chromium (dev) | без него нельзя проверить OPFS, перетаскивание и перф-критерии |
 | eslint, typescript-eslint, eslint-plugin-react-hooks | статический анализ (dev) | правило `no-restricted-imports` обеспечивает изоляцию движка; правила хуков ловят ошибки React |
 | prettier | единое форматирование (dev) | устраняет споры о стиле и шум в диффах |
@@ -127,6 +128,7 @@ src/
 │   ├── directory-storage.ts  # чтение/запись раскладки поверх FileSystemDirectoryHandle
 │   ├── location.ts        # выбор папки, OPFS, восстановление доступа, idb-keyval
 │   ├── autosave.ts        # debounce 300 мс + сброс на pagehide
+│   ├── fs-types.d.ts      # типы File System Access API, которых нет в lib.dom
 │   └── opfs-write-worker.ts  # только если Safari не поддерживает createWritable в OPFS (риск R7)
 ├── store/
 │   ├── store.ts           # Zustand: workspace, tabs, history, nodeStates
@@ -135,9 +137,11 @@ src/
 │   ├── actions.ts         # правки графа через engine-проверки
 │   ├── history.ts         # снапшоты, объединение правок значения
 │   ├── evaluation.ts      # связка стор ↔ Evaluator ↔ requestAnimationFrame
-│   └── persistence.ts     # загрузка при старте, автосохранение, смена хранилища и слияние
+│   ├── persistence.ts     # загрузка при старте, автосохранение, смена хранилища и слияние
+│   └── persistence-react.ts  # контроллер хранения в React-контексте
 ├── ui/
 │   ├── App.tsx
+│   ├── Workbench.tsx      # список workflow + хранилище слева, вкладки + редактор справа
 │   ├── Editor.tsx         # палитра + холст (в ErrorBoundary) + уведомления внутри ReactFlowProvider
 │   ├── ErrorBoundary.tsx  # перехват ошибок отрисовки (принцип IV)
 │   ├── layout/            # WorkflowList, TabBar, StorageIndicator, AccessScreen, FolderBanner, Notifications, ExportImport
@@ -150,7 +154,7 @@ src/
 tests/
 ├── unit/                  # Vitest (node): engine/*, model/*, storage/* (фейковый DirectoryHandle в storage/fake-directory.ts)
 ├── component/             # Vitest (jsdom) + Testing Library: store, FlowNode, Palette, TabBar
-└── e2e/                   # Playwright: us1-…us5-*.spec.ts, perf.spec.ts
+└── e2e/                   # Playwright: us1-…us5-*.spec.ts, perf.spec.ts; helpers.ts, persistent.ts (постоянный профиль)
 ```
 
 **Structure Decision**: один Vite-проект в корне репозитория. Слои зависят только
