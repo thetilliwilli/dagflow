@@ -23,9 +23,11 @@ import {
   type Rejection,
 } from '../engine';
 import { compositeMessages, messages } from '../ui/messages';
+import { record, redo as redoStep, undo as undoStep } from './history';
 import { registryOf } from './registry';
 import {
   activeTab,
+  tabGraph,
   DEFAULT_WORKFLOW_NAME,
   emptyGraph,
   type AppState,
@@ -49,34 +51,63 @@ export type Result<T = object> = ({ ok: true } & T) | Rejection;
 export function createActions({ store, deps }: AppStore) {
   /** Все графы: workflow и определения составных нодов. */
   function allGraphs(draft: AppState): Graph[] {
-    return [...Object.values(draft.workflows).map((w) => w.graph), ...Object.values(draft.composites).map((c) => c.graph)];
+    return [
+      ...Object.values(draft.workflows).map((w) => w.graph),
+      ...Object.values(draft.composites).map((c) => c.graph),
+    ];
   }
 
   /** После правки определения: связи экземпляров с исчезнувшими портами удаляются с уведомлением (edge case). */
-  function cleanupRemovedPorts(draft: AppState, defId: string, before: { inputs: PortDef[]; outputs: PortDef[] }) {
+  function cleanupRemovedPorts(
+    draft: AppState,
+    defId: string,
+    before: { inputs: PortDef[]; outputs: PortDef[] },
+  ) {
     const after = compositePorts(draft.composites[defId]!);
-    const removedIn = new Set(before.inputs.map((p) => p.name).filter((n) => !after.inputs.some((p) => p.name === n)));
-    const removedOut = new Set(before.outputs.map((p) => p.name).filter((n) => !after.outputs.some((p) => p.name === n)));
+    const removedIn = new Set(
+      before.inputs.map((p) => p.name).filter((n) => !after.inputs.some((p) => p.name === n)),
+    );
+    const removedOut = new Set(
+      before.outputs.map((p) => p.name).filter((n) => !after.outputs.some((p) => p.name === n)),
+    );
     if (removedIn.size === 0 && removedOut.size === 0) return;
     let removed = 0;
     for (const g of allGraphs(draft)) {
-      const instances = new Set(g.nodes.filter((n) => compositeIdOf(n.type) === defId).map((n) => n.id));
+      const instances = new Set(
+        g.nodes.filter((n) => compositeIdOf(n.type) === defId).map((n) => n.id),
+      );
       if (instances.size === 0) continue;
-      for (const n of g.nodes) if (instances.has(n.id)) for (const p of removedIn) delete n.values[p];
+      for (const n of g.nodes)
+        if (instances.has(n.id)) for (const p of removedIn) delete n.values[p];
       const kept = g.edges.filter(
-        (e) => !(instances.has(e.target.node) && removedIn.has(e.target.port)) && !(instances.has(e.source.node) && removedOut.has(e.source.port)),
+        (e) =>
+          !(instances.has(e.target.node) && removedIn.has(e.target.port)) &&
+          !(instances.has(e.source.node) && removedOut.has(e.source.port)),
       );
       removed += g.edges.length - kept.length;
       g.edges = kept;
     }
-    if (removed > 0) draft.notifications.push({ id: deps.newId(), kind: 'warning', text: compositeMessages.edgesRemoved(removed) });
+    if (removed > 0)
+      draft.notifications.push({
+        id: deps.newId(),
+        kind: 'warning',
+        text: compositeMessages.edgesRemoved(removed),
+      });
   }
 
-  /** Изменяет граф активной вкладки внутри immer-черновика. */
-  function editGraph(fn: (graph: Graph, state: AppState) => void) {
+  const nowMs = deps.nowMs ?? (() => Date.now());
+
+  /** Изменяет граф активной вкладки внутри immer-черновика; записывает шаг истории (FR-009). */
+  function editGraph(
+    fn: (graph: Graph, state: AppState) => void,
+    historyKey: string | null = null,
+  ) {
+    const before = tabGraph(store.getState(), activeTab(store.getState()));
     store.setState((draft: AppState) => {
       const tab = activeTab(draft);
       if (!tab) return;
+      if (before)
+        draft.history[tab.id] = record(draft.history[tab.id], before, historyKey, nowMs());
       if (tab.kind === 'workflow') {
         const wf = draft.workflows[tab.targetId];
         if (!wf) return;
@@ -93,11 +124,62 @@ export function createActions({ store, deps }: AppStore) {
     });
   }
 
+  function deleteElements(nodeIds: string[], edgeIds: string[]) {
+    const g0 = current().graph;
+    const nodes = new Set(nodeIds.filter((id) => g0?.nodes.some((n) => n.id === id)));
+    const edges = new Set(edgeIds.filter((id) => g0?.edges.some((e) => e.id === id)));
+    if (nodes.size === 0 && edges.size === 0) return;
+    editGraph((g) => {
+      g.nodes = g.nodes.filter((n) => !nodes.has(n.id));
+      g.edges = g.edges.filter(
+        (e) => !edges.has(e.id) && !nodes.has(e.source.node) && !nodes.has(e.target.node),
+      );
+    });
+  }
+
+  /** Применить шаг отмены/повтора к активной вкладке. */
+  function applyHistory(step: typeof undoStep) {
+    store.setState((draft: AppState) => {
+      const tab = activeTab(draft);
+      const graph = tabGraph(draft, tab);
+      if (!tab || !graph) return;
+      const r = step(draft.history[tab.id], graph);
+      if (!r) return;
+      draft.history[tab.id] = r.history;
+      // Экземпляры составных нодов, удалённых из палитры, не возвращаются
+      const known = (t: string) =>
+        compositeIdOf(t) === null || !!draft.composites[compositeIdOf(t)!];
+      const gone = new Set(r.graph.nodes.filter((n) => !known(n.type)).map((n) => n.id));
+      const next =
+        gone.size === 0
+          ? r.graph
+          : {
+              nodes: r.graph.nodes.filter((n) => !gone.has(n.id)),
+              edges: r.graph.edges.filter(
+                (e) => !gone.has(e.source.node) && !gone.has(e.target.node),
+              ),
+            };
+      if (tab.kind === 'workflow') {
+        draft.workflows[tab.targetId]!.graph = next;
+      } else {
+        const def = draft.composites[tab.targetId]!;
+        const before = compositePorts(def);
+        def.graph = next;
+        cleanupRemovedPorts(draft, def.id, before);
+      }
+    });
+  }
+
   function checkCompositeName(name: string, exceptId?: string): Rejection | null {
     const trimmed = name.trim();
-    if (trimmed.length < 1 || trimmed.length > MAX_NAME) return { ok: false, code: 'unknown-port', message: messages.invalidName };
-    const taken = Object.values(store.getState().composites).some((c) => c.id !== exceptId && c.name === trimmed);
-    return taken ? { ok: false, code: 'unknown-port', message: compositeMessages.nameTaken(trimmed) } : null;
+    if (trimmed.length < 1 || trimmed.length > MAX_NAME)
+      return { ok: false, code: 'unknown-port', message: messages.invalidName };
+    const taken = Object.values(store.getState().composites).some(
+      (c) => c.id !== exceptId && c.name === trimmed,
+    );
+    return taken
+      ? { ok: false, code: 'unknown-port', message: compositeMessages.nameTaken(trimmed) }
+      : null;
   }
 
   function current(): { state: AppState; graph: Graph | undefined; insideComposite?: string } {
@@ -124,7 +206,9 @@ export function createActions({ store, deps }: AppStore) {
     if (index < 0) return;
     draft.tabs.splice(index, 1);
     delete draft.nodeStates[tabId];
-    if (draft.activeTabId === tabId) draft.activeTabId = (draft.tabs[index] ?? draft.tabs[index - 1])?.id ?? null;
+    delete draft.history[tabId];
+    if (draft.activeTabId === tabId)
+      draft.activeTabId = (draft.tabs[index] ?? draft.tabs[index - 1])?.id ?? null;
   }
 
   return {
@@ -134,7 +218,10 @@ export function createActions({ store, deps }: AppStore) {
       const id = deps.newId();
       const ts = deps.now();
       store.setState((draft: AppState) => {
-        const name = uniqueName(DEFAULT_WORKFLOW_NAME, Object.values(draft.workflows).map((w) => w.name));
+        const name = uniqueName(
+          DEFAULT_WORKFLOW_NAME,
+          Object.values(draft.workflows).map((w) => w.name),
+        );
         draft.workflows[id] = { id, name, graph: emptyGraph(), createdAt: ts, updatedAt: ts };
         draft.workflowOrder.push(id);
         openTabIn(draft, 'workflow', id);
@@ -163,7 +250,13 @@ export function createActions({ store, deps }: AppStore) {
       const ts = deps.now();
       store.setState((draft: AppState) => {
         const name = `${source.name} (копия)`.slice(0, MAX_NAME);
-        draft.workflows[copyId] = { id: copyId, name, graph: structuredClone(source.graph), createdAt: ts, updatedAt: ts };
+        draft.workflows[copyId] = {
+          id: copyId,
+          name,
+          graph: structuredClone(source.graph),
+          createdAt: ts,
+          updatedAt: ts,
+        };
         draft.workflowOrder.splice(draft.workflowOrder.indexOf(id) + 1, 0, copyId);
       });
       return copyId;
@@ -173,7 +266,8 @@ export function createActions({ store, deps }: AppStore) {
       store.setState((draft: AppState) => {
         delete draft.workflows[id];
         draft.workflowOrder = draft.workflowOrder.filter((x) => x !== id);
-        for (const t of draft.tabs.filter((t) => t.kind === 'workflow' && t.targetId === id)) closeTabIn(draft, t.id);
+        for (const t of draft.tabs.filter((t) => t.kind === 'workflow' && t.targetId === id))
+          closeTabIn(draft, t.id);
       });
     },
 
@@ -226,15 +320,29 @@ export function createActions({ store, deps }: AppStore) {
     addNode(type: string, position: Position): Result<{ id: string }> {
       const { state, graph, insideComposite } = current();
       if (!graph) return { ok: false, code: 'unknown-type', message: 'Нет открытой вкладки' };
-      const check = canAddNode(graph, type, { insideComposite }, registryOf(state), Object.values(state.composites));
+      const check = canAddNode(
+        graph,
+        type,
+        { insideComposite },
+        registryOf(state),
+        Object.values(state.composites),
+      );
       if (!check.ok) return check;
       const id = deps.newId();
       editGraph((g) => {
         const node: Graph['nodes'][number] = { id, type, position, values: {} };
         if (type === IO_INPUT || type === IO_OUTPUT) {
           // Новый нод «Вход»/«Выход» — с одним портом и уникальным именем (FR-021c)
-          const taken = g.nodes.filter((n) => n.type === type).flatMap((n) => (n.ports ?? []).map((p) => p.name));
-          node.ports = [{ name: uniqueName(type === IO_INPUT ? 'in' : 'out', taken).replace(' ', '_'), type: 'any', required: true }];
+          const taken = g.nodes
+            .filter((n) => n.type === type)
+            .flatMap((n) => (n.ports ?? []).map((p) => p.name));
+          node.ports = [
+            {
+              name: uniqueName(type === IO_INPUT ? 'in' : 'out', taken).replace(' ', '_'),
+              type: 'any',
+              required: true,
+            },
+          ];
         }
         g.nodes.push(node);
       });
@@ -244,7 +352,10 @@ export function createActions({ store, deps }: AppStore) {
     // --- Составные ноды (US4) ---
 
     /** Свернуть выделенные ноды в составной нод (FR-021, FR-022, FR-023a). */
-    collapseSelection(nodeIds: string[], name: string): Result<{ compositeId: string; instanceId: string }> {
+    collapseSelection(
+      nodeIds: string[],
+      name: string,
+    ): Result<{ compositeId: string; instanceId: string }> {
       const bad = checkCompositeName(name);
       if (bad) return bad;
       const { state, graph } = current();
@@ -280,7 +391,8 @@ export function createActions({ store, deps }: AppStore) {
       const node = graph?.nodes.find((n) => n.id === nodeId);
       const defId = node ? compositeIdOf(node.type) : null;
       const def = defId ? state.composites[defId] : undefined;
-      if (!graph || !def) return { ok: false, code: 'unknown-type', message: 'Составной нод не найден' };
+      if (!graph || !def)
+        return { ok: false, code: 'unknown-type', message: 'Составной нод не найден' };
       const next = expand(graph, nodeId, def, deps.newId);
       editGraph((g) => {
         g.nodes = next.nodes;
@@ -296,8 +408,14 @@ export function createActions({ store, deps }: AppStore) {
     /** Сколько экземпляров составного нода во всех workflow и определениях. */
     compositeUsage(id: string): number {
       const s = store.getState();
-      const graphs = [...Object.values(s.workflows).map((w) => w.graph), ...Object.values(s.composites).map((c) => c.graph)];
-      return graphs.reduce((sum, g) => sum + g.nodes.filter((n) => compositeIdOf(n.type) === id).length, 0);
+      const graphs = [
+        ...Object.values(s.workflows).map((w) => w.graph),
+        ...Object.values(s.composites).map((c) => c.graph),
+      ];
+      return graphs.reduce(
+        (sum, g) => sum + g.nodes.filter((n) => compositeIdOf(n.type) === id).length,
+        0,
+      );
     },
 
     /** Удалить составной нод из палитры вместе со всеми экземплярами (FR-027; подтверждение — в UI). */
@@ -305,12 +423,15 @@ export function createActions({ store, deps }: AppStore) {
       store.setState((draft: AppState) => {
         delete draft.composites[id];
         for (const g of allGraphs(draft)) {
-          const gone = new Set(g.nodes.filter((n) => compositeIdOf(n.type) === id).map((n) => n.id));
+          const gone = new Set(
+            g.nodes.filter((n) => compositeIdOf(n.type) === id).map((n) => n.id),
+          );
           if (gone.size === 0) continue;
           g.nodes = g.nodes.filter((n) => !gone.has(n.id));
           g.edges = g.edges.filter((e) => !gone.has(e.source.node) && !gone.has(e.target.node));
         }
-        for (const t of draft.tabs.filter((t) => t.kind === 'composite' && t.targetId === id)) closeTabIn(draft, t.id);
+        for (const t of draft.tabs.filter((t) => t.kind === 'composite' && t.targetId === id))
+          closeTabIn(draft, t.id);
       });
     },
 
@@ -322,32 +443,61 @@ export function createActions({ store, deps }: AppStore) {
         return { ok: false, code: 'unknown-port', message: 'Нод «Вход»/«Выход» не найден' };
       }
       const cleaned = ports.map((p) => ({ ...p, name: p.name.trim() }));
-      const candidate = { ...graph, nodes: graph.nodes.map((n) => (n.id === nodeId ? { ...n, ports: cleaned } : n)) };
+      const candidate = {
+        ...graph,
+        nodes: graph.nodes.map((n) => (n.id === nodeId ? { ...n, ports: cleaned } : n)),
+      };
       const bad = validateIoPorts(candidate);
       if (bad) return bad;
       const names = new Set(cleaned.map((p) => p.name));
       editGraph((g) => {
         g.nodes.find((n) => n.id === nodeId)!.ports = cleaned;
         g.edges = g.edges.filter((e) =>
-          node.type === IO_INPUT ? !(e.source.node === nodeId && !names.has(e.source.port)) : !(e.target.node === nodeId && !names.has(e.target.port)),
+          node.type === IO_INPUT
+            ? !(e.source.node === nodeId && !names.has(e.source.port))
+            : !(e.target.node === nodeId && !names.has(e.target.port)),
         );
       });
       return { ok: true };
     },
 
     moveNode(id: string, position: Position) {
+      if (!current().graph?.nodes.some((n) => n.id === id)) return;
       editGraph((g) => {
         const n = g.nodes.find((x) => x.id === id);
         if (n) n.position = position;
-      });
+      }, `move:${id}`);
     },
 
     deleteNodes(ids: string[]) {
-      const set = new Set(ids);
-      editGraph((g) => {
-        g.nodes = g.nodes.filter((n) => !set.has(n.id));
-        g.edges = g.edges.filter((e) => !set.has(e.source.node) && !set.has(e.target.node));
-      });
+      deleteElements(ids, []);
+    },
+
+    /** Удалить ноды (со всеми их связями) и связи одним шагом истории. */
+    deleteElements,
+
+    // --- Отмена и повтор (FR-009) ---
+
+    canUndo(): boolean {
+      const s = store.getState();
+      return (s.history[s.activeTabId ?? '']?.past.length ?? 0) > 0;
+    },
+
+    canRedo(): boolean {
+      const s = store.getState();
+      return (s.history[s.activeTabId ?? '']?.future.length ?? 0) > 0;
+    },
+
+    undo() {
+      applyHistory(undoStep);
+    },
+
+    redo() {
+      applyHistory(redoStep);
+    },
+
+    tabIds(): string[] {
+      return store.getState().tabs.map((t) => t.id);
     },
 
     connect(source: PortRef, target: PortRef): Result {
@@ -364,9 +514,7 @@ export function createActions({ store, deps }: AppStore) {
     },
 
     disconnect(edgeId: string) {
-      editGraph((g) => {
-        g.edges = g.edges.filter((e) => e.id !== edgeId);
-      });
+      deleteElements([], [edgeId]);
     },
 
     /** Задать вручную значение входа; `undefined` — очистить. */
@@ -374,7 +522,8 @@ export function createActions({ store, deps }: AppStore) {
       const { state, graph } = current();
       const node = graph?.nodes.find((n) => n.id === nodeId);
       const def = node && nodePorts(node, registryOf(state))?.inputs.find((p) => p.name === port);
-      if (!node || !def) return { ok: false, code: 'unknown-port', message: `Порт «${port}» не найден.` };
+      if (!node || !def)
+        return { ok: false, code: 'unknown-port', message: `Порт «${port}» не найден.` };
       if (value !== undefined && !matchesType(value, def.type)) {
         return { ok: false, code: 'type-mismatch', message: messages.valueTypeMismatch(def.type) };
       }
@@ -382,7 +531,7 @@ export function createActions({ store, deps }: AppStore) {
         const n = g.nodes.find((x) => x.id === nodeId)!;
         if (value === undefined) delete n.values[port];
         else n.values[port] = value;
-      });
+      }, `value:${nodeId}:${port}`);
       return { ok: true };
     },
   };

@@ -129,7 +129,8 @@ src/
 │   ├── location.ts        # выбор папки, OPFS, восстановление доступа, idb-keyval
 │   ├── autosave.ts        # debounce 300 мс + сброс на pagehide
 │   ├── fs-types.d.ts      # типы File System Access API, которых нет в lib.dom
-│   └── opfs-write-worker.ts  # только если Safari не поддерживает createWritable в OPFS (риск R7)
+│   ├── opfs-writer.ts     # запись через воркер, если нет createWritable (риск R7)
+│   └── opfs-write-worker.ts  # воркер: createSyncAccessHandle() в OPFS
 ├── store/
 │   ├── store.ts           # Zustand: workspace, tabs, history, nodeStates
 │   ├── react.ts           # AppProvider, useAppState, useActions — привязка стора к React

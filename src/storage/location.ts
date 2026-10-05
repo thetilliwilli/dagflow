@@ -1,5 +1,6 @@
 // Где хранятся данные: рабочая папка (File System Access API) или OPFS (research R7, FR-028a…d)
 import { get, set } from 'idb-keyval';
+import { createOpfsWorkerWriter, type FallbackWrite } from './opfs-writer';
 
 export type StorageLocation =
   | { kind: 'folder'; name: string }
@@ -9,6 +10,8 @@ export type StorageLocation =
 /** Окружение браузера; в тестах подменяется фейками. */
 export interface LocationEnv {
   showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
+  /** Запасная запись в OPFS без createWritable (риск R7). */
+  opfsFallbackWrite?: FallbackWrite;
   getOpfsRoot: () => Promise<FileSystemDirectoryHandle>;
   loadHandle: () => Promise<FileSystemDirectoryHandle | undefined>;
   saveHandle: (handle: FileSystemDirectoryHandle) => Promise<void>;
@@ -20,6 +23,7 @@ export function browserEnv(): LocationEnv {
   const picker = typeof window !== 'undefined' ? window.showDirectoryPicker : undefined;
   return {
     showDirectoryPicker: picker ? () => picker.call(window, { mode: 'readwrite', id: 'dagflow' }) : undefined,
+    opfsFallbackWrite: createOpfsWorkerWriter(),
     getOpfsRoot: () => navigator.storage.getDirectory(),
     loadHandle: () => get<FileSystemDirectoryHandle>(HANDLE_KEY),
     saveHandle: (h) => set(HANDLE_KEY, h),

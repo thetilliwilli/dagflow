@@ -77,6 +77,7 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
         Object.assign(d, freshWorkspace(deps));
         d.composites = {};
         d.nodeStates = {};
+        d.history = {};
         d.unavailable = data.unavailable;
       });
       autosave.markAllDirty();
@@ -96,10 +97,13 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
       d.tabs = tabs;
       d.activeTabId = activeTabId;
       d.nodeStates = {};
+      d.history = {};
       d.unavailable = data.unavailable;
     });
     autosave.resetBaseline();
   }
+
+  const browserStorage = async () => new DirectoryStorage(await browserStorageHandle(env), env.opfsFallbackWrite);
 
   async function use(target: DirectoryStorage, location: StorageLocation) {
     pendingHandle = null;
@@ -115,7 +119,7 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
       return;
     }
     // Папка стала недоступна: продолжаем в браузере, ничего не теряя
-    const browser = new DirectoryStorage(await browserStorageHandle(env));
+    const browser = await browserStorage();
     await browser.saveAll(currentData());
     storage = browser;
     setLocation({ kind: 'browser' });
@@ -134,7 +138,11 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
       setLocation(detected.location);
       return;
     }
-    await use(new DirectoryStorage(detected.handle), detected.location);
+    const target =
+      detected.location.kind === 'browser'
+        ? new DirectoryStorage(detected.handle, env.opfsFallbackWrite)
+        : new DirectoryStorage(detected.handle);
+    await use(target, detected.location);
   }
 
   return {
@@ -154,7 +162,7 @@ export function createPersistence(app: AppStore, env: LocationEnv = browserEnv()
     /** Явное переключение на хранилище браузера. */
     async useBrowser() {
       await autosave.flush();
-      await use(new DirectoryStorage(await browserStorageHandle(env)), { kind: 'browser' });
+      await use(await browserStorage(), { kind: 'browser' });
     },
 
     /** Выбор или смена рабочей папки (FR-028c). */

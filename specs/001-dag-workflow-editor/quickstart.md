@@ -17,6 +17,8 @@ npm install
 npm run dev          # редактор на http://localhost:5173
 npm test             # unit + component тесты (Vitest)
 npm run test:e2e     # e2e (Playwright, Chromium)
+npm run test:e2e:firefox  # e2e в Firefox (без сценариев выбора рабочей папки)
+npm run test:perf    # замеры SC-002/SC-003 на графе из 100 нодов
 npm run typecheck    # tsc для приложения и отдельно для движка (без DOM)
 npm run build        # production-сборка в dist/
 ```

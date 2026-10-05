@@ -111,3 +111,9 @@ export const compositeMessages = {
   portType: 'Тип порта',
   removePort: (name: string) => `Удалить порт «${name}»`,
 };
+
+export const historyMessages = {
+  undo: 'Отменить',
+  redo: 'Повторить',
+  minimap: 'Мини-карта графа',
+};

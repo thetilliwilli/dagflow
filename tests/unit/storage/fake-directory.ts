@@ -34,6 +34,8 @@ export class FakeDirectory {
   accessCount = 0;
   /** Если задано — любые операции падают с этой ошибкой (папка стала недоступна). */
   failWith: Error | null = null;
+  /** Имитация браузера без createWritable (риск R7). */
+  noCreateWritable = false;
 
   constructor(public name = 'root') {}
 
@@ -48,6 +50,7 @@ export class FakeDirectory {
     if (!e) {
       if (!opts?.create) throw new DOMException(`${name} not found`, 'NotFoundError');
       e = new FakeDirectory(name);
+      e.noCreateWritable = this.noCreateWritable;
       this.entries.set(name, e);
     }
     if (!(e instanceof FakeDirectory)) throw new DOMException('not a directory', 'TypeMismatchError');
@@ -55,6 +58,11 @@ export class FakeDirectory {
   }
 
   async getFileHandle(name: string, opts?: { create?: boolean }): Promise<FakeFile> {
+    const file = await this.getFileHandleRaw(name, opts);
+    return this.noCreateWritable ? ({ kind: 'file', name: file.name, getFile: () => file.getFile() } as unknown as FakeFile) : file;
+  }
+
+  private async getFileHandleRaw(name: string, opts?: { create?: boolean }): Promise<FakeFile> {
     this.touch();
     let e = this.entries.get(name);
     if (!e) {

@@ -543,8 +543,9 @@ button.link {
 .canvas-toolbar {
   position: absolute;
   top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 8px;
+  display: flex;
+  gap: 4px;
   z-index: 5;
 }
 .field {

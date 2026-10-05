@@ -80,4 +80,18 @@ describe('DirectoryStorage', () => {
     expect(dstDir.paths()).toEqual(['workflows/wf1.workflow.json', 'workspace.json']);
     await expect(src.copyTo(new DirectoryStorage(dstDir.asHandle()))).rejects.toThrow();
   });
+
+  it('без createWritable пишет через запасной путь, а без него сообщает об ошибке (риск R7)', async () => {
+    const dir = new FakeDirectory();
+    dir.noCreateWritable = true;
+    const writes: string[] = [];
+    const s = new DirectoryStorage(dir.asHandle(), async (d, name, text) => {
+      writes.push(`${d.name}/${name}`);
+      expect(text).toContain('"format": "dagflow-workflow"');
+    });
+    await s.saveWorkflow(sampleWorkflow('wf1'));
+    expect(writes).toEqual(['workflows/wf1.workflow.json']);
+    const noFallback = new DirectoryStorage(dir.asHandle());
+    await expect(noFallback.saveWorkspace(workspace)).rejects.toThrow('не поддерживает запись');
+  });
 });

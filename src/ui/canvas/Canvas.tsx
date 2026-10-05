@@ -4,6 +4,8 @@ import {
   applyEdgeChanges,
   applyNodeChanges,
   Background,
+  Controls,
+  MiniMap,
   ReactFlow,
   useReactFlow,
   type Connection,
@@ -20,7 +22,8 @@ import { canConnect } from '../../engine';
 import { useActions, useApp, useAppState } from '../../store/react';
 import { tryConnect } from './connection';
 import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
-import { compositeMessages } from '../messages';
+import { compositeMessages, historyMessages } from '../messages';
+import { useShortcuts } from './useShortcuts';
 import { FlowNode } from './FlowNode';
 import { inHandle, outHandle, portOfHandle } from './PortHandle';
 
@@ -63,16 +66,33 @@ export function Canvas() {
     [graph?.edges, selectedEdges],
   );
 
+  useShortcuts(actions);
+  const canUndo = useAppState((s) => (s.history[s.activeTabId ?? '']?.past.length ?? 0) > 0);
+  const canRedo = useAppState((s) => (s.history[s.activeTabId ?? '']?.future.length ?? 0) > 0);
+
+  // Удаление нодов и связей приходит одним вызовом onDelete — один шаг истории
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      setRfNodes((nodes) => applyNodeChanges(changes, nodes));
-      const removed: string[] = [];
+      setRfNodes((nodes) =>
+        applyNodeChanges(
+          changes.filter((c) => c.type !== 'remove'),
+          nodes,
+        ),
+      );
       for (const c of changes) {
         if (c.type === 'position' && c.position)
           actions.moveNode(c.id, { x: c.position.x, y: c.position.y });
-        if (c.type === 'remove') removed.push(c.id);
       }
-      if (removed.length > 0) actions.deleteNodes(removed);
+    },
+    [actions],
+  );
+
+  const onDelete = useCallback(
+    ({ nodes, edges }: { nodes: RfNode[]; edges: RfEdge[] }) => {
+      actions.deleteElements(
+        nodes.map((n) => n.id),
+        edges.map((e) => e.id),
+      );
     },
     [actions],
   );
@@ -86,9 +106,8 @@ export function Canvas() {
         const next = new Set(selected);
         return next.size === prev.size && [...next].every((id) => prev.has(id)) ? prev : next;
       });
-      for (const c of changes) if (c.type === 'remove') actions.disconnect(c.id);
     },
-    [actions, rfEdges],
+    [rfEdges],
   );
 
   const app = useApp();
@@ -156,20 +175,37 @@ export function Canvas() {
 
   return (
     <div className="canvas" data-testid="canvas">
-      {selected.length > 0 && (
-        <div className="canvas-toolbar">
+      <div className="canvas-toolbar">
+        <button type="button" disabled={!canUndo} title="Ctrl+Z" onClick={() => actions.undo()}>
+          {historyMessages.undo}
+        </button>
+        <button
+          type="button"
+          disabled={!canRedo}
+          title="Ctrl+Shift+Z"
+          onClick={() => actions.redo()}
+        >
+          {historyMessages.redo}
+        </button>
+        {selected.length > 0 && (
           <button type="button" onClick={() => setCollapsing(selected)}>
             {compositeMessages.collapse}
           </button>
-        </div>
+        )}
+      </div>
+      {collapsing && (
+        <CompositeNameDialog nodeIds={collapsing} onClose={() => setCollapsing(null)} />
       )}
-      {collapsing && <CompositeNameDialog nodeIds={collapsing} onClose={() => setCollapsing(null)} />}
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
+        onDelete={onDelete}
+        deleteKeyCode={['Delete', 'Backspace']}
+        selectionKeyCode="Shift"
+        multiSelectionKeyCode={['Shift', 'Meta', 'Control']}
         onConnect={onConnect}
         onConnectEnd={onConnectEnd}
         isValidConnection={isValidConnection}
@@ -179,6 +215,8 @@ export function Canvas() {
         onDrop={onDrop}
       >
         <Background />
+        <Controls showInteractive={false} />
+        <MiniMap pannable zoomable ariaLabel={historyMessages.minimap} />
       </ReactFlow>
     </div>
   );

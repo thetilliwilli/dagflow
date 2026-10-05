@@ -3,6 +3,7 @@ import { createStore } from 'zustand/vanilla';
 import { immer } from 'zustand/middleware/immer';
 import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '../engine';
 import type { UnavailableItem } from '../storage/directory-storage';
+import type { TabHistory } from './history';
 import type { StorageLocation } from '../storage/location';
 
 export type NotificationKind = 'info' | 'warning' | 'error';
@@ -35,11 +36,15 @@ export interface AppState {
   folderSupported: boolean;
   /** Файлы, которые не удалось прочитать. */
   unavailable: UnavailableItem[];
+  /** История отмены: tabId → снапшоты графа. Не сохраняется между сессиями. */
+  history: Record<string, TabHistory>;
 }
 
 export interface StoreDeps {
   newId: () => string;
   now: () => string;
+  /** Миллисекунды для объединения правок в истории; по умолчанию Date.now. */
+  nowMs?: () => number;
 }
 
 function makeStore(initial?: Partial<AppState>) {
@@ -56,6 +61,7 @@ function makeStore(initial?: Partial<AppState>) {
       storagePrompt: null,
       folderSupported: false,
       unavailable: [],
+      history: {},
       ...initial,
     })),
   );

@@ -9,6 +9,7 @@ import {
   workflowToFile,
   workspaceToFile,
 } from '../model/serialize';
+import type { FallbackWrite } from './opfs-writer';
 
 export interface UnavailableItem {
   id: string;
@@ -34,7 +35,11 @@ function isNotFound(e: unknown): boolean {
 }
 
 export class DirectoryStorage {
-  constructor(readonly handle: FileSystemDirectoryHandle) {}
+  /** fallbackWrite — запись без createWritable (OPFS в браузерах без его поддержки, риск R7). */
+  constructor(
+    readonly handle: FileSystemDirectoryHandle,
+    private readonly fallbackWrite?: FallbackWrite,
+  ) {}
 
   get name(): string {
     return this.handle.name;
@@ -51,9 +56,16 @@ export class DirectoryStorage {
 
   private async write(dir: FileSystemDirectoryHandle, name: string, data: unknown) {
     const file = await dir.getFileHandle(name, { create: true });
-    const writable = await file.createWritable();
-    await writable.write(toJsonText(data));
-    await writable.close();
+    const text = toJsonText(data);
+    if (typeof file.createWritable === 'function') {
+      const writable = await file.createWritable();
+      await writable.write(text);
+      await writable.close();
+    } else if (this.fallbackWrite) {
+      await this.fallbackWrite(dir, name, text);
+    } else {
+      throw new Error('Браузер не поддерживает запись файлов');
+    }
   }
 
   private async remove(dirName: string, name: string) {
