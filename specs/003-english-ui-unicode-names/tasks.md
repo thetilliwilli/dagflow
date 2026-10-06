@@ -152,7 +152,7 @@ workflow вычисляются с теми же значениями, нод «
 - [X] T039 [P] Пометки «уточнено в 003» (R9, принцип V): `specs/001-dag-workflow-editor/spec.md` (Assumptions «Язык интерфейса — русский»), `specs/001-dag-workflow-editor/data-model.md` (имена workflow и составного нода 1–100, порта 1–40 → «ограничение снято в 003, только непустое»), `specs/002-editor-ui-redesign/spec.md` (Assumptions о языке, FR-009 — «до 100 символов» снято); в `specs/BACKLOG.md` убедиться, что раздела этой фичи нет
 - [X] T040 Прогнать `npm run test:e2e:firefox` и `npm run test:perf` (SC-002/SC-003 фичи 002 — без регрессий); фильтр Firefox в `playwright.config.ts` по-прежнему отсекает сценарии рабочей папки
 - [X] T041 Финальная проверка: `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e`, `npm run build` зелёные; `npx prettier --check` по изменённым файлам
-- [ ] T042 Ручная проверка по [quickstart.md](./quickstart.md) (US1 1–7, US2 1–4, US3 1; SC-006 — формулировки ошибок сверить с контрактом)
+- [X] T042 Ручная проверка по [quickstart.md](./quickstart.md) (US1 1–7, US2 1–4, US3 1; SC-006 — формулировки ошибок сверить с контрактом)
 
 ---
 
