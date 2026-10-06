@@ -7,7 +7,15 @@ function full(value: JsonValue): string {
   return typeof value === 'string' ? value : JSON.stringify(value, null, 2);
 }
 
-export function ValueView({ value, testId, className }: { value: JsonValue | undefined; testId?: string; className?: string }) {
+export function ValueView({
+  value,
+  testId,
+  className,
+}: {
+  value: JsonValue | undefined;
+  testId?: string;
+  className?: string;
+}) {
   const [open, setOpen] = useState(false);
   if (value === undefined) {
     return (

@@ -22,9 +22,12 @@ scope.onmessage = async (e) => {
   const { id, path, text } = e.data;
   try {
     let dir = await navigator.storage.getDirectory();
-    for (const name of path.slice(0, -1)) dir = await dir.getDirectoryHandle(name, { create: true });
+    for (const name of path.slice(0, -1))
+      dir = await dir.getDirectoryHandle(name, { create: true });
     const file = await dir.getFileHandle(path[path.length - 1]!, { create: true });
-    const handle = await (file as unknown as { createSyncAccessHandle(): Promise<SyncAccessHandle> }).createSyncAccessHandle();
+    const handle = await (
+      file as unknown as { createSyncAccessHandle(): Promise<SyncAccessHandle> }
+    ).createSyncAccessHandle();
     try {
       const data = new TextEncoder().encode(text);
       handle.truncate(0);

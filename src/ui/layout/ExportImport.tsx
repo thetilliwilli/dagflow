@@ -57,7 +57,12 @@ export function ExportImport() {
       </button>
       <label className="button-like">
         {m.importLabel}
-        <input type="file" accept=".json,application/json" className="visually-hidden" onChange={(e) => void importFile(e)} />
+        <input
+          type="file"
+          accept=".json,application/json"
+          className="visually-hidden"
+          onChange={(e) => void importFile(e)}
+        />
       </label>
       {error && <ImportErrorDialog message={error} onClose={() => setError(null)} />}
     </section>

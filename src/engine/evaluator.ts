@@ -94,7 +94,12 @@ export function createEvaluator(source: RegistrySource): Evaluator {
     const def = registry.get(n.type);
     const ports = nodePorts(n, registry);
     if (!def || !ports) {
-      return { status: 'error', inputs: {}, outputs: {}, message: stateMessages.unknownType(n.type) };
+      return {
+        status: 'error',
+        inputs: {},
+        outputs: {},
+        message: stateMessages.unknownType(n.type),
+      };
     }
     const inputs: Inputs = {};
     let missing: string | undefined;
@@ -106,9 +111,10 @@ export function createEvaluator(source: RegistrySource): Evaluator {
         const v = s?.status === 'ok' ? s.outputs[src.port] : undefined;
         if (v === undefined) {
           blocked ??=
-            s?.status === 'ok' ? stateMessages.noOutputValue(src.port, title(src.node)) : blockedMessage(src.node, s);
-        }
-        else inputs[p.name] = v;
+            s?.status === 'ok'
+              ? stateMessages.noOutputValue(src.port, title(src.node))
+              : blockedMessage(src.node, s);
+        } else inputs[p.name] = v;
       } else if (Object.hasOwn(n.values, p.name)) {
         inputs[p.name] = n.values[p.name]!;
       } else if (p.default !== undefined) {
@@ -123,12 +129,14 @@ export function createEvaluator(source: RegistrySource): Evaluator {
       for (const p of n.ports ?? []) if (p.default !== undefined) outputs[p.name] = p.default;
       return { status: 'ok', inputs: {}, outputs };
     }
-    if (missing) return { status: 'waiting', inputs, outputs: {}, message: stateMessages.fillInput(missing) };
+    if (missing)
+      return { status: 'waiting', inputs, outputs: {}, message: stateMessages.fillInput(missing) };
     if (blocked) return { status: 'blocked', inputs, outputs: {}, message: blocked };
     try {
       return { status: 'ok', inputs, outputs: def.compute ? def.compute(inputs) : {} };
     } catch (e) {
-      const message = e instanceof NodeError ? e.userMessage : stateMessages.internalError(def.title);
+      const message =
+        e instanceof NodeError ? e.userMessage : stateMessages.internalError(def.title);
       return { status: 'error', inputs, outputs: {}, message };
     }
   }

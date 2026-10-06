@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { createRegistry } from '../../../src/engine/registry';
-import { canAddNode, canConnect, linkCandidates, validateGraph } from '../../../src/engine/validate';
+import {
+  canAddNode,
+  canConnect,
+  linkCandidates,
+  validateGraph,
+} from '../../../src/engine/validate';
 import { edge, graph, node } from './helpers';
 
 const registry = createRegistry([]);
@@ -15,23 +20,37 @@ function chain() {
 
 describe('canConnect', () => {
   it('отклоняет связь, образующую цикл (C → A)', () => {
-    const r = canConnect(chain(), { source: { node: 'C', port: 'result' }, target: { node: 'A', port: 'a' } }, registry);
+    const r = canConnect(
+      chain(),
+      { source: { node: 'C', port: 'result' }, target: { node: 'A', port: 'a' } },
+      registry,
+    );
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.code).toBe('cycle');
-      expect(r.message).toBe('Cannot link: this connection would create a cycle, and the graph must stay acyclic.');
+      expect(r.message).toBe(
+        'Cannot link: this connection would create a cycle, and the graph must stay acyclic.',
+      );
     }
   });
 
   it('отклоняет связь нода с самим собой', () => {
-    const r = canConnect(chain(), { source: { node: 'A', port: 'result' }, target: { node: 'A', port: 'b' } }, registry);
+    const r = canConnect(
+      chain(),
+      { source: { node: 'A', port: 'result' }, target: { node: 'A', port: 'b' } },
+      registry,
+    );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe('same-node');
   });
 
   it('отклоняет несовместимые типы и называет оба типа по-русски', () => {
     const g = graph([node('T', 'builtin:text'), node('S', 'builtin:add')]);
-    const r = canConnect(g, { source: { node: 'T', port: 'value' }, target: { node: 'S', port: 'a' } }, registry);
+    const r = canConnect(
+      g,
+      { source: { node: 'T', port: 'value' }, target: { node: 'S', port: 'a' } },
+      registry,
+    );
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.code).toBe('type-mismatch');
@@ -42,27 +61,57 @@ describe('canConnect', () => {
   });
 
   it('разрешает любой тип ↔ any', () => {
-    const g = graph([node('T', 'builtin:text'), node('N', 'builtin:number'), node('Show', 'builtin:show'), node('J', 'builtin:json'), node('S', 'builtin:add')]);
-    expect(canConnect(g, { source: { node: 'T', port: 'value' }, target: { node: 'Show', port: 'value' } }, registry).ok).toBe(true);
-    expect(canConnect(g, { source: { node: 'J', port: 'value' }, target: { node: 'S', port: 'a' } }, registry).ok).toBe(true);
+    const g = graph([
+      node('T', 'builtin:text'),
+      node('N', 'builtin:number'),
+      node('Show', 'builtin:show'),
+      node('J', 'builtin:json'),
+      node('S', 'builtin:add'),
+    ]);
+    expect(
+      canConnect(
+        g,
+        { source: { node: 'T', port: 'value' }, target: { node: 'Show', port: 'value' } },
+        registry,
+      ).ok,
+    ).toBe(true);
+    expect(
+      canConnect(
+        g,
+        { source: { node: 'J', port: 'value' }, target: { node: 'S', port: 'a' } },
+        registry,
+      ).ok,
+    ).toBe(true);
   });
 
   it('связь на занятый вход заменяет старую', () => {
     const g = chain();
     const g2 = { ...g, nodes: [...g.nodes, node('D', 'builtin:number')] };
     const old = g.edges[0]!;
-    const r = canConnect(g2, { source: { node: 'D', port: 'value' }, target: { node: 'B', port: 'a' } }, registry);
+    const r = canConnect(
+      g2,
+      { source: { node: 'D', port: 'value' }, target: { node: 'B', port: 'a' } },
+      registry,
+    );
     expect(r).toEqual({ ok: true, replaces: old.id });
   });
 
   it('несуществующий порт — unknown-port', () => {
-    const r = canConnect(chain(), { source: { node: 'A', port: 'nope' }, target: { node: 'C', port: 'b' } }, registry);
+    const r = canConnect(
+      chain(),
+      { source: { node: 'A', port: 'nope' }, target: { node: 'C', port: 'b' } },
+      registry,
+    );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe('unknown-port');
   });
 
   it('вход нельзя использовать как источник', () => {
-    const r = canConnect(chain(), { source: { node: 'A', port: 'a' }, target: { node: 'C', port: 'b' } }, registry);
+    const r = canConnect(
+      chain(),
+      { source: { node: 'A', port: 'a' }, target: { node: 'C', port: 'b' } },
+      registry,
+    );
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.code).toBe('unknown-port');
   });
@@ -107,12 +156,17 @@ describe('validateGraph', () => {
   });
 
   it('находит несовместимую связь', () => {
-    const g = graph([node('T', 'builtin:text'), node('S', 'builtin:add')], [edge('T', 'value', 'S', 'a')]);
+    const g = graph(
+      [node('T', 'builtin:text'), node('S', 'builtin:add')],
+      [edge('T', 'value', 'S', 'a')],
+    );
     expect(validateGraph(g, registry).map((r) => r.code)).toContain('type-mismatch');
   });
 
   it('находит ноды «Вход»/«Выход» вне составного нода', () => {
-    const g = graph([{ ...node('I', 'builtin:input'), ports: [{ name: 'a', type: 'number', required: true }] }]);
+    const g = graph([
+      { ...node('I', 'builtin:input'), ports: [{ name: 'a', type: 'number', required: true }] },
+    ]);
     expect(validateGraph(g, registry).map((r) => r.code)).toContain('io-node-outside-composite');
   });
 });
@@ -140,7 +194,8 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
   };
   const SAME_OUT =
     'Cannot link an output to an output: a link goes from an output of one node to an input of another.';
-  const SAME_IN = 'Cannot link an input to an input: a link goes from an output of one node to an input of another.';
+  const SAME_IN =
+    'Cannot link an input to an input: a link goes from an output of one node to an input of another.';
 
   it('E10: запись для каждого порта цели в порядке портов, независимо от from', () => {
     const fromOut = linkCandidates(g(), { node: 'N', port: 'value', side: 'out' }, 'B', registry);
@@ -166,21 +221,26 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
     expect(codes(fromText).inputs).toEqual({ a: 'type-mismatch', b: 'type-mismatch' });
     if ('inputs' in fromText) {
       expect(fromText.inputs.b).toMatchObject({
-        message: 'Incompatible types: text → number. Link ports of the same type or use a port of type “any”.',
+        message:
+          'Incompatible types: text → number. Link ports of the same type or use a port of type “any”.',
       });
     }
     const cycle = linkCandidates(g(), { node: 'B', port: 'result', side: 'out' }, 'A', registry);
     expect(codes(cycle).inputs).toEqual({ a: 'cycle', b: 'cycle' });
     if ('inputs' in cycle) {
       expect(cycle.inputs.b).toMatchObject({
-        message: 'Cannot link: this connection would create a cycle, and the graph must stay acyclic.',
+        message:
+          'Cannot link: this connection would create a cycle, and the graph must stay acyclic.',
       });
     }
   });
 
   it('от входа: входы цели — same-side, выходы проверяются как источник', () => {
     const r = linkCandidates(g(), { node: 'S', port: 'value', side: 'in' }, 'B', registry);
-    expect(codes(r)).toEqual({ inputs: { a: 'same-side', b: 'same-side' }, outputs: { result: 'ok' } });
+    expect(codes(r)).toEqual({
+      inputs: { a: 'same-side', b: 'same-side' },
+      outputs: { result: 'ok' },
+    });
     if ('inputs' in r) expect(r.inputs.a).toMatchObject({ message: SAME_IN });
     // Вход A ← выход B — цикл (A → B уже есть)
     const back = linkCandidates(g(), { node: 'A', port: 'b', side: 'in' }, 'B', registry);
@@ -215,12 +275,20 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
         ['A', 'out'],
         ['B', 'out'],
       ] as const) {
-        const r = linkCandidates(graphs, { node: from, port: from === 'N' || from === 'T' ? 'value' : 'result', side }, target, registry);
+        const r = linkCandidates(
+          graphs,
+          { node: from, port: from === 'N' || from === 'T' ? 'value' : 'result', side },
+          target,
+          registry,
+        );
         if (!('inputs' in r)) throw new Error(r.message);
         for (const [port, c] of Object.entries(r.inputs)) {
           const direct = canConnect(
             graphs,
-            { source: { node: from, port: from === 'N' || from === 'T' ? 'value' : 'result' }, target: { node: target, port } },
+            {
+              source: { node: from, port: from === 'N' || from === 'T' ? 'value' : 'result' },
+              target: { node: target, port },
+            },
             registry,
           );
           expect(c.ok).toBe(direct.ok);

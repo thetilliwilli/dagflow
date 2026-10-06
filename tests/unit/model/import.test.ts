@@ -14,7 +14,10 @@ function ctx(): ImportContext {
 }
 
 function exportText(mutate?: (e: Record<string, unknown>) => void): string {
-  const e = buildExport(sampleWorkflow('wf1'), [], '2026-10-05T12:10:00.000Z') as unknown as Record<string, unknown>;
+  const e = buildExport(sampleWorkflow('wf1'), [], '2026-10-05T12:10:00.000Z') as unknown as Record<
+    string,
+    unknown
+  >;
   mutate?.(e);
   return toJsonText(e);
 }
@@ -33,16 +36,24 @@ describe('импорт файла выгрузки', () => {
   });
 
   it('чужой format', () => {
-    expect(fail(JSON.stringify({ format: 'something-else', version: 1 }))).toBe('Unknown file format.');
+    expect(fail(JSON.stringify({ format: 'something-else', version: 1 }))).toBe(
+      'Unknown file format.',
+    );
     expect(fail('[1, 2, 3]')).toBe('Unknown file format.');
   });
 
   it('более новая версия', () => {
-    expect(fail(exportText((e) => (e.version = 2)))).toBe('The file was created by a newer version of the editor.');
+    expect(fail(exportText((e) => (e.version = 2)))).toBe(
+      'The file was created by a newer version of the editor.',
+    );
   });
 
   it('ошибка схемы — сообщение с путём к полю', () => {
-    const msg = fail(exportText((e) => ((e.workflow as Record<string, unknown>).graph = { nodes: 'oops', edges: [] })));
+    const msg = fail(
+      exportText(
+        (e) => ((e.workflow as Record<string, unknown>).graph = { nodes: 'oops', edges: [] }),
+      ),
+    );
     expect(msg).toMatch(/^The file does not look like a workflow export: .+\.$/);
     expect(msg).toContain('workflow.graph.nodes');
   });
@@ -50,7 +61,9 @@ describe('импорт файла выгрузки', () => {
   it('файл до фичи 002 (ноды без имён) отклоняется с путём к полю, список не меняется', () => {
     const msg = fail(
       exportText((e) => {
-        for (const n of (e.workflow as { graph: { nodes: Array<Record<string, unknown>> } }).graph.nodes) delete n.name;
+        for (const n of (e.workflow as { graph: { nodes: Array<Record<string, unknown>> } }).graph
+          .nodes)
+          delete n.name;
       }),
     );
     expect(msg).toMatch(/^The file does not look like a workflow export: .+\.$/);
@@ -60,7 +73,9 @@ describe('импорт файла выгрузки', () => {
   it('выгрузка и загрузка сохраняют имена нодов (SC-007)', () => {
     const r = importExport(exportText(), ctx());
     if (!r.ok) throw new Error(r.message);
-    expect(r.workflow.graph.nodes.map((n) => n.name)).toEqual(sampleWorkflow().graph.nodes.map((n) => n.name));
+    expect(r.workflow.graph.nodes.map((n) => n.name)).toEqual(
+      sampleWorkflow().graph.nodes.map((n) => n.name),
+    );
   });
 
   it('неизвестные типы нодов перечислены в сообщении', () => {
@@ -79,10 +94,16 @@ describe('импорт файла выгрузки', () => {
     const msg = fail(
       exportText((e) => {
         const g = (e.workflow as { graph: { edges: unknown[] } }).graph;
-        g.edges.push({ id: 'e3', source: { node: 'n2', port: 'result' }, target: { node: 'n2', port: 'b' } });
+        g.edges.push({
+          id: 'e3',
+          source: { node: 'n2', port: 'result' },
+          target: { node: 'n2', port: 'b' },
+        });
       }),
     );
-    expect(msg).toMatch(/^The graph in the file is invalid: Cannot link: this connection would create a cycle/);
+    expect(msg).toMatch(
+      /^The graph in the file is invalid: Cannot link: this connection would create a cycle/,
+    );
   });
 
   it('успешный импорт выдаёт workflow с новым id и тем же графом', () => {

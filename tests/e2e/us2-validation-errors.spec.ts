@@ -23,7 +23,9 @@ test('US2: несовместимые типы отклоняются', async ({
   await expect(page.getByRole('alert')).toContainText('Incompatible types: text → number');
 });
 
-test('US2: деление на ноль → ошибка на ноде, исправление → ошибка исчезла; независимая ветка работает', async ({ page }) => {
+test('US2: деление на ноль → ошибка на ноде, исправление → ошибка исчезла; независимая ветка работает', async ({
+  page,
+}) => {
   await page.goto('/');
   const div = await addNode(page, 'Divide', 60, 60);
   const show = await addNode(page, 'Show', 420, 60);
@@ -36,7 +38,9 @@ test('US2: деление на ноль → ошибка на ноде, испр
   await connect(page, div, 'result', show, 'value');
   await connect(page, add, 'result', show2, 'value');
 
-  await expect(div.getByTestId('node-message')).toHaveText('Division by zero: set a non-zero divisor.');
+  await expect(div.getByTestId('node-message')).toHaveText(
+    'Division by zero: set a non-zero divisor.',
+  );
   await expect(show.getByTestId('node-status')).toContainText('not computed: upstream problem');
   await expect(await valueOf(page, show2, 'in', 'value')).toHaveText('5');
 

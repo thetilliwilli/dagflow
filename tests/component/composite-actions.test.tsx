@@ -47,7 +47,8 @@ function setup() {
     const inst = graph().nodes.find((n) => n.type === `composite:${compositeId}`)!;
     return { ...ids, compositeId, inst: inst.id, workflowTab: state().activeTabId! };
   };
-  const showValue = (tabId: string, nodeId: string) => state().nodeStates[tabId]?.[nodeId]?.inputs.value;
+  const showValue = (tabId: string, nodeId: string) =>
+    state().nodeStates[tabId]?.[nodeId]?.inputs.value;
   return { app, actions, state, flush, graph, add, buildAndCollapse, showValue };
 }
 
@@ -55,7 +56,11 @@ describe('составные ноды: действия', () => {
   it('свернуть выделение: экземпляр на месте группы, значения не изменились (FR-022)', () => {
     const { buildAndCollapse, graph, showValue } = setup();
     const ids = buildAndCollapse();
-    expect(graph().nodes.map((n) => n.id).sort()).toEqual([ids.n1, ids.n2, ids.show, ids.inst].sort());
+    expect(
+      graph()
+        .nodes.map((n) => n.id)
+        .sort(),
+    ).toEqual([ids.n1, ids.n2, ids.show, ids.inst].sort());
     expect(showValue(ids.workflowTab, ids.show)).toBe(10);
   });
 
@@ -105,7 +110,9 @@ describe('составные ноды: действия', () => {
     flush();
     const ports = () => {
       const def = state().composites[ids.compositeId]!;
-      return def.graph.nodes.filter((n) => n.type === 'builtin:input').flatMap((n) => n.ports!.map((p) => p.name));
+      return def.graph.nodes
+        .filter((n) => n.type === 'builtin:input')
+        .flatMap((n) => n.ports!.map((p) => p.name));
     };
     expect(ports()).toEqual(['a', 'b', 'c', 'd']);
     act(() => actions.deleteNodes([inputId]));
@@ -118,11 +125,17 @@ describe('составные ноды: действия', () => {
     const ids = buildAndCollapse();
     act(() => actions.openComposite(ids.compositeId));
     const def = state().composites[ids.compositeId]!;
-    const inputA = def.graph.nodes.find((n) => n.type === 'builtin:input' && n.ports![0]!.name === 'a')!;
+    const inputA = def.graph.nodes.find(
+      (n) => n.type === 'builtin:input' && n.ports![0]!.name === 'a',
+    )!;
     act(() => actions.deleteNodes([inputA.id]));
     const wf = Object.values(state().workflows)[0]!;
-    expect(wf.graph.edges.some((e) => e.target.node === ids.inst && e.target.port === 'a')).toBe(false);
-    expect(wf.graph.edges.some((e) => e.target.node === ids.inst && e.target.port === 'b')).toBe(true);
+    expect(wf.graph.edges.some((e) => e.target.node === ids.inst && e.target.port === 'a')).toBe(
+      false,
+    );
+    expect(wf.graph.edges.some((e) => e.target.node === ids.inst && e.target.port === 'b')).toBe(
+      true,
+    );
     expect(state().notifications.at(-1)!.text).toMatch(/Links removed: 1/);
   });
 
@@ -169,11 +182,21 @@ describe('составные ноды: действия', () => {
       </AppProvider>,
     );
     openPalette('My composite nodes');
-    await user.click(screen.getByRole('button', { name: 'Delete composite node “Удвоенная сумма”' }));
-    expect(screen.getByRole('dialog', { name: 'Delete composite node?' })).toHaveTextContent('Instances in use: 1.');
-    await user.click(within(screen.getByRole('dialog', { name: 'Delete composite node?' })).getByRole('button', { name: 'Delete' }));
+    await user.click(
+      screen.getByRole('button', { name: 'Delete composite node “Удвоенная сумма”' }),
+    );
+    expect(screen.getByRole('dialog', { name: 'Delete composite node?' })).toHaveTextContent(
+      'Instances in use: 1.',
+    );
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Delete composite node?' })).getByRole('button', {
+        name: 'Delete',
+      }),
+    );
     expect(state().composites[ids.compositeId]).toBeUndefined();
-    expect(Object.values(state().workflows)[0]!.graph.nodes.some((n) => n.id === ids.inst)).toBe(false);
+    expect(Object.values(state().workflows)[0]!.graph.nodes.some((n) => n.id === ids.inst)).toBe(
+      false,
+    );
   });
 
   it('добавить составной нод внутрь самого себя нельзя (FR-026)', () => {
@@ -193,7 +216,17 @@ describe('составные ноды: действия', () => {
     });
     flush();
     expect(graph().nodes.some((n) => n.type.startsWith('composite:'))).toBe(false);
-    expect(graph().nodes.map((n) => n.type).sort()).toEqual(['builtin:add', 'builtin:multiply', 'builtin:number', 'builtin:number', 'builtin:show']);
+    expect(
+      graph()
+        .nodes.map((n) => n.type)
+        .sort(),
+    ).toEqual([
+      'builtin:add',
+      'builtin:multiply',
+      'builtin:number',
+      'builtin:number',
+      'builtin:show',
+    ]);
     expect(showValue(ids.workflowTab, ids.show)).toBe(10);
   });
 });

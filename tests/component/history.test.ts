@@ -152,12 +152,21 @@ describe('история отмены (FR-009)', () => {
     const r = actions.collapseSelection([a], 'Сумма');
     if (!r.ok) throw new Error(r.message);
     actions.openComposite(r.compositeId);
-    const out = state().composites[r.compositeId]!.graph.nodes.find((n) => n.type === 'builtin:output')!;
+    const out = state().composites[r.compositeId]!.graph.nodes.find(
+      (n) => n.type === 'builtin:output',
+    )!;
     expect(out).toBeDefined();
     const ir = actions.addNode('builtin:input', { x: 0, y: 0 });
     if (!ir.ok) throw new Error(ir.message);
     vi.advanceTimersByTime(1000);
-    const portsWith = (v?: number) => [{ name: 'in', type: 'number' as const, required: true, ...(v === undefined ? {} : { default: v }) }];
+    const portsWith = (v?: number) => [
+      {
+        name: 'in',
+        type: 'number' as const,
+        required: true,
+        ...(v === undefined ? {} : { default: v }),
+      },
+    ];
     // Сначала тип порта (отдельный шаг), затем серия правок значения по умолчанию
     expect(actions.editIoPorts(ir.id, portsWith()).ok).toBe(true);
     vi.advanceTimersByTime(1000);
@@ -171,4 +180,3 @@ describe('история отмены (FR-009)', () => {
     expect(input().ports![0]!.default).toBeUndefined();
   });
 });
-

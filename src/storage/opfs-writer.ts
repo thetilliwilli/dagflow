@@ -1,5 +1,9 @@
 // Запись файла OPFS через воркер (используется, только если нет createWritable — риск R7)
-export type FallbackWrite = (dir: FileSystemDirectoryHandle, name: string, text: string) => Promise<void>;
+export type FallbackWrite = (
+  dir: FileSystemDirectoryHandle,
+  name: string,
+  text: string,
+) => Promise<void>;
 
 export function createOpfsWorkerWriter(): FallbackWrite {
   let worker: Worker | null = null;

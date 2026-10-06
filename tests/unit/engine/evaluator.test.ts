@@ -66,7 +66,13 @@ describe('Evaluator', () => {
   it('вычисляет цепочку при первом flush', () => {
     const { registry } = testRegistry();
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('S', 'test:src', { value: 1 }), node('I', 'test:inc')], [edge('S', 'value', 'I', 'x')]), []);
+    ev.setGraph(
+      graph(
+        [node('S', 'test:src', { value: 1 }), node('I', 'test:inc')],
+        [edge('S', 'value', 'I', 'x')],
+      ),
+      [],
+    );
     ev.flush();
     expect(ev.state('I')).toMatchObject({ status: 'ok', outputs: { y: 2 }, inputs: { x: 1 } });
   });
@@ -76,7 +82,12 @@ describe('Evaluator', () => {
     const ev = createEvaluator(registry);
     ev.setGraph(
       graph(
-        [node('S1', 'test:src', { value: 1 }), node('I1', 'test:inc'), node('S2', 'test:src', { value: 5 }), node('I2', 'test:inc')],
+        [
+          node('S1', 'test:src', { value: 1 }),
+          node('I1', 'test:inc'),
+          node('S2', 'test:src', { value: 5 }),
+          node('I2', 'test:inc'),
+        ],
         [edge('S1', 'value', 'I1', 'x'), edge('S2', 'value', 'I2', 'x')],
       ),
       [],
@@ -96,8 +107,18 @@ describe('Evaluator', () => {
     const ev = createEvaluator(registry);
     ev.setGraph(
       graph(
-        [node('D', 'test:sum'), node('B', 'test:inc'), node('A', 'test:src', { value: 1 }), node('C', 'test:inc')],
-        [edge('A', 'value', 'B', 'x'), edge('A', 'value', 'C', 'x'), edge('B', 'y', 'D', 'a'), edge('C', 'y', 'D', 'b')],
+        [
+          node('D', 'test:sum'),
+          node('B', 'test:inc'),
+          node('A', 'test:src', { value: 1 }),
+          node('C', 'test:inc'),
+        ],
+        [
+          edge('A', 'value', 'B', 'x'),
+          edge('A', 'value', 'C', 'x'),
+          edge('B', 'y', 'D', 'a'),
+          edge('C', 'y', 'D', 'b'),
+        ],
       ),
       [],
     );
@@ -116,7 +137,11 @@ describe('Evaluator', () => {
       const ev = createEvaluator(registry);
       ev.setGraph(
         graph(
-          [node('A', 'test:src', { value: 0 }), node('B', 'test:src', { value: 0 }), node('S', 'test:sum')],
+          [
+            node('A', 'test:src', { value: 0 }),
+            node('B', 'test:src', { value: 0 }),
+            node('S', 'test:sum'),
+          ],
           [edge('A', 'value', 'S', 'a'), edge('B', 'value', 'S', 'b')],
         ),
         [],
@@ -126,15 +151,36 @@ describe('Evaluator', () => {
       ev.flush();
       return ev.state('S');
     };
-    expect(run([['A', 3], ['B', 4]])).toEqual(run([['B', 4], ['A', 3]]));
-    expect(run([['A', 3], ['B', 4]]).outputs).toEqual({ r: 7 });
+    expect(
+      run([
+        ['A', 3],
+        ['B', 4],
+      ]),
+    ).toEqual(
+      run([
+        ['B', 4],
+        ['A', 3],
+      ]),
+    );
+    expect(
+      run([
+        ['A', 3],
+        ['B', 4],
+      ]).outputs,
+    ).toEqual({ r: 7 });
   });
 
   it('E4: незаполненный обязательный вход → waiting с именем входа; потомки → blocked', () => {
     const { registry } = testRegistry();
     const ev = createEvaluator(registry);
     // Сообщение потомка называет нод по имени экземпляра (E15, фича 002)
-    ev.setGraph(graph([node('S', 'test:sum', { a: 1 }, 'Сумма'), node('I', 'test:inc')], [edge('S', 'r', 'I', 'x')]), []);
+    ev.setGraph(
+      graph(
+        [node('S', 'test:sum', { a: 1 }, 'Сумма'), node('I', 'test:inc')],
+        [edge('S', 'r', 'I', 'x')],
+      ),
+      [],
+    );
     ev.flush();
     expect(ev.state('S').status).toBe('waiting');
     expect(ev.state('S').message).toContain('b');
@@ -145,7 +191,13 @@ describe('Evaluator', () => {
   it('E4: null, пришедший по связи, считается значением', () => {
     const registry = createRegistry([]);
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('J', 'builtin:json', { value: null }), node('Sh', 'builtin:show')], [edge('J', 'value', 'Sh', 'value')]), []);
+    ev.setGraph(
+      graph(
+        [node('J', 'builtin:json', { value: null }), node('Sh', 'builtin:show')],
+        [edge('J', 'value', 'Sh', 'value')],
+      ),
+      [],
+    );
     ev.flush();
     expect(ev.state('Sh')).toMatchObject({ status: 'ok', inputs: { value: null } });
   });
@@ -166,7 +218,10 @@ describe('Evaluator', () => {
       [],
     );
     ev.flush();
-    expect(ev.state('Div')).toMatchObject({ status: 'error', message: 'Division by zero: set a non-zero divisor.' });
+    expect(ev.state('Div')).toMatchObject({
+      status: 'error',
+      message: 'Division by zero: set a non-zero divisor.',
+    });
     expect(ev.state('Show').status).toBe('blocked');
     expect(ev.state('Show2')).toMatchObject({ status: 'ok', inputs: { value: 3 } });
   });
@@ -174,7 +229,13 @@ describe('Evaluator', () => {
   it('E6: исправление значения возвращает цепочку в ok одним flush()', () => {
     const registry = createRegistry([]);
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('Div', 'builtin:divide', { a: 1, b: 0 }), node('Show', 'builtin:show')], [edge('Div', 'result', 'Show', 'value')]), []);
+    ev.setGraph(
+      graph(
+        [node('Div', 'builtin:divide', { a: 1, b: 0 }), node('Show', 'builtin:show')],
+        [edge('Div', 'result', 'Show', 'value')],
+      ),
+      [],
+    );
     ev.flush();
     ev.setValue('Div', 'b', 2);
     ev.flush();
@@ -186,19 +247,37 @@ describe('Evaluator', () => {
     const registry = createRegistry([]);
     const ev = createEvaluator(registry);
     ev.setGraph(
-      graph([node('J', 'builtin:json', { value: { a: 1 } }), node('Get', 'builtin:array-get', { index: 0 })], [edge('J', 'value', 'Get', 'array')]),
+      graph(
+        [
+          node('J', 'builtin:json', { value: { a: 1 } }),
+          node('Get', 'builtin:array-get', { index: 0 }),
+        ],
+        [edge('J', 'value', 'Get', 'array')],
+      ),
       [],
     );
     ev.flush();
-    expect(ev.state('Get')).toMatchObject({ status: 'error', message: 'Expected an array, got: object.' });
+    expect(ev.state('Get')).toMatchObject({
+      status: 'error',
+      message: 'Expected an array, got: object.',
+    });
   });
 
   it('исключение, не являющееся NodeError, → «Внутренняя ошибка нода» без трассировки', () => {
     const { registry } = testRegistry();
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('S', 'test:src', { value: 1 }), node('B', 'test:boom')], [edge('S', 'value', 'B', 'x')]), []);
+    ev.setGraph(
+      graph(
+        [node('S', 'test:src', { value: 1 }), node('B', 'test:boom')],
+        [edge('S', 'value', 'B', 'x')],
+      ),
+      [],
+    );
     ev.flush();
-    expect(ev.state('B')).toMatchObject({ status: 'error', message: 'Internal error in node “Бомба”.' });
+    expect(ev.state('B')).toMatchObject({
+      status: 'error',
+      message: 'Internal error in node “Бомба”.',
+    });
   });
 
   it('NodeError из compute передаёт текст пользователю', () => {
@@ -208,7 +287,17 @@ describe('Evaluator', () => {
   it('pending() содержит грязные ноды и их потомков до flush()', () => {
     const { registry } = testRegistry();
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('S', 'test:src', { value: 1 }), node('I', 'test:inc'), node('X', 'test:src', { value: 2 })], [edge('S', 'value', 'I', 'x')]), []);
+    ev.setGraph(
+      graph(
+        [
+          node('S', 'test:src', { value: 1 }),
+          node('I', 'test:inc'),
+          node('X', 'test:src', { value: 2 }),
+        ],
+        [edge('S', 'value', 'I', 'x')],
+      ),
+      [],
+    );
     ev.flush();
     ev.setValue('S', 'value', 3);
     expect([...ev.pending()].sort()).toEqual(['I', 'S']);
@@ -220,7 +309,11 @@ describe('Evaluator', () => {
   it('setGraph со структурным изменением пересчитывает только затронутые ноды', () => {
     const { registry, calls } = testRegistry();
     const ev = createEvaluator(registry);
-    const nodes = [node('S', 'test:src', { value: 1 }), node('I1', 'test:inc'), node('I2', 'test:inc')];
+    const nodes = [
+      node('S', 'test:src', { value: 1 }),
+      node('I1', 'test:inc'),
+      node('I2', 'test:inc'),
+    ];
     ev.setGraph(graph(nodes, [edge('S', 'value', 'I1', 'x')]), []);
     ev.flush();
     expect(ev.state('I2').status).toBe('waiting');
@@ -234,7 +327,13 @@ describe('Evaluator', () => {
   it('удалённый нод исчезает, а его потомки переходят в waiting', () => {
     const { registry } = testRegistry();
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('S', 'test:src', { value: 1 }), node('I', 'test:inc')], [edge('S', 'value', 'I', 'x')]), []);
+    ev.setGraph(
+      graph(
+        [node('S', 'test:src', { value: 1 }), node('I', 'test:inc')],
+        [edge('S', 'value', 'I', 'x')],
+      ),
+      [],
+    );
     ev.flush();
     ev.setGraph(graph([node('I', 'test:inc')]), []);
     ev.flush();

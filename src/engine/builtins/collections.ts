@@ -56,9 +56,15 @@ export const collectionNodes = [
     title: 'Set field',
     category: c,
     description: 'A new object with the field set.',
-    inputs: [{ name: 'object', type: 'object', default: {} }, req('key', 'text'), req('value', 'any')],
+    inputs: [
+      { name: 'object', type: 'object', default: {} },
+      req('key', 'text'),
+      req('value', 'any'),
+    ],
     outputs: [out('object', 'object')],
-    compute: (i) => ({ object: { ...(i.object as { [key: string]: JsonValue }), [i.key as string]: i.value! } }),
+    compute: (i) => ({
+      object: { ...(i.object as { [key: string]: JsonValue }), [i.key as string]: i.value! },
+    }),
   }),
   defineNode({
     id: 'builtin:object-get',

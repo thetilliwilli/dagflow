@@ -12,7 +12,8 @@ export const ioNodes: NodeTypeDef[] = [
     id: IO_INPUT,
     title: 'Input',
     category: compositeCategory,
-    description: 'Ports of this node become inputs of the composite node. Inside, it gives default values.',
+    description:
+      'Ports of this node become inputs of the composite node. Inside, it gives default values.',
     inputs: [],
     outputs: [],
     paletteScope: 'composite',

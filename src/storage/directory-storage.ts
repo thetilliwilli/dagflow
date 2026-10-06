@@ -101,7 +101,7 @@ export class DirectoryStorage {
       if (entry.kind !== 'file' || !entry.name.endsWith(ext)) continue; // посторонние файлы игнорируются
       const id = entry.name.slice(0, -ext.length);
       try {
-        const text = await ((await (entry as FileSystemFileHandle).getFile()).text());
+        const text = await (await (entry as FileSystemFileHandle).getFile()).text();
         out.items.push(decode(JSON.parse(text)));
       } catch (e) {
         const detail = e instanceof SyntaxError ? 'invalid JSON' : (e as Error).message;
@@ -141,7 +141,11 @@ export class DirectoryStorage {
   }
 
   async saveWorkflow(wf: Workflow) {
-    await this.write((await this.subdir(WORKFLOWS, true))!, `${wf.id}${WORKFLOW_EXT}`, workflowToFile(wf));
+    await this.write(
+      (await this.subdir(WORKFLOWS, true))!,
+      `${wf.id}${WORKFLOW_EXT}`,
+      workflowToFile(wf),
+    );
   }
 
   async deleteWorkflow(id: string) {
@@ -149,7 +153,11 @@ export class DirectoryStorage {
   }
 
   async saveComposite(def: CompositeDef) {
-    await this.write((await this.subdir(COMPOSITES, true))!, `${def.id}${COMPOSITE_EXT}`, compositeToFile(def));
+    await this.write(
+      (await this.subdir(COMPOSITES, true))!,
+      `${def.id}${COMPOSITE_EXT}`,
+      compositeToFile(def),
+    );
   }
 
   async deleteComposite(id: string) {
@@ -172,7 +180,11 @@ export class DirectoryStorage {
     if (await other.hasData()) throw new Error('The target storage is not empty.');
     const data = await this.loadAll();
     await other.saveAll({
-      workspace: data.workspace ?? { workflowOrder: data.workflows.map((w) => w.id), tabs: [], activeTabId: null },
+      workspace: data.workspace ?? {
+        workflowOrder: data.workflows.map((w) => w.id),
+        tabs: [],
+        activeTabId: null,
+      },
       workflows: data.workflows,
       composites: data.composites,
     });

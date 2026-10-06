@@ -20,7 +20,11 @@ function setup() {
   const target = fakeTarget();
   const events = new EventTarget();
   let hidden = false;
-  const autosave = createAutosave(app.store, () => target, { delay: 300, events, isHidden: () => hidden });
+  const autosave = createAutosave(app.store, () => target, {
+    delay: 300,
+    events,
+    isHidden: () => hidden,
+  });
   const wfId = app.store.getState().workflowOrder[0]!;
   const rename = (name: string) =>
     app.store.setState((d: AppState) => {
@@ -48,7 +52,13 @@ describe('автосохранение', () => {
   it('пишет только изменённые файлы', async () => {
     const { app, target, rename, autosave } = setup();
     app.store.setState((d: AppState) => {
-      d.workflows.other = { id: 'other', name: 'Другой', graph: { nodes: [], edges: [] }, createdAt: 'now', updatedAt: 'now' };
+      d.workflows.other = {
+        id: 'other',
+        name: 'Другой',
+        graph: { nodes: [], edges: [] },
+        createdAt: 'now',
+        updatedAt: 'now',
+      };
       d.workflowOrder.push('other');
     });
     await autosave.flush();
@@ -70,7 +80,11 @@ describe('автосохранение', () => {
     });
     await autosave.flush();
     expect(target.deleteWorkflow).toHaveBeenCalledWith(wfId);
-    expect(target.saveWorkspace).toHaveBeenCalledWith({ workflowOrder: [], tabs: [], activeTabId: null });
+    expect(target.saveWorkspace).toHaveBeenCalledWith({
+      workflowOrder: [],
+      tabs: [],
+      activeTabId: null,
+    });
   });
 
   it('pagehide и visibilitychange (скрыта) сбрасывают отложенную запись немедленно', async () => {
@@ -92,14 +106,25 @@ describe('автосохранение', () => {
   it('ошибка записи не теряет изменения и повторяется при следующем изменении', async () => {
     const { app, target, rename, autosave } = setup();
     const onError = vi.fn();
-    const failing = createAutosave(app.store, () => target, { delay: 300, onError, events: new EventTarget() });
+    const failing = createAutosave(app.store, () => target, {
+      delay: 300,
+      onError,
+      events: new EventTarget(),
+    });
     autosave.stop();
     target.saveWorkflow.mockRejectedValueOnce(new Error('disk full'));
     rename('a');
     await failing.flush();
     expect(onError).toHaveBeenCalledTimes(1);
     app.store.setState((d: AppState) => {
-      d.composites.c = { id: 'c', name: 'c', description: '', graph: { nodes: [], edges: [] }, createdAt: '', updatedAt: '' };
+      d.composites.c = {
+        id: 'c',
+        name: 'c',
+        description: '',
+        graph: { nodes: [], edges: [] },
+        createdAt: '',
+        updatedAt: '',
+      };
     });
     await failing.flush();
     expect(target.saveWorkflow).toHaveBeenCalledTimes(2);

@@ -25,8 +25,14 @@ describe('DirectoryStorage', () => {
     await s.saveWorkflow(sampleWorkflow('wf1'));
     await s.saveComposite(composite);
     await s.saveWorkspace(workspace);
-    expect(dir.paths()).toEqual(['composites/c1.composite.json', 'workflows/wf1.workflow.json', 'workspace.json']);
-    expect(dir.file('workflows/wf1.workflow.json')!.content).toBe(toJsonText(workflowToFile(sampleWorkflow('wf1'))));
+    expect(dir.paths()).toEqual([
+      'composites/c1.composite.json',
+      'workflows/wf1.workflow.json',
+      'workspace.json',
+    ]);
+    expect(dir.file('workflows/wf1.workflow.json')!.content).toBe(
+      toJsonText(workflowToFile(sampleWorkflow('wf1'))),
+    );
   });
 
   it('loadAll читает всё обратно', async () => {
@@ -63,7 +69,9 @@ describe('DirectoryStorage', () => {
     dir.put('workflows/bad.workflow.json', '{ broken');
     const data = await s.loadAll();
     expect(data.workflows.map((w) => w.id)).toEqual(['wf1']);
-    expect(data.unavailable).toEqual([{ id: 'bad', kind: 'workflow', reason: 'The file is damaged: invalid JSON' }]);
+    expect(data.unavailable).toEqual([
+      { id: 'bad', kind: 'workflow', reason: 'The file is damaged: invalid JSON' },
+    ]);
   });
 
   it('workflow с нодом без имени (файл до фичи 002) — «недоступен» с причиной, остальные загружаются', async () => {
@@ -83,7 +91,12 @@ describe('DirectoryStorage', () => {
   it('пустое хранилище: loadAll и hasData', async () => {
     const s = new DirectoryStorage(new FakeDirectory().asHandle());
     expect(await s.hasData()).toBe(false);
-    expect(await s.loadAll()).toEqual({ workspace: null, workflows: [], composites: [], unavailable: [] });
+    expect(await s.loadAll()).toEqual({
+      workspace: null,
+      workflows: [],
+      composites: [],
+      unavailable: [],
+    });
     await s.saveWorkflow(sampleWorkflow('wf1'));
     expect(await s.hasData()).toBe(true);
   });
@@ -109,7 +122,9 @@ describe('DirectoryStorage', () => {
     await s.saveWorkflow(sampleWorkflow('wf1'));
     expect(writes).toEqual(['workflows/wf1.workflow.json']);
     const noFallback = new DirectoryStorage(dir.asHandle());
-    await expect(noFallback.saveWorkspace(workspace)).rejects.toThrow('The browser does not support writing files.');
+    await expect(noFallback.saveWorkspace(workspace)).rejects.toThrow(
+      'The browser does not support writing files.',
+    );
   });
 });
 
@@ -123,11 +138,23 @@ describe('рабочая папка, сохранённая до фичи 003 (U
     const dir = new FakeDirectory();
     const wf = { ...legacy.workflow, name: 'Новый workflow' };
     const def = legacy.composites[0];
-    dir.put(`workflows/${wf.id}.workflow.json`, JSON.stringify({ format: 'dagflow-workflow', version: 1, ...wf }, null, 2));
-    dir.put(`composites/${def.id}.composite.json`, JSON.stringify({ format: 'dagflow-composite', version: 1, ...def }, null, 2));
+    dir.put(
+      `workflows/${wf.id}.workflow.json`,
+      JSON.stringify({ format: 'dagflow-workflow', version: 1, ...wf }, null, 2),
+    );
+    dir.put(
+      `composites/${def.id}.composite.json`,
+      JSON.stringify({ format: 'dagflow-composite', version: 1, ...def }, null, 2),
+    );
     dir.put(
       'workspace.json',
-      JSON.stringify({ format: 'dagflow-workspace', version: 1, workflowOrder: [wf.id], tabs: [], activeTabId: null }),
+      JSON.stringify({
+        format: 'dagflow-workspace',
+        version: 1,
+        workflowOrder: [wf.id],
+        tabs: [],
+        activeTabId: null,
+      }),
     );
     return dir;
   }
@@ -136,9 +163,17 @@ describe('рабочая папка, сохранённая до фичи 003 (U
     const data = await new DirectoryStorage(legacyFolder().asHandle()).loadAll();
     expect(data.unavailable).toEqual([]);
     expect(data.workflows.map((w) => w.name)).toEqual(['Новый workflow']);
-    expect(data.workflows[0]!.graph.nodes.map((n) => n.name)).toEqual(['Число', 'Число', 'Сложить', 'Показать', 'Удвоить']);
+    expect(data.workflows[0]!.graph.nodes.map((n) => n.name)).toEqual([
+      'Число',
+      'Число',
+      'Сложить',
+      'Показать',
+      'Удвоить',
+    ]);
     expect(data.composites.map((c) => c.name)).toEqual(['Удвоить']);
-    expect(data.composites[0]!.graph.nodes.flatMap((n) => n.ports ?? []).map((p) => p.name)).toEqual(['x', 'результат']);
+    expect(
+      data.composites[0]!.graph.nodes.flatMap((n) => n.ports ?? []).map((p) => p.name),
+    ).toEqual(['x', 'результат']);
   });
 
   it('вычисляется с теми же значениями', async () => {

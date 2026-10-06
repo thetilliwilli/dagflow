@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { addNode, connect, openSidebar, tabBar, paletteItem, setInput, valueOf } from './helpers';
 
-test('US4: свернуть, второй экземпляр, правка внутри, отказ рекурсии, выгрузка/загрузка', async ({ page }, info) => {
+test('US4: свернуть, второй экземпляр, правка внутри, отказ рекурсии, выгрузка/загрузка', async ({
+  page,
+}, info) => {
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   // (a + b) × 2
@@ -25,8 +27,14 @@ test('US4: свернуть, второй экземпляр, правка вн�
   await mul.locator('.flow-node__name').click();
   await page.keyboard.up('Control');
   await page.getByRole('button', { name: 'Collapse into composite node' }).click();
-  await page.getByRole('dialog', { name: 'Collapse into composite node' }).getByLabel('Composite node name').fill('Удвоенная сумма');
-  await page.getByRole('dialog', { name: 'Collapse into composite node' }).getByRole('button', { name: 'Collapse' }).click();
+  await page
+    .getByRole('dialog', { name: 'Collapse into composite node' })
+    .getByLabel('Composite node name')
+    .fill('Удвоенная сумма');
+  await page
+    .getByRole('dialog', { name: 'Collapse into composite node' })
+    .getByRole('button', { name: 'Collapse' })
+    .click();
   // После сворачивания порядок нодов меняется — ищем по содержимому
   const showNode = page.locator('.react-flow__node').filter({ hasText: 'Show' });
   await expect(await valueOf(page, showNode, 'in', 'value')).toHaveText('10');
@@ -40,20 +48,38 @@ test('US4: свернуть, второй экземпляр, правка вн�
 
   // 3. Правка внутри: ×2 → ×3
   await page.getByRole('button', { name: 'Open composite node “Удвоенная сумма”' }).first().click();
-  await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('Composite node: Удвоенная сумма');
+  await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText(
+    'Composite node: Удвоенная сумма',
+  );
   const innerMul = page.locator('.react-flow__node').filter({ hasText: 'Multiply' });
   await setInput(page, innerMul, 'b', '3');
 
   // 4. Отказ рекурсии
   await addNodeExpectRejection();
   async function addNodeExpectRejection() {
-    await (await paletteItem(page, 'Удвоенная сумма')).dragTo(page.locator('.react-flow__pane'), { targetPosition: { x: 300, y: 400 } });
+    await (
+      await paletteItem(page, 'Удвоенная сумма')
+    ).dragTo(page.locator('.react-flow__pane'), { targetPosition: { x: 300, y: 400 } });
     await expect(page.getByRole('alert')).toContainText('inside itself');
   }
 
   await tabBar(page).getByRole('tab', { name: 'New workflow' }).click();
-  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Show' }), 'in', 'value')).toHaveText('15');
-  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Удвоенная сумма' }).last(), 'out', 'result')).toHaveText('6');
+  await expect(
+    await valueOf(
+      page,
+      page.locator('.react-flow__node').filter({ hasText: 'Show' }),
+      'in',
+      'value',
+    ),
+  ).toHaveText('15');
+  await expect(
+    await valueOf(
+      page,
+      page.locator('.react-flow__node').filter({ hasText: 'Удвоенная сумма' }).last(),
+      'out',
+      'result',
+    ),
+  ).toHaveText('6');
 
   // 5. Выгрузка → удаление → загрузка
   const downloadPromise = page.waitForEvent('download');
@@ -62,9 +88,19 @@ test('US4: свернуть, второй экземпляр, правка вн�
   await (await downloadPromise).saveAs(path);
   await paletteItem(page, 'Удвоенная сумма');
   await page.getByRole('button', { name: 'Delete composite node “Удвоенная сумма”' }).click();
-  await page.getByRole('dialog', { name: 'Delete composite node?' }).getByRole('button', { name: 'Delete' }).click();
+  await page
+    .getByRole('dialog', { name: 'Delete composite node?' })
+    .getByRole('button', { name: 'Delete' })
+    .click();
   await expect(page.getByTestId('palette').getByText('Удвоенная сумма')).toHaveCount(0);
   await (await openSidebar(page)).getByLabel('Import from file').setInputFiles(path);
   await expect(page.getByTestId('palette').getByText('Удвоенная сумма')).toHaveCount(1);
-  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Show' }), 'in', 'value')).toHaveText('15');
+  await expect(
+    await valueOf(
+      page,
+      page.locator('.react-flow__node').filter({ hasText: 'Show' }),
+      'in',
+      'value',
+    ),
+  ).toHaveText('15');
 });

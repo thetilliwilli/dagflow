@@ -35,7 +35,9 @@ export function deepEqual(a: JsonValue, b: JsonValue): boolean {
   if (isPlainObject(a)) {
     if (!isPlainObject(b)) return false;
     const keys = Object.keys(a);
-    return keys.length === Object.keys(b).length && keys.every((k) => k in b && deepEqual(a[k]!, b[k]!));
+    return (
+      keys.length === Object.keys(b).length && keys.every((k) => k in b && deepEqual(a[k]!, b[k]!))
+    );
   }
   return false;
 }

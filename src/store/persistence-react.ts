@@ -4,7 +4,13 @@ import type { Persistence } from './persistence';
 
 const PersistenceContext = createContext<Persistence | null>(null);
 
-export function PersistenceProvider({ persistence, children }: { persistence: Persistence; children: ReactNode }) {
+export function PersistenceProvider({
+  persistence,
+  children,
+}: {
+  persistence: Persistence;
+  children: ReactNode;
+}) {
   return createElement(PersistenceContext.Provider, { value: persistence }, children);
 }
 

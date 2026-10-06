@@ -1,7 +1,11 @@
 import type { CompositeDef, Graph, NodeInstance, PortDef } from '../../../src/engine';
 import { edge, node } from './helpers';
 
-export function io(id: string, type: 'builtin:input' | 'builtin:output', ports: PortDef[]): NodeInstance {
+export function io(
+  id: string,
+  type: 'builtin:input' | 'builtin:output',
+  ports: PortDef[],
+): NodeInstance {
   return { ...node(id, type), ports };
 }
 

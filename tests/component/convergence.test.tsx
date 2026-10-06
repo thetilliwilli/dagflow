@@ -37,7 +37,11 @@ function setup(state: Partial<AppState> = {}) {
 
 describe('недоступные данные (T100)', () => {
   it('повреждённый составной нод показан в палитре с причиной', () => {
-    setup({ unavailable: [{ id: 'broken', kind: 'composite', reason: 'Файл повреждён: некорректный JSON' }] });
+    setup({
+      unavailable: [
+        { id: 'broken', kind: 'composite', reason: 'Файл повреждён: некорректный JSON' },
+      ],
+    });
     const palette = within(openPalette('My composite nodes'));
     expect(palette.getByText(/Unavailable: broken/)).toBeInTheDocument();
     expect(palette.getByText(/Файл повреждён/)).toBeInTheDocument();
@@ -48,7 +52,13 @@ describe('недоступные данные (T100)', () => {
     act(() => {
       app.store.setState((d: AppState) => {
         const wf = Object.values(d.workflows)[0]!;
-        wf.graph.nodes.push({ id: 'ghost', type: 'composite:missing', name: 'Призрак', position: { x: 0, y: 0 }, values: {} });
+        wf.graph.nodes.push({
+          id: 'ghost',
+          type: 'composite:missing',
+          name: 'Призрак',
+          position: { x: 0, y: 0 },
+          values: {},
+        });
       });
     });
     act(() => frames.flushFrames());

@@ -6,7 +6,12 @@ function finite(n: number): number {
   return n;
 }
 
-function binary(id: string, title: string, description: string, op: (a: number, b: number) => number) {
+function binary(
+  id: string,
+  title: string,
+  description: string,
+  op: (a: number, b: number) => number,
+) {
   return defineNode({
     id,
     title,

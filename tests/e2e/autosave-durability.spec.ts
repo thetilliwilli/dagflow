@@ -8,20 +8,33 @@ async function changeWaitReload(page: Page) {
   await setInput(page, n, 'value', '4242');
   await page.waitForTimeout(1000);
   await page.reload();
-  await expect(await inputField(page, page.locator('.react-flow__node').first(), 'value')).toHaveValue('4242');
+  await expect(
+    await inputField(page, page.locator('.react-flow__node').first(), 'value'),
+  ).toHaveValue('4242');
 }
 
 test('SC-008: режим рабочей папки', async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as Record<string, unknown>).showDirectoryPicker = async () =>
-      (await navigator.storage.getDirectory()).getDirectoryHandle('picked-folder', { create: true });
+      (await navigator.storage.getDirectory()).getDirectoryHandle('picked-folder', {
+        create: true,
+      });
   });
   await page.goto('/');
-  await (await openSidebar(page)).getByRole('button', { name: 'Choose working folder' }).first().click();
+  await (
+    await openSidebar(page)
+  )
+    .getByRole('button', { name: 'Choose working folder' })
+    .first()
+    .click();
   await (await openSidebar(page)).getByRole('button', { name: 'Move', exact: true }).click();
-  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Folder: picked-folder');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText(
+    'Folder: picked-folder',
+  );
   await changeWaitReload(page);
-  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Folder: picked-folder');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText(
+    'Folder: picked-folder',
+  );
 });
 
 test('SC-008: режим хранилища браузера', async ({ page }) => {
@@ -29,6 +42,8 @@ test('SC-008: режим хранилища браузера', async ({ page }) 
     delete (window as unknown as Record<string, unknown>).showDirectoryPicker;
   });
   await page.goto('/');
-  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Data is stored in the browser');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText(
+    'Data is stored in the browser',
+  );
   await changeWaitReload(page);
 });

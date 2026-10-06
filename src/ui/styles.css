@@ -165,9 +165,15 @@ body,
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.flow-node.status-waiting .flow-node__problem { color: var(--waiting); }
-.flow-node.status-error .flow-node__problem { color: var(--error); }
-.flow-node.status-blocked .flow-node__problem { color: var(--blocked); }
+.flow-node.status-waiting .flow-node__problem {
+  color: var(--waiting);
+}
+.flow-node.status-error .flow-node__problem {
+  color: var(--error);
+}
+.flow-node.status-blocked .flow-node__problem {
+  color: var(--blocked);
+}
 /* Служебные «ручки» React Flow: невидимы и не принимают указатель (research R3) */
 .flow-node__anchor.react-flow__handle {
   width: 1px;
@@ -246,19 +252,36 @@ body,
   white-space: nowrap;
   color: var(--computing);
 }
-.node-status--ok { color: var(--ok); }
-.node-status--waiting { color: var(--waiting); }
-.node-status--error { color: var(--error); }
-.node-status--blocked { color: var(--blocked); }
+.node-status--ok {
+  color: var(--ok);
+}
+.node-status--waiting {
+  color: var(--waiting);
+}
+.node-status--error {
+  color: var(--error);
+}
+.node-status--blocked {
+  color: var(--blocked);
+}
 .node-message {
   max-width: 240px;
   padding: 4px 10px;
   font-size: 11px;
   border-bottom: 1px solid var(--border);
 }
-.node-message--waiting { color: var(--waiting); background: #fff8c5; }
-.node-message--error { color: var(--error); background: #ffebe9; }
-.node-message--blocked { color: var(--blocked); background: #fbefff; }
+.node-message--waiting {
+  color: var(--waiting);
+  background: #fff8c5;
+}
+.node-message--error {
+  color: var(--error);
+  background: #ffebe9;
+}
+.node-message--blocked {
+  color: var(--blocked);
+  background: #fbefff;
+}
 
 /* Уведомления */
 .notifications {
@@ -283,8 +306,12 @@ body,
   box-shadow: 0 2px 8px rgb(0 0 0 / 15%);
   font-size: 13px;
 }
-.notification--warning { border-left-color: var(--waiting); }
-.notification--error { border-left-color: var(--error); }
+.notification--warning {
+  border-left-color: var(--waiting);
+}
+.notification--error {
+  border-left-color: var(--error);
+}
 .notification button {
   border: none;
   background: none;

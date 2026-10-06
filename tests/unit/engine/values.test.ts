@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { deepEqual, describeKind, formatCompact, isCompatible, matchesType } from '../../../src/engine/values';
+import {
+  deepEqual,
+  describeKind,
+  formatCompact,
+  isCompatible,
+  matchesType,
+} from '../../../src/engine/values';
 import type { PortType } from '../../../src/engine/types';
 
 describe('matchesType', () => {

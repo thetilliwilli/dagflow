@@ -106,7 +106,9 @@ describe('список workflow и вкладки', () => {
     await user.click(tabs().getByRole('button', { name: 'Close tab “New workflow”' }));
     expect(tabs().queryAllByRole('tab')).toHaveLength(0);
     expect(state().workflowOrder).toHaveLength(1);
-    expect(screen.getByText('Open a workflow from the list or create a new one')).toBeInTheDocument();
+    expect(
+      screen.getByText('Open a workflow from the list or create a new one'),
+    ).toBeInTheDocument();
     await user.click(list().getByRole('button', { name: 'Open “New workflow”' }));
     expect(tabs().getAllByRole('tab')).toHaveLength(1);
   });
@@ -120,7 +122,11 @@ describe('список workflow и вкладки', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
     expect(state().workflows[id]).toBeDefined();
     await user.click(list().getByRole('button', { name: 'Delete “New workflow 2”' }));
-    await user.click(within(screen.getByRole('dialog', { name: 'Delete workflow?' })).getByRole('button', { name: 'Delete' }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'Delete workflow?' })).getByRole('button', {
+        name: 'Delete',
+      }),
+    );
     expect(state().workflows[id]).toBeUndefined();
     expect(tabs().getAllByRole('tab')).toHaveLength(1);
   });
@@ -128,7 +134,9 @@ describe('список workflow и вкладки', () => {
   it('недоступный workflow показан с причиной', () => {
     const { app, list } = setup();
     act(() => {
-      app.store.setState({ unavailable: [{ id: 'bad', kind: 'workflow', reason: 'Файл повреждён: ...' }] });
+      app.store.setState({
+        unavailable: [{ id: 'bad', kind: 'workflow', reason: 'Файл повреждён: ...' }],
+      });
     });
     expect(list().getByText(/bad/)).toBeInTheDocument();
     expect(list().getByText(/Файл повреждён/)).toBeInTheDocument();

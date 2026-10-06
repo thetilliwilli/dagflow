@@ -1,7 +1,16 @@
 // Составные ноды: порты, зависимости, сворачивание/разворачивание, разворачивание для вычисления (research R3)
 import { IO_INPUT, IO_OUTPUT, PASSTHROUGH } from './builtins/io';
 import { rejections, type Rejection } from './errors';
-import type { CompositeDef, Edge, Graph, JsonValue, NodeInstance, NodeRegistry, PortDef, PortRef } from './types';
+import type {
+  CompositeDef,
+  Edge,
+  Graph,
+  JsonValue,
+  NodeInstance,
+  NodeRegistry,
+  PortDef,
+  PortRef,
+} from './types';
 import { nodePorts } from './validate';
 
 export const COMPOSITE_PREFIX = 'composite:';
@@ -53,7 +62,10 @@ export function validateIoPorts(graph: Graph): Rejection | null {
 export function compositeDependencies(defs: CompositeDef[]): Map<string, Set<string>> {
   const direct = new Map<string, string[]>();
   for (const d of defs) {
-    direct.set(d.id, d.graph.nodes.map((n) => compositeIdOf(n.type)).filter((x): x is string => x !== null));
+    direct.set(
+      d.id,
+      d.graph.nodes.map((n) => compositeIdOf(n.type)).filter((x): x is string => x !== null),
+    );
   }
   const result = new Map<string, Set<string>>();
   for (const d of defs) {
@@ -95,8 +107,12 @@ export function collapse(
   const maxX = Math.max(...xs);
   const minY = Math.min(...ys);
   const defNodes: NodeInstance[] = inner.map((n) => clone(n));
-  const defEdges: Edge[] = graph.edges.filter((e) => group.has(e.source.node) && group.has(e.target.node)).map((e) => clone(e));
-  const outerEdges: Edge[] = graph.edges.filter((e) => !group.has(e.source.node) && !group.has(e.target.node));
+  const defEdges: Edge[] = graph.edges
+    .filter((e) => group.has(e.source.node) && group.has(e.target.node))
+    .map((e) => clone(e));
+  const outerEdges: Edge[] = graph.edges.filter(
+    (e) => !group.has(e.source.node) && !group.has(e.target.node),
+  );
   const instanceId = newId();
   const portOf = (ref: PortRef, kind: 'inputs' | 'outputs'): PortDef | undefined => {
     const n = graph.nodes.find((x) => x.id === ref.node);
@@ -123,7 +139,11 @@ export function collapse(
         values: {},
         ports: [{ name: portName, type: target?.type ?? 'any', required: true }],
       });
-      defEdges.push({ id: newId(), source: { node: ioId, port: portName }, target: { ...e.target } });
+      defEdges.push({
+        id: newId(),
+        source: { node: ioId, port: portName },
+        target: { ...e.target },
+      });
     }
     outerEdges.push({ id: e.id, source: e.source, target: { node: instanceId, port: portName } });
   });
@@ -148,7 +168,11 @@ export function collapse(
         values: {},
         ports: [{ name: portName, type: source?.type ?? 'any', required: true }],
       });
-      defEdges.push({ id: newId(), source: { ...e.source }, target: { node: ioId, port: portName } });
+      defEdges.push({
+        id: newId(),
+        source: { ...e.source },
+        target: { node: ioId, port: portName },
+      });
     }
     outerEdges.push({ id: e.id, source: { node: instanceId, port: portName }, target: e.target });
   });
@@ -165,7 +189,10 @@ export function collapse(
     id: instanceId,
     type: `${COMPOSITE_PREFIX}${composite.id}`,
     name,
-    position: { x: xs.reduce((a, b) => a + b, 0) / xs.length, y: ys.reduce((a, b) => a + b, 0) / ys.length },
+    position: {
+      x: xs.reduce((a, b) => a + b, 0) / xs.length,
+      y: ys.reduce((a, b) => a + b, 0) / ys.length,
+    },
     values: {},
   };
   return {
@@ -176,7 +203,12 @@ export function collapse(
 }
 
 /** Развернуть экземпляр составного нода обратно в ноды и связи (FR-025). */
-export function expand(graph: Graph, instanceId: string, def: CompositeDef, newId: () => string): Graph {
+export function expand(
+  graph: Graph,
+  instanceId: string,
+  def: CompositeDef,
+  newId: () => string,
+): Graph {
   const instance = graph.nodes.find((n) => n.id === instanceId);
   if (!instance) return graph;
   const innerNodes = def.graph.nodes.filter((n) => !isIo(n));
@@ -190,7 +222,10 @@ export function expand(graph: Graph, instanceId: string, def: CompositeDef, newI
       {
         ...clone(n),
         id: idMap.get(n.id)!,
-        position: { x: instance.position.x + n.position.x - cx, y: instance.position.y + n.position.y - cy },
+        position: {
+          x: instance.position.x + n.position.x - cx,
+          y: instance.position.y + n.position.y - cy,
+        },
       } as NodeInstance,
     ]),
   );
@@ -198,7 +233,8 @@ export function expand(graph: Graph, instanceId: string, def: CompositeDef, newI
   const outerOut = new Map<string, PortRef[]>(); // порт экземпляра → внешние приёмники
   for (const e of graph.edges) {
     if (e.target.node === instanceId) outerIn.set(e.target.port, e.source);
-    if (e.source.node === instanceId) outerOut.set(e.source.port, [...(outerOut.get(e.source.port) ?? []), e.target]);
+    if (e.source.node === instanceId)
+      outerOut.set(e.source.port, [...(outerOut.get(e.source.port) ?? []), e.target]);
   }
   const inputDefault = (port: string): JsonValue | undefined => {
     if (Object.hasOwn(instance.values, port)) return instance.values[port];
@@ -208,13 +244,21 @@ export function expand(graph: Graph, instanceId: string, def: CompositeDef, newI
     }
     return undefined;
   };
-  const edges: Edge[] = graph.edges.filter((e) => e.source.node !== instanceId && e.target.node !== instanceId);
+  const edges: Edge[] = graph.edges.filter(
+    (e) => e.source.node !== instanceId && e.target.node !== instanceId,
+  );
   const link = (source: PortRef, target: PortRef) => edges.push({ id: newId(), source, target });
   for (const e of def.graph.edges) {
     const sIo = io.get(e.source.node);
     const tIo = io.get(e.target.node);
-    const sources: PortRef[] = sIo ? (outerIn.has(e.source.port) ? [outerIn.get(e.source.port)!] : []) : [{ node: idMap.get(e.source.node)!, port: e.source.port }];
-    const targets: PortRef[] = tIo ? (outerOut.get(e.target.port) ?? []) : [{ node: idMap.get(e.target.node)!, port: e.target.port }];
+    const sources: PortRef[] = sIo
+      ? outerIn.has(e.source.port)
+        ? [outerIn.get(e.source.port)!]
+        : []
+      : [{ node: idMap.get(e.source.node)!, port: e.source.port }];
+    const targets: PortRef[] = tIo
+      ? (outerOut.get(e.target.port) ?? [])
+      : [{ node: idMap.get(e.target.node)!, port: e.target.port }];
     if (sIo && sources.length === 0 && !tIo) {
       const v = inputDefault(e.source.port);
       if (v !== undefined) copies.get(e.target.node)!.values[e.target.port] = v;
@@ -238,7 +282,12 @@ export function flatten(graph: Graph, composites: CompositeDef[]): Flattened {
   const edges: Edge[] = [];
   const instances = new Map<string, { inputs: string[]; outputs: string[] }>();
 
-  function expandGraph(g: Graph, prefix: string, stack: string[], instanceValues: Record<string, JsonValue> | null) {
+  function expandGraph(
+    g: Graph,
+    prefix: string,
+    stack: string[],
+    instanceValues: Record<string, JsonValue> | null,
+  ) {
     const inRef = new Map<string, Map<string, PortRef>>();
     const outRef = new Map<string, Map<string, PortRef>>();
     for (const n of g.nodes) {
@@ -254,10 +303,12 @@ export function flatten(graph: Graph, composites: CompositeDef[]): Flattened {
         for (const io of def.graph.nodes) {
           if (io.type === IO_INPUT) {
             info.inputs.push(`${path}/${io.id}`);
-            for (const p of io.ports ?? []) ins.set(p.name, { node: `${path}/${io.id}`, port: p.name });
+            for (const p of io.ports ?? [])
+              ins.set(p.name, { node: `${path}/${io.id}`, port: p.name });
           } else if (io.type === IO_OUTPUT) {
             info.outputs.push(`${path}/${io.id}`);
-            for (const p of io.ports ?? []) outs.set(p.name, { node: `${path}/${io.id}`, port: p.name });
+            for (const p of io.ports ?? [])
+              outs.set(p.name, { node: `${path}/${io.id}`, port: p.name });
           }
         }
         instances.set(path, info);
@@ -268,8 +319,17 @@ export function flatten(graph: Graph, composites: CompositeDef[]): Flattened {
       if (instanceValues && isIo(n)) {
         const ports = n.ports ?? [];
         const values: Record<string, JsonValue> = {};
-        if (n.type === IO_INPUT) for (const p of ports) if (Object.hasOwn(instanceValues, p.name)) values[p.name] = instanceValues[p.name]!;
-        nodes.push({ id: path, type: PASSTHROUGH, name: n.name, position: n.position, values, ports });
+        if (n.type === IO_INPUT)
+          for (const p of ports)
+            if (Object.hasOwn(instanceValues, p.name)) values[p.name] = instanceValues[p.name]!;
+        nodes.push({
+          id: path,
+          type: PASSTHROUGH,
+          name: n.name,
+          position: n.position,
+          values,
+          ports,
+        });
       } else {
         nodes.push({ ...n, id: path });
       }
@@ -277,7 +337,9 @@ export function flatten(graph: Graph, composites: CompositeDef[]): Flattened {
     const resolve = (map: Map<string, Map<string, PortRef>>, ref: PortRef): PortRef | undefined => {
       const m = map.get(ref.node);
       if (m) return m.get(ref.port);
-      return g.nodes.some((n) => n.id === ref.node && compositeIdOf(n.type) === null) ? { node: prefix + ref.node, port: ref.port } : undefined;
+      return g.nodes.some((n) => n.id === ref.node && compositeIdOf(n.type) === null)
+        ? { node: prefix + ref.node, port: ref.port }
+        : undefined;
     };
     for (const e of g.edges) {
       const source = resolve(outRef, e.source);

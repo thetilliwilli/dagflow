@@ -36,7 +36,6 @@ import {
   type NotificationKind,
 } from './store';
 
-
 /** «New workflow», «New workflow 2», … — первое свободное имя. */
 export function uniqueName(base: string, taken: Iterable<string>): string {
   const set = new Set(taken);
@@ -331,7 +330,13 @@ export function createActions({ store, deps }: AppStore) {
       const id = deps.newId();
       editGraph((g) => {
         // Имя экземпляра по умолчанию — название типа (FR-009)
-        const node: Graph['nodes'][number] = { id, type, name: registryOf(state).get(type)?.title ?? type, position, values: {} };
+        const node: Graph['nodes'][number] = {
+          id,
+          type,
+          name: registryOf(state).get(type)?.title ?? type,
+          position,
+          values: {},
+        };
         if (type === IO_INPUT || type === IO_OUTPUT) {
           // Новый нод «Вход»/«Выход» — с одним портом и уникальным именем (FR-021c)
           const taken = g.nodes

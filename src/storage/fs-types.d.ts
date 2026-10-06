@@ -9,5 +9,8 @@ interface FileSystemDirectoryHandle {
 }
 
 interface Window {
-  showDirectoryPicker?: (options?: { mode?: 'read' | 'readwrite'; id?: string }) => Promise<FileSystemDirectoryHandle>;
+  showDirectoryPicker?: (options?: {
+    mode?: 'read' | 'readwrite';
+    id?: string;
+  }) => Promise<FileSystemDirectoryHandle>;
 }

@@ -53,13 +53,16 @@ export class FakeDirectory {
       e.noCreateWritable = this.noCreateWritable;
       this.entries.set(name, e);
     }
-    if (!(e instanceof FakeDirectory)) throw new DOMException('not a directory', 'TypeMismatchError');
+    if (!(e instanceof FakeDirectory))
+      throw new DOMException('not a directory', 'TypeMismatchError');
     return e;
   }
 
   async getFileHandle(name: string, opts?: { create?: boolean }): Promise<FakeFile> {
     const file = await this.getFileHandleRaw(name, opts);
-    return this.noCreateWritable ? ({ kind: 'file', name: file.name, getFile: () => file.getFile() } as unknown as FakeFile) : file;
+    return this.noCreateWritable
+      ? ({ kind: 'file', name: file.name, getFile: () => file.getFile() } as unknown as FakeFile)
+      : file;
   }
 
   private async getFileHandleRaw(name: string, opts?: { create?: boolean }): Promise<FakeFile> {

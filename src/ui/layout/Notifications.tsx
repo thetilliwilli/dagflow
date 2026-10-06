@@ -12,7 +12,10 @@ function Item({ n, onClose }: { n: Notification; onClose: (id: string) => void }
     return () => clearTimeout(t);
   }, [n.id, onClose]);
   return (
-    <div className={`notification notification--${n.kind}`} role={n.kind === 'error' ? 'alert' : 'status'}>
+    <div
+      className={`notification notification--${n.kind}`}
+      role={n.kind === 'error' ? 'alert' : 'status'}
+    >
       <span>{n.text}</span>
       <button type="button" aria-label={messages.closeNotification} onClick={() => onClose(n.id)}>
         ×

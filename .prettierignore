@@ -2,3 +2,10 @@ node_modules/
 dist/
 coverage/
 package-lock.json
+
+# Форматируется только код; документация и файлы Spec Kit — нет
+*.md
+*.yml
+*.yaml
+.specify/
+.claude/

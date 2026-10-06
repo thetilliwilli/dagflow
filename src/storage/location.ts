@@ -24,7 +24,9 @@ const HANDLE_KEY = 'dagflow:folder';
 export function browserEnv(): LocationEnv {
   const picker = typeof window !== 'undefined' ? window.showDirectoryPicker : undefined;
   return {
-    showDirectoryPicker: picker ? () => picker.call(window, { mode: 'readwrite', id: 'dagflow' }) : undefined,
+    showDirectoryPicker: picker
+      ? () => picker.call(window, { mode: 'readwrite', id: 'dagflow' })
+      : undefined,
     opfsFallbackWrite: createOpfsWorkerWriter(),
     getOpfsRoot: () => navigator.storage.getDirectory(),
     loadHandle: () => get<FileSystemDirectoryHandle>(HANDLE_KEY),
@@ -48,9 +50,13 @@ export async function detectLocation(env: LocationEnv): Promise<Detected> {
   if (env.showDirectoryPicker) {
     const saved = await env.loadHandle().catch(() => undefined);
     if (saved) {
-      const permission = await saved.queryPermission({ mode: 'readwrite' }).catch(() => 'denied' as const);
-      if (permission === 'granted') return { location: { kind: 'folder', name: saved.name }, handle: saved };
-      if (permission === 'prompt') return { location: { kind: 'folder-pending', name: saved.name }, handle: saved };
+      const permission = await saved
+        .queryPermission({ mode: 'readwrite' })
+        .catch(() => 'denied' as const);
+      if (permission === 'granted')
+        return { location: { kind: 'folder', name: saved.name }, handle: saved };
+      if (permission === 'prompt')
+        return { location: { kind: 'folder-pending', name: saved.name }, handle: saved };
     }
   }
   return { location: { kind: 'browser' }, handle: await browserStorageHandle(env) };

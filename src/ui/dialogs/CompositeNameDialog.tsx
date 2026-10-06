@@ -3,7 +3,13 @@ import { useActions } from '../../store/react';
 import { compositeMessages as m } from '../messages';
 import { NameDialog } from './NameDialog';
 
-export function CompositeNameDialog({ nodeIds, onClose }: { nodeIds: string[]; onClose: () => void }) {
+export function CompositeNameDialog({
+  nodeIds,
+  onClose,
+}: {
+  nodeIds: string[];
+  onClose: () => void;
+}) {
   const actions = useActions();
   return (
     <NameDialog

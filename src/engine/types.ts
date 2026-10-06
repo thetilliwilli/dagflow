@@ -1,6 +1,7 @@
 // Типы движка — см. specs/001-dag-workflow-editor/data-model.md
 
-export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+export type JsonValue =
+  null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
 export type PortType = 'number' | 'text' | 'boolean' | 'array' | 'object' | 'any';
 

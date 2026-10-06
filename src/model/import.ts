@@ -1,7 +1,14 @@
 // Импорт файла выгрузки: шаги 1–6 алгоритма из contracts/file-formats.md.
 // Шаги 1–4 только проверяют; результат применяет вызывающий код (FR-030).
 import * as v from 'valibot';
-import { compositeDependencies, createRegistry, validateGraph, type CompositeDef, type Graph, type Workflow } from '../engine';
+import {
+  compositeDependencies,
+  createRegistry,
+  validateGraph,
+  type CompositeDef,
+  type Graph,
+  type Workflow,
+} from '../engine';
 import { ExportFileSchema } from './schemas';
 import { FORMAT_VERSION, issuePath } from './serialize';
 
@@ -33,12 +40,17 @@ export const importMessages = {
 export function canonicalJson(value: unknown): string {
   return JSON.stringify(value, (_key, v: unknown) =>
     v && typeof v === 'object' && !Array.isArray(v)
-      ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      ? Object.fromEntries(
+          Object.entries(v as Record<string, unknown>).sort(([a], [b]) =>
+            a < b ? -1 : a > b ? 1 : 0,
+          ),
+        )
       : v,
   );
 }
 
-const contentOf = (d: CompositeDef) => canonicalJson({ name: d.name, description: d.description, graph: d.graph });
+const contentOf = (d: CompositeDef) =>
+  canonicalJson({ name: d.name, description: d.description, graph: d.graph });
 
 /** Порядок «зависимости раньше зависящих» среди входящих определений. */
 function dependencyOrder(defs: CompositeDef[]): CompositeDef[] {
@@ -49,7 +61,9 @@ function dependencyOrder(defs: CompositeDef[]): CompositeDef[] {
     if (done.has(d.id) || stack.has(d.id)) return;
     stack.add(d.id);
     for (const n of d.graph.nodes) {
-      const dep = n.type.startsWith('composite:') ? byId.get(n.type.slice('composite:'.length)) : undefined;
+      const dep = n.type.startsWith('composite:')
+        ? byId.get(n.type.slice('composite:'.length))
+        : undefined;
       if (dep) visit(dep, stack);
     }
     done.add(d.id);
@@ -94,7 +108,11 @@ export function mergeComposites(
     added.push({ ...candidate, id, name });
   }
   // Ссылки на определения, получившие новый id позже, тоже переписываем
-  return { added: added.map((d) => ({ ...d, graph: rewriteCompositeRefs(d.graph, idMap) })), idMap, notices };
+  return {
+    added: added.map((d) => ({ ...d, graph: rewriteCompositeRefs(d.graph, idMap) })),
+    idMap,
+    notices,
+  };
 }
 
 /** Переписывает ссылки `composite:<id>` по таблице соответствия. */
@@ -119,7 +137,12 @@ export function importExport(text: string, ctx: ImportContext): ImportResult {
   }
   // 3 (раньше схемы, чтобы чужой файл получил понятное сообщение). Формат и версия
   const header = data as { format?: unknown; version?: unknown } | null;
-  if (typeof header !== 'object' || header === null || Array.isArray(header) || header.format !== 'dagflow-export') {
+  if (
+    typeof header !== 'object' ||
+    header === null ||
+    Array.isArray(header) ||
+    header.format !== 'dagflow-export'
+  ) {
     return { ok: false, message: importMessages.unknownFormat };
   }
   if (typeof header.version === 'number' && header.version > FORMAT_VERSION) {
@@ -127,7 +150,8 @@ export function importExport(text: string, ctx: ImportContext): ImportResult {
   }
   // 2. Схема
   const parsed = v.safeParse(ExportFileSchema, data);
-  if (!parsed.success) return { ok: false, message: importMessages.schema(issuePath(parsed.issues)) };
+  if (!parsed.success)
+    return { ok: false, message: importMessages.schema(issuePath(parsed.issues)) };
   const file = parsed.output;
 
   // 4. Семантика
@@ -140,7 +164,8 @@ export function importExport(text: string, ctx: ImportContext): ImportResult {
     ...validateGraph(file.workflow.graph, registry),
     ...file.composites.flatMap((c) => validateGraph(c.graph, registry, { insideComposite: true })),
   ];
-  if (problems.length > 0) return { ok: false, message: importMessages.invalidGraph(problems[0]!.message) };
+  if (problems.length > 0)
+    return { ok: false, message: importMessages.invalidGraph(problems[0]!.message) };
   const deps = compositeDependencies(file.composites);
   const recursive = file.composites.find((c) => deps.get(c.id)?.has(c.id));
   if (recursive) return { ok: false, message: importMessages.recursion(recursive.name) };

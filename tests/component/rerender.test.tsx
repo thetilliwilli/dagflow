@@ -32,7 +32,10 @@ describe('перерисовки на графе из 100 нодов', () => {
     startEvaluation(app, frames.schedule);
     const ids: string[] = [];
     for (let i = 0; i < 99; i++) {
-      const r = actions.addNode('builtin:number', { x: (i % 10) * 220, y: Math.floor(i / 10) * 140 });
+      const r = actions.addNode('builtin:number', {
+        x: (i % 10) * 220,
+        y: Math.floor(i / 10) * 140,
+      });
       if (r.ok) ids.push(r.id);
     }
     const show = actions.addNode('builtin:show', { x: 0, y: 1600 });

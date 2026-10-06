@@ -2,7 +2,9 @@ import type { LocationEnv } from '../../../src/storage/location';
 import { FakeDirectory } from './fake-directory';
 
 /** Окружение браузера для тестов: OPFS и выбранная папка — фейки в памяти. */
-export function fakeEnv(opts: { picker?: boolean; folder?: FakeDirectory; saved?: FakeDirectory } = {}) {
+export function fakeEnv(
+  opts: { picker?: boolean; folder?: FakeDirectory; saved?: FakeDirectory } = {},
+) {
   const opfs = new FakeDirectory('opfs');
   const folder = opts.folder ?? new FakeDirectory('my-flows');
   let saved: FileSystemDirectoryHandle | undefined = opts.saved?.asHandle();

@@ -23,7 +23,12 @@ describe('сериализация workflow', () => {
 
   it('формат файла соответствует контракту', () => {
     const file = workflowToFile(sampleWorkflow());
-    expect(file).toMatchObject({ format: 'dagflow-workflow', version: 1, id: 'wf1', name: 'Пример' });
+    expect(file).toMatchObject({
+      format: 'dagflow-workflow',
+      version: 1,
+      id: 'wf1',
+      name: 'Пример',
+    });
     const text = toJsonText(file);
     expect(text.startsWith('{\n  "format": "dagflow-workflow",\n  "version": 1,')).toBe(true);
     expect(text.endsWith('\n')).toBe(true);
@@ -44,24 +49,49 @@ describe('имя нода в файле (FR-009, FR-010, contracts/file-formats.
   it('ключи нода идут в порядке id, type, name, position, values, ports', () => {
     const wf = sampleWorkflow();
     // Нод собран в «неудобном» порядке ключей — в файле порядок всё равно по контракту
-    wf.graph.nodes[0] = { values: { value: 2 }, position: { x: 0, y: 0 }, name: 'Number', type: 'builtin:number', id: 'n1' };
+    wf.graph.nodes[0] = {
+      values: { value: 2 },
+      position: { x: 0, y: 0 },
+      name: 'Number',
+      type: 'builtin:number',
+      id: 'n1',
+    };
     const text = toJsonText(workflowToFile(wf));
     const keys = Object.keys(nodesOf(JSON.parse(text))[0]!);
     expect(keys).toEqual(['id', 'type', 'name', 'position', 'values']);
     const io = toJsonText(
       workflowToFile({
         ...wf,
-        graph: { nodes: [{ ports: [], values: {}, position: { x: 0, y: 0 }, name: 'Input', type: 'builtin:input', id: 'i' }], edges: [] },
+        graph: {
+          nodes: [
+            {
+              ports: [],
+              values: {},
+              position: { x: 0, y: 0 },
+              name: 'Input',
+              type: 'builtin:input',
+              id: 'i',
+            },
+          ],
+          edges: [],
+        },
       }),
     );
-    expect(Object.keys(nodesOf(JSON.parse(io))[0]!)).toEqual(['id', 'type', 'name', 'position', 'values', 'ports']);
+    expect(Object.keys(nodesOf(JSON.parse(io))[0]!)).toEqual([
+      'id',
+      'type',
+      'name',
+      'position',
+      'values',
+      'ports',
+    ]);
   });
 
   it('имена нодов переживают запись и чтение (SC-007)', () => {
     const wf = sampleWorkflow();
-    expect(fileToWorkflow(JSON.parse(toJsonText(workflowToFile(wf)))).graph.nodes.map((n) => n.name)).toEqual(
-      wf.graph.nodes.map((n) => n.name),
-    );
+    expect(
+      fileToWorkflow(JSON.parse(toJsonText(workflowToFile(wf)))).graph.nodes.map((n) => n.name),
+    ).toEqual(wf.graph.nodes.map((n) => n.name));
   });
 
   it('нод без имени или с пустым именем — FormatError с путём к полю', () => {
@@ -102,7 +132,13 @@ describe('выгрузка', () => {
   it('файл выгрузки содержит workflow и определения', () => {
     const wf = sampleWorkflow();
     const exp = buildExport(wf, [], '2026-10-05T12:10:00.000Z');
-    expect(exp).toEqual({ format: 'dagflow-export', version: 1, exportedAt: '2026-10-05T12:10:00.000Z', workflow: wf, composites: [] });
+    expect(exp).toEqual({
+      format: 'dagflow-export',
+      version: 1,
+      exportedAt: '2026-10-05T12:10:00.000Z',
+      workflow: wf,
+      composites: [],
+    });
   });
 });
 

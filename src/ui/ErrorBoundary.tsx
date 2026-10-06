@@ -23,12 +23,19 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
       return (
         <div className="error-boundary" role="alert">
           <p>{messages.renderFailed}</p>
-          <button type="button" onClick={() => this.setState((s) => ({ failed: false, attempt: s.attempt + 1 }))}>
+          <button
+            type="button"
+            onClick={() => this.setState((s) => ({ failed: false, attempt: s.attempt + 1 }))}
+          >
             {messages.reloadTab}
           </button>
         </div>
       );
     }
-    return <div key={this.state.attempt} className="error-boundary__content">{this.props.children}</div>;
+    return (
+      <div key={this.state.attempt} className="error-boundary__content">
+        {this.props.children}
+      </div>
+    );
   }
 }

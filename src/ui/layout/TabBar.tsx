@@ -12,15 +12,30 @@ export function TabBar() {
   return (
     <div className="tab-bar" role="tablist" data-testid="tab-bar">
       {tabs.map((t) => {
-        const name = (t.kind === 'workflow' ? workflows[t.targetId]?.name : composites[t.targetId]?.name) ?? '…';
+        const name =
+          (t.kind === 'workflow' ? workflows[t.targetId]?.name : composites[t.targetId]?.name) ??
+          '…';
         const title = t.kind === 'composite' ? compositeMessages.tabTitle(name) : name;
         const selected = t.id === activeTabId;
         return (
           <div key={t.id} className={`tab ${selected ? 'tab--active' : ''}`}>
-            <div role="tab" aria-selected={selected} tabIndex={0} className="tab__title" title={title} onClick={() => actions.switchTab(t.id)} onKeyDown={(e) => e.key === 'Enter' && actions.switchTab(t.id)}>
+            <div
+              role="tab"
+              aria-selected={selected}
+              tabIndex={0}
+              className="tab__title"
+              title={title}
+              onClick={() => actions.switchTab(t.id)}
+              onKeyDown={(e) => e.key === 'Enter' && actions.switchTab(t.id)}
+            >
               {title}
             </div>
-            <button type="button" className="tab__close" aria-label={m.closeTab(title)} onClick={() => actions.closeTab(t.id)}>
+            <button
+              type="button"
+              className="tab__close"
+              aria-label={m.closeTab(title)}
+              onClick={() => actions.closeTab(t.id)}
+            >
               ×
             </button>
           </div>

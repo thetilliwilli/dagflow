@@ -50,7 +50,13 @@ export function WorkflowList() {
                   onBlur={() => editing === id && commitRename(id)}
                 />
               ) : (
-                <button type="button" className="workflow-list__name" aria-label={m.open(wf.name)} title={wf.name} onClick={() => actions.openTab('workflow', id)}>
+                <button
+                  type="button"
+                  className="workflow-list__name"
+                  aria-label={m.open(wf.name)}
+                  title={wf.name}
+                  onClick={() => actions.openTab('workflow', id)}
+                >
                   {wf.name}
                 </button>
               )}
@@ -66,10 +72,20 @@ export function WorkflowList() {
                 >
                   ✎
                 </button>
-                <button type="button" aria-label={m.duplicate(wf.name)} title={m.duplicate(wf.name)} onClick={() => actions.duplicateWorkflow(id)}>
+                <button
+                  type="button"
+                  aria-label={m.duplicate(wf.name)}
+                  title={m.duplicate(wf.name)}
+                  onClick={() => actions.duplicateWorkflow(id)}
+                >
                   ⧉
                 </button>
-                <button type="button" aria-label={m.remove(wf.name)} title={m.remove(wf.name)} onClick={() => setDeleting(id)}>
+                <button
+                  type="button"
+                  aria-label={m.remove(wf.name)}
+                  title={m.remove(wf.name)}
+                  onClick={() => setDeleting(id)}
+                >
                   ✕
                 </button>
               </span>

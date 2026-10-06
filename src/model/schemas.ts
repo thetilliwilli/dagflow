@@ -3,7 +3,14 @@ import * as v from 'valibot';
 import type { JsonValue } from '../engine';
 
 export const JsonValueSchema: v.GenericSchema<JsonValue> = v.lazy(() =>
-  v.union([v.null(), v.boolean(), v.number(), v.string(), v.array(JsonValueSchema), v.record(v.string(), JsonValueSchema)]),
+  v.union([
+    v.null(),
+    v.boolean(),
+    v.number(),
+    v.string(),
+    v.array(JsonValueSchema),
+    v.record(v.string(), JsonValueSchema),
+  ]),
 );
 
 const PortTypeSchema = v.picklist(['number', 'text', 'boolean', 'array', 'object', 'any']);
@@ -30,7 +37,13 @@ export const GraphSchema = v.object({
       ports: v.optional(v.array(PortDefSchema)),
     }),
   ),
-  edges: v.array(v.object({ id: v.pipe(v.string(), v.minLength(1)), source: PortRefSchema, target: PortRefSchema })),
+  edges: v.array(
+    v.object({
+      id: v.pipe(v.string(), v.minLength(1)),
+      source: PortRefSchema,
+      target: PortRefSchema,
+    }),
+  ),
 });
 
 const NameSchema = v.pipe(v.string(), v.trim(), v.minLength(1));
@@ -66,11 +79,23 @@ export const WorkspaceSchema = v.object({
   activeTabId: v.nullable(v.string()),
 });
 
-const header = <F extends string>(format: F) => ({ format: v.literal(format), version: VersionSchema });
+const header = <F extends string>(format: F) => ({
+  format: v.literal(format),
+  version: VersionSchema,
+});
 
-export const WorkflowFileSchema = v.object({ ...header('dagflow-workflow'), ...WorkflowSchema.entries });
-export const CompositeFileSchema = v.object({ ...header('dagflow-composite'), ...CompositeSchema.entries });
-export const WorkspaceFileSchema = v.object({ ...header('dagflow-workspace'), ...WorkspaceSchema.entries });
+export const WorkflowFileSchema = v.object({
+  ...header('dagflow-workflow'),
+  ...WorkflowSchema.entries,
+});
+export const CompositeFileSchema = v.object({
+  ...header('dagflow-composite'),
+  ...CompositeSchema.entries,
+});
+export const WorkspaceFileSchema = v.object({
+  ...header('dagflow-workspace'),
+  ...WorkspaceSchema.entries,
+});
 export const ExportFileSchema = v.object({
   ...header('dagflow-export'),
   exportedAt: v.string(),

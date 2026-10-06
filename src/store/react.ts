@@ -9,7 +9,11 @@ const AppContext = createContext<AppStore | null>(null);
 
 /** Основной стор и стор интерфейса (фича 002) — один провайдер на приложение. */
 export function AppProvider({ app, children }: { app: AppStore; children: ReactNode }) {
-  return createElement(AppContext.Provider, { value: app }, createElement(UiProvider, { app, children }));
+  return createElement(
+    AppContext.Provider,
+    { value: app },
+    createElement(UiProvider, { app, children }),
+  );
 }
 
 export function useApp(): AppStore {

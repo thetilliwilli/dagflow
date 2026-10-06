@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { browserStorageHandle, detectLocation, pickFolder, restoreAccess } from '../../../src/storage/location';
+import {
+  browserStorageHandle,
+  detectLocation,
+  pickFolder,
+  restoreAccess,
+} from '../../../src/storage/location';
 import { FakeDirectory } from './fake-directory';
 import { fakeEnv } from './env';
 

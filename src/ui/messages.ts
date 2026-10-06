@@ -19,7 +19,8 @@ export const messages = {
   showMore: 'show',
   showLess: 'hide',
   invalidJson: (reason: string) => `Invalid JSON: ${reason}`,
-  valueTypeMismatch: (type: PortType) => `The value does not match the port type “${typeLabels[type]}”.`,
+  valueTypeMismatch: (type: PortType) =>
+    `The value does not match the port type “${typeLabels[type]}”.`,
   noValue: '—',
   closeNotification: 'Close notification',
   nodeNotFound: (id: string) => `Node “${id}” not found.`,
@@ -43,13 +44,17 @@ export const storageMessages = {
   loading: 'Loading…',
   chooseFolder: 'Choose working folder',
   changeFolder: 'Change folder',
-  firstRunHint: 'Choose a working folder on your disk — all your work will be saved there automatically.',
-  browserReminder: 'Data is stored in the browser. To move your work to another computer, export workflows to a file.',
+  firstRunHint:
+    'Choose a working folder on your disk — all your work will be saved there automatically.',
+  browserReminder:
+    'Data is stored in the browser. To move your work to another computer, export workflows to a file.',
   copyToEmpty: (folder: string) => `Folder “${folder}” is empty. Move your current data there?`,
   addFromBrowser: (folder: string, add: number, copies: number) =>
     `Folder “${folder}” already has data. ` +
     (add > 0 ? `Workflows from the previous storage that are not in the folder: ${add}. ` : '') +
-    (copies > 0 ? `Different versions (will be added as “(from browser)” copies): ${copies}. ` : '') +
+    (copies > 0
+      ? `Different versions (will be added as “(from browser)” copies): ${copies}. `
+      : '') +
     'Add them to the folder?',
   move: 'Move',
   dontMove: 'Don’t move',
@@ -57,11 +62,13 @@ export const storageMessages = {
   dontAdd: 'Don’t add',
   later: 'Later',
   accessTitle: 'Restore access to the working folder',
-  accessText: (folder: string) => `The browser asks you to confirm access to folder “${folder}” again.`,
+  accessText: (folder: string) =>
+    `The browser asks you to confirm access to folder “${folder}” again.`,
   restoreAccess: 'Restore access',
   workInBrowser: 'Work in the browser',
   workInBrowserNote: 'The browser keeps a separate set of data; the folder data stays untouched.',
-  folderLost: (folder: string) => `Working folder “${folder}” is unavailable. Work continues and is saved in the browser.`,
+  folderLost: (folder: string) =>
+    `Working folder “${folder}” is unavailable. Work continues and is saved in the browser.`,
   saveFailed: (reason: string) => `Could not save changes: ${reason}`,
   copyName: (name: string) => `${name} (from browser)`,
   none: 'Saving unavailable',
@@ -70,7 +77,8 @@ export const storageMessages = {
   unavailableBanner:
     'Saving unavailable: changes will be lost when you close the page. Export workflows to a file to keep your work.',
   operationFailed: (reason: string) => `Storage operation failed: ${reason}`,
-  accessDenied: (folder: string) => `Access not granted: the browser did not allow working with folder “${folder}”. Try again or work in the browser.`,
+  accessDenied: (folder: string) =>
+    `Access not granted: the browser did not allow working with folder “${folder}”. Try again or work in the browser.`,
   gotIt: 'Got it',
 };
 
@@ -122,8 +130,10 @@ export const compositeMessages = {
   portType: 'Port type',
   removePort: (name: string) => `Remove port “${name}”`,
   defaultLabel: (port: string) => `Default: ${port}`,
-  defaultHint: 'Default value: used when an instance input is not connected or filled; inside the composite node tab — for debugging',
-  defaultTypeMismatch: (port: string) => `The default value of port “${port}” does not match its type`,
+  defaultHint:
+    'Default value: used when an instance input is not connected or filled; inside the composite node tab — for debugging',
+  defaultTypeMismatch: (port: string) =>
+    `The default value of port “${port}” does not match its type`,
   unknownNode: 'Unknown node',
   unknownType: (type: string) =>
     `Type “${type}” not found: the composite node was deleted or its file is damaged. Delete the node or import the definition from a file.`,
@@ -145,7 +155,8 @@ export const windowMessages = {
   repoLink: 'github',
   repoUrl: 'https://github.com/thetilliwilli/dagflow',
   paletteCategories: 'Categories',
-  noComposites: 'No composite nodes yet: select nodes on the canvas and collapse them into a composite node.',
+  noComposites:
+    'No composite nodes yet: select nodes on the canvas and collapse them into a composite node.',
 };
 
 /** Окно свойств выделенного нода (US3, contracts/ui-contract.md). */

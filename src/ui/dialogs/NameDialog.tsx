@@ -23,11 +23,22 @@ export function NameDialog({ title, label, submitLabel, initial = '', onSubmit, 
   }
   return (
     <div className="modal-backdrop" onKeyDown={(e) => e.key === 'Escape' && onClose()}>
-      <form className="modal" role="dialog" aria-modal="true" aria-labelledby="name-dialog-title" onSubmit={submit}>
+      <form
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="name-dialog-title"
+        onSubmit={submit}
+      >
         <h2 id="name-dialog-title">{title}</h2>
         <label className="field">
           {label}
-          <input autoFocus value={name} aria-invalid={error ? true : undefined} onChange={(e) => setName(e.target.value)} />
+          <input
+            autoFocus
+            value={name}
+            aria-invalid={error ? true : undefined}
+            onChange={(e) => setName(e.target.value)}
+          />
         </label>
         {error && <p className="field__error">{error}</p>}
         <div className="modal__actions">

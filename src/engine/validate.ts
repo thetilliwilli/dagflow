@@ -1,6 +1,14 @@
 // Проверка правок графа: связи, добавление нодов, целостность (FR-004, FR-005a, data-model «Edge»)
 import { rejections, type Rejection } from './errors';
-import type { CompositeDef, Edge, Graph, LinkEnd, NodeInstance, NodeRegistry, PortDef } from './types';
+import type {
+  CompositeDef,
+  Edge,
+  Graph,
+  LinkEnd,
+  NodeInstance,
+  NodeRegistry,
+  PortDef,
+} from './types';
 import { isCompatible } from './values';
 
 import { IO_INPUT, IO_OUTPUT, PASSTHROUGH } from './builtins/io';
@@ -59,9 +67,11 @@ export function canConnect(
   if (edge.source.node === edge.target.node) return rejections.sameNode();
   const source = graph.nodes.find((n) => n.id === edge.source.node);
   const target = graph.nodes.find((n) => n.id === edge.target.node);
-  const sourcePort = source && nodePorts(source, registry)?.outputs.find((p) => p.name === edge.source.port);
+  const sourcePort =
+    source && nodePorts(source, registry)?.outputs.find((p) => p.name === edge.source.port);
   if (!sourcePort) return rejections.unknownPort(edge.source.port);
-  const targetPort = target && nodePorts(target, registry)?.inputs.find((p) => p.name === edge.target.port);
+  const targetPort =
+    target && nodePorts(target, registry)?.inputs.find((p) => p.name === edge.target.port);
   if (!targetPort) return rejections.unknownPort(edge.target.port);
   if (!isCompatible(sourcePort.type, targetPort.type)) {
     return rejections.typeMismatch(sourcePort.type, targetPort.type);
@@ -117,13 +127,16 @@ export function canAddNode(
   registry: NodeRegistry,
   composites: CompositeDef[],
 ): { ok: true } | Rejection {
-  if (IO_NODE_TYPES.includes(typeId) && !ctx.insideComposite) return rejections.ioOutsideComposite();
+  if (IO_NODE_TYPES.includes(typeId) && !ctx.insideComposite)
+    return rejections.ioOutsideComposite();
   const def = registry.get(typeId);
   if (!def || def.paletteScope === 'hidden') return rejections.unknownType(typeId);
   const added = typeId.startsWith('composite:') ? typeId.slice('composite:'.length) : null;
   if (added && ctx.insideComposite) {
     // Рекурсия: добавляемый нод — это сам составной нод или он уже (косвенно) содержит его (FR-026)
-    const deps = new Map<string, string[]>(composites.map((c) => [c.id, c.graph.nodes.map((n) => n.type)]));
+    const deps = new Map<string, string[]>(
+      composites.map((c) => [c.id, c.graph.nodes.map((n) => n.type)]),
+    );
     const seen = new Set<string>();
     const stack = [added];
     while (stack.length > 0) {
@@ -131,7 +144,8 @@ export function canAddNode(
       if (id === ctx.insideComposite) return rejections.compositeRecursion(def.title);
       if (seen.has(id)) continue;
       seen.add(id);
-      for (const t of deps.get(id) ?? []) if (t.startsWith('composite:')) stack.push(t.slice('composite:'.length));
+      for (const t of deps.get(id) ?? [])
+        if (t.startsWith('composite:')) stack.push(t.slice('composite:'.length));
     }
   }
   return { ok: true };
@@ -146,7 +160,8 @@ export function validateGraph(
   const errors: Rejection[] = [];
   const byId = new Map(graph.nodes.map((n) => [n.id, n]));
   for (const n of graph.nodes) {
-    if (IO_NODE_TYPES.includes(n.type) && !ctx.insideComposite) errors.push(rejections.ioOutsideComposite());
+    if (IO_NODE_TYPES.includes(n.type) && !ctx.insideComposite)
+      errors.push(rejections.ioOutsideComposite());
     else if (!registry.get(n.type)) errors.push(rejections.unknownType(n.type));
   }
   const usedInputs = new Set<string>();

@@ -27,17 +27,31 @@ interface Snapshot {
 }
 
 function snapshot(s: AppState): Snapshot {
-  return { workflows: s.workflows, composites: s.composites, workflowOrder: s.workflowOrder, tabs: s.tabs, activeTabId: s.activeTabId };
+  return {
+    workflows: s.workflows,
+    composites: s.composites,
+    workflowOrder: s.workflowOrder,
+    tabs: s.tabs,
+    activeTabId: s.activeTabId,
+  };
 }
 
-export function workspaceOf(s: Pick<AppState, 'workflowOrder' | 'tabs' | 'activeTabId'>): Workspace {
+export function workspaceOf(
+  s: Pick<AppState, 'workflowOrder' | 'tabs' | 'activeTabId'>,
+): Workspace {
   return { workflowOrder: s.workflowOrder, tabs: s.tabs, activeTabId: s.activeTabId };
 }
 
-export function createAutosave(store: AppStoreApi, getTarget: () => AutosaveTarget | null, opts: AutosaveOptions = {}) {
+export function createAutosave(
+  store: AppStoreApi,
+  getTarget: () => AutosaveTarget | null,
+  opts: AutosaveOptions = {},
+) {
   const delay = opts.delay ?? 300;
   const events = opts.events ?? (typeof window !== 'undefined' ? window : undefined);
-  const isHidden = opts.isHidden ?? (() => typeof document !== 'undefined' && document.visibilityState === 'hidden');
+  const isHidden =
+    opts.isHidden ??
+    (() => typeof document !== 'undefined' && document.visibilityState === 'hidden');
   let baseline = snapshot(store.getState());
   let timer: ReturnType<typeof setTimeout> | null = null;
   let running: Promise<void> = Promise.resolve();
@@ -48,11 +62,19 @@ export function createAutosave(store: AppStoreApi, getTarget: () => AutosaveTarg
   }
 
   async function write(target: AutosaveTarget, from: Snapshot, to: Snapshot) {
-    for (const [id, wf] of Object.entries(to.workflows)) if (from.workflows[id] !== wf) await target.saveWorkflow(wf);
-    for (const id of Object.keys(from.workflows)) if (!to.workflows[id]) await target.deleteWorkflow(id);
-    for (const [id, c] of Object.entries(to.composites)) if (from.composites[id] !== c) await target.saveComposite(c);
-    for (const id of Object.keys(from.composites)) if (!to.composites[id]) await target.deleteComposite(id);
-    if (from.workflowOrder !== to.workflowOrder || from.tabs !== to.tabs || from.activeTabId !== to.activeTabId) {
+    for (const [id, wf] of Object.entries(to.workflows))
+      if (from.workflows[id] !== wf) await target.saveWorkflow(wf);
+    for (const id of Object.keys(from.workflows))
+      if (!to.workflows[id]) await target.deleteWorkflow(id);
+    for (const [id, c] of Object.entries(to.composites))
+      if (from.composites[id] !== c) await target.saveComposite(c);
+    for (const id of Object.keys(from.composites))
+      if (!to.composites[id]) await target.deleteComposite(id);
+    if (
+      from.workflowOrder !== to.workflowOrder ||
+      from.tabs !== to.tabs ||
+      from.activeTabId !== to.activeTabId
+    ) {
       await target.saveWorkspace(workspaceOf(to));
     }
   }
@@ -77,7 +99,13 @@ export function createAutosave(store: AppStoreApi, getTarget: () => AutosaveTarg
   }
 
   const unsubscribe = store.subscribe((s, prev) => {
-    if (s.workflows !== prev.workflows || s.composites !== prev.composites || s.workflowOrder !== prev.workflowOrder || s.tabs !== prev.tabs || s.activeTabId !== prev.activeTabId) {
+    if (
+      s.workflows !== prev.workflows ||
+      s.composites !== prev.composites ||
+      s.workflowOrder !== prev.workflowOrder ||
+      s.tabs !== prev.tabs ||
+      s.activeTabId !== prev.activeTabId
+    ) {
       schedule();
     }
   });

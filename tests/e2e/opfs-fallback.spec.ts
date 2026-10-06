@@ -13,5 +13,7 @@ test('OPFS без createWritable: автосохранение через Web Wo
   await setInput(page, n, 'value', '777');
   await page.waitForTimeout(1000);
   await page.reload();
-  await expect(await inputField(page, page.locator('.react-flow__node').first(), 'value')).toHaveValue('777');
+  await expect(
+    await inputField(page, page.locator('.react-flow__node').first(), 'value'),
+  ).toHaveValue('777');
 });

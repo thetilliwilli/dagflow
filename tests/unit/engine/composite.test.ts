@@ -26,7 +26,12 @@ function sumTimesTwo(): Graph {
       node('Mul', 'builtin:multiply', { b: 2 }),
       node('Show', 'builtin:show'),
     ],
-    [edge('N1', 'value', 'Add', 'a'), edge('N2', 'value', 'Add', 'b'), edge('Add', 'result', 'Mul', 'a'), edge('Mul', 'result', 'Show', 'value')],
+    [
+      edge('N1', 'value', 'Add', 'a'),
+      edge('N2', 'value', 'Add', 'b'),
+      edge('Add', 'result', 'Mul', 'a'),
+      edge('Mul', 'result', 'Show', 'value'),
+    ],
   );
 }
 
@@ -63,13 +68,20 @@ describe('validateIoPorts (FR-021c)', () => {
     const r = validateIoPorts(g);
     expect(r?.code).toBe('duplicate-port-name');
     expect(r?.message).toContain('a');
-    const ok = graph([io('i1', 'builtin:input', [{ name: 'a', type: 'number' }]), io('o1', 'builtin:output', [{ name: 'a', type: 'number' }])]);
+    const ok = graph([
+      io('i1', 'builtin:input', [{ name: 'a', type: 'number' }]),
+      io('o1', 'builtin:output', [{ name: 'a', type: 'number' }]),
+    ]);
     expect(validateIoPorts(ok)).toBeNull();
   });
 
   it('порт с пустым именем отклоняется (003: US2 #4)', () => {
     const g = graph([io('i1', 'builtin:input', [{ name: '', type: 'number' }])]);
-    expect(validateIoPorts(g)).toEqual({ ok: false, code: 'duplicate-port-name', message: 'The port name cannot be empty.' });
+    expect(validateIoPorts(g)).toEqual({
+      ok: false,
+      code: 'duplicate-port-name',
+      message: 'The port name cannot be empty.',
+    });
   });
 });
 
@@ -81,8 +93,12 @@ describe('collapse (FR-021, FR-022)', () => {
     expect(r.graph.nodes.map((n) => n.id).sort()).toEqual(['N1', 'N2', 'Show', inst.id].sort());
     expect(compositePorts(r.composite).inputs.map((p) => p.name)).toEqual(['a', 'b']);
     expect(compositePorts(r.composite).outputs.map((p) => p.name)).toEqual(['result']);
-    const outer = r.graph.edges.map((e) => `${e.source.node}.${e.source.port}->${e.target.node}.${e.target.port}`).sort();
-    expect(outer).toEqual([`${inst.id}.result->Show.value`, `N1.value->${inst.id}.a`, `N2.value->${inst.id}.b`].sort());
+    const outer = r.graph.edges
+      .map((e) => `${e.source.node}.${e.source.port}->${e.target.node}.${e.target.port}`)
+      .sort();
+    expect(outer).toEqual(
+      [`${inst.id}.result->Show.value`, `N1.value->${inst.id}.a`, `N2.value->${inst.id}.b`].sort(),
+    );
     const inputs = r.composite.graph.nodes.filter((n) => n.type === 'builtin:input');
     const outputs = r.composite.graph.nodes.filter((n) => n.type === 'builtin:output');
     expect(inputs).toHaveLength(2);
@@ -106,9 +122,20 @@ describe('expand (FR-025)', () => {
     const inst = r.graph.nodes.find((n) => n.type.startsWith('composite:'))!;
     const g = expand(r.graph, inst.id, r.composite, newId);
     const types = g.nodes.map((n) => n.type).sort();
-    expect(types).toEqual(['builtin:add', 'builtin:multiply', 'builtin:number', 'builtin:number', 'builtin:show']);
+    expect(types).toEqual([
+      'builtin:add',
+      'builtin:multiply',
+      'builtin:number',
+      'builtin:number',
+      'builtin:show',
+    ]);
     const byId = new Map(g.nodes.map((n) => [n.id, n]));
-    const desc = g.edges.map((e) => `${byId.get(e.source.node)!.type}.${e.source.port}->${byId.get(e.target.node)!.type}.${e.target.port}`).sort();
+    const desc = g.edges
+      .map(
+        (e) =>
+          `${byId.get(e.source.node)!.type}.${e.source.port}->${byId.get(e.target.node)!.type}.${e.target.port}`,
+      )
+      .sort();
     expect(desc).toEqual(
       [
         'builtin:add.result->builtin:multiply.a',
@@ -149,6 +176,8 @@ describe('рекурсия и зависимости (FR-026)', () => {
     const indirect = canAddNode(C.graph, 'composite:A', { insideComposite: 'C' }, registry, defs);
     expect(indirect.ok).toBe(false);
     if (!indirect.ok) expect(indirect.code).toBe('composite-recursion');
-    expect(canAddNode(A.graph, 'composite:C', { insideComposite: 'A' }, registry, defs).ok).toBe(true);
+    expect(canAddNode(A.graph, 'composite:C', { insideComposite: 'A' }, registry, defs).ok).toBe(
+      true,
+    );
   });
 });

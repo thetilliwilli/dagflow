@@ -88,15 +88,36 @@ export function emptyGraph(): Graph {
 export const DEFAULT_WORKFLOW_NAME = messages.defaultWorkflowName;
 
 /** Начальное состояние: один пустой workflow, открытый во вкладке. */
-export function freshWorkspace(deps: StoreDeps): Pick<AppState, 'workflows' | 'workflowOrder' | 'tabs' | 'activeTabId'> {
+export function freshWorkspace(
+  deps: StoreDeps,
+): Pick<AppState, 'workflows' | 'workflowOrder' | 'tabs' | 'activeTabId'> {
   const ts = deps.now();
-  const workflow: Workflow = { id: deps.newId(), name: DEFAULT_WORKFLOW_NAME, graph: emptyGraph(), createdAt: ts, updatedAt: ts };
-  const tab: Tab = { id: deps.newId(), kind: 'workflow', targetId: workflow.id, viewport: { x: 0, y: 0, zoom: 1 } };
-  return { workflows: { [workflow.id]: workflow }, workflowOrder: [workflow.id], tabs: [tab], activeTabId: tab.id };
+  const workflow: Workflow = {
+    id: deps.newId(),
+    name: DEFAULT_WORKFLOW_NAME,
+    graph: emptyGraph(),
+    createdAt: ts,
+    updatedAt: ts,
+  };
+  const tab: Tab = {
+    id: deps.newId(),
+    kind: 'workflow',
+    targetId: workflow.id,
+    viewport: { x: 0, y: 0, zoom: 1 },
+  };
+  return {
+    workflows: { [workflow.id]: workflow },
+    workflowOrder: [workflow.id],
+    tabs: [tab],
+    activeTabId: tab.id,
+  };
 }
 
 /** Создаёт стор; если workflow нет, создаёт «Новый workflow» и открывает его во вкладке. */
-export function createAppStore(deps: StoreDeps = defaultDeps, initial?: Partial<AppState>): AppStore {
+export function createAppStore(
+  deps: StoreDeps = defaultDeps,
+  initial?: Partial<AppState>,
+): AppStore {
   const store = makeStore(initial);
   if (store.getState().workflowOrder.length === 0) store.setState(freshWorkspace(deps));
   return { store, deps };
@@ -109,5 +130,7 @@ export function activeTab(state: AppState): Tab | undefined {
 /** Граф, который редактируется во вкладке. */
 export function tabGraph(state: AppState, tab: Tab | undefined): Graph | undefined {
   if (!tab) return undefined;
-  return tab.kind === 'workflow' ? state.workflows[tab.targetId]?.graph : state.composites[tab.targetId]?.graph;
+  return tab.kind === 'workflow'
+    ? state.workflows[tab.targetId]?.graph
+    : state.composites[tab.targetId]?.graph;
 }

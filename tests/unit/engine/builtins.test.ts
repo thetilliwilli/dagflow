@@ -27,7 +27,10 @@ function errorOf(id: string, inputs: Inputs): string {
 function ports(id: string) {
   const d = def(id);
   return {
-    inputs: d.inputs.map((p) => `${p.name}${p.required ? '*' : ''}:${p.type}${p.default !== undefined ? `=${JSON.stringify(p.default)}` : ''}`),
+    inputs: d.inputs.map(
+      (p) =>
+        `${p.name}${p.required ? '*' : ''}:${p.type}${p.default !== undefined ? `=${JSON.stringify(p.default)}` : ''}`,
+    ),
     outputs: d.outputs.map((p) => `${p.name}:${p.type}`),
   };
 }
@@ -37,12 +40,30 @@ describe('каталог', () => {
     const ids = builtinNodes.map((n) => n.id).sort();
     expect(ids).toEqual(
       [
-        'builtin:number', 'builtin:text', 'builtin:boolean', 'builtin:json',
-        'builtin:add', 'builtin:subtract', 'builtin:multiply', 'builtin:divide',
-        'builtin:concat', 'builtin:text-length', 'builtin:to-text', 'builtin:to-number',
-        'builtin:equals', 'builtin:greater', 'builtin:less', 'builtin:and', 'builtin:or', 'builtin:not',
+        'builtin:number',
+        'builtin:text',
+        'builtin:boolean',
+        'builtin:json',
+        'builtin:add',
+        'builtin:subtract',
+        'builtin:multiply',
+        'builtin:divide',
+        'builtin:concat',
+        'builtin:text-length',
+        'builtin:to-text',
+        'builtin:to-number',
+        'builtin:equals',
+        'builtin:greater',
+        'builtin:less',
+        'builtin:and',
+        'builtin:or',
+        'builtin:not',
         'builtin:if',
-        'builtin:array-append', 'builtin:array-get', 'builtin:array-length', 'builtin:object-set', 'builtin:object-get',
+        'builtin:array-append',
+        'builtin:array-get',
+        'builtin:array-length',
+        'builtin:object-set',
+        'builtin:object-get',
         'builtin:show',
       ].sort(),
     );
@@ -75,16 +96,28 @@ describe('каталог', () => {
       'builtin:divide': ['Divide', 'a ÷ b; the divisor must not be zero', math],
       'builtin:concat': ['Concatenate', 'Joins two texts: a + b.', text],
       'builtin:text-length': ['Text length', 'Number of characters in the text.', text],
-      'builtin:to-text': ['To text', 'Turns any value into text: text as is, everything else as JSON.', text],
+      'builtin:to-text': [
+        'To text',
+        'Turns any value into text: text as is, everything else as JSON.',
+        text,
+      ],
       'builtin:to-number': ['To number', 'Turns text into a number.', text],
-      'builtin:equals': ['Equals', 'Checks that a and b are equal (including nested arrays and objects).', logic],
+      'builtin:equals': [
+        'Equals',
+        'Checks that a and b are equal (including nested arrays and objects).',
+        logic,
+      ],
       'builtin:greater': ['Greater than', 'a > b', logic],
       'builtin:less': ['Less than', 'a < b', logic],
       'builtin:and': ['And', 'True if both values are true.', logic],
       'builtin:or': ['Or', 'True if at least one value is true.', logic],
       'builtin:not': ['Not', 'Inverts a boolean.', logic],
       'builtin:if': ['If', 'Picks “then” if the condition is true, otherwise “else”.', condition],
-      'builtin:array-append': ['Append to array', 'A new array with the item added at the end.', collections],
+      'builtin:array-append': [
+        'Append to array',
+        'A new array with the item added at the end.',
+        collections,
+      ],
       'builtin:array-get': ['Array item', 'Array item by index (from zero).', collections],
       'builtin:array-length': ['Array length', 'Number of items in the array.', collections],
       'builtin:object-set': ['Set field', 'A new object with the field set.', collections],
@@ -95,8 +128,16 @@ describe('каталог', () => {
         'Ports of this node become inputs of the composite node. Inside, it gives default values.',
         iface,
       ],
-      'builtin:output': ['Output', 'Ports of this node become outputs of the composite node.', iface],
-      'builtin:passthrough': ['Composite port', 'Passes values across the composite node boundary.', iface],
+      'builtin:output': [
+        'Output',
+        'Ports of this node become outputs of the composite node.',
+        iface,
+      ],
+      'builtin:passthrough': [
+        'Composite port',
+        'Passes values across the composite node boundary.',
+        iface,
+      ],
     };
     const reg = createRegistry();
     const actual = Object.fromEntries(
@@ -116,16 +157,29 @@ describe('каталог', () => {
       { id: 'c1', name: 'Итого', description: '', graph, createdAt: '', updatedAt: '' },
       { id: 'c2', name: 'Своё', description: 'Моё описание', graph, createdAt: '', updatedAt: '' },
     ]);
-    expect(reg.get('composite:c1')).toMatchObject({ title: 'Итого', category: 'My composite nodes', description: 'Composite node' });
-    expect(reg.get('composite:c2')).toMatchObject({ category: 'My composite nodes', description: 'Моё описание' });
+    expect(reg.get('composite:c1')).toMatchObject({
+      title: 'Итого',
+      category: 'My composite nodes',
+      description: 'Composite node',
+    });
+    expect(reg.get('composite:c2')).toMatchObject({
+      category: 'My composite nodes',
+      description: 'Моё описание',
+    });
   });
 });
 
 describe('константы', () => {
   it('порты', () => {
-    expect(ports('builtin:number')).toEqual({ inputs: ['value:number=0'], outputs: ['value:number'] });
+    expect(ports('builtin:number')).toEqual({
+      inputs: ['value:number=0'],
+      outputs: ['value:number'],
+    });
     expect(ports('builtin:text')).toEqual({ inputs: ['value:text=""'], outputs: ['value:text'] });
-    expect(ports('builtin:boolean')).toEqual({ inputs: ['value:boolean=false'], outputs: ['value:boolean'] });
+    expect(ports('builtin:boolean')).toEqual({
+      inputs: ['value:boolean=false'],
+      outputs: ['value:boolean'],
+    });
     expect(ports('builtin:json')).toEqual({ inputs: ['value:any=null'], outputs: ['value:any'] });
   });
   it('возвращают значение входа', () => {
@@ -147,7 +201,9 @@ describe('арифметика', () => {
     expect(run('builtin:divide', { a: 3, b: 2 })).toEqual({ result: 1.5 });
   });
   it('деление на ноль', () => {
-    expect(errorOf('builtin:divide', { a: 1, b: 0 })).toBe('Division by zero: set a non-zero divisor.');
+    expect(errorOf('builtin:divide', { a: 1, b: 0 })).toBe(
+      'Division by zero: set a non-zero divisor.',
+    );
   });
   it('слишком большой результат', () => {
     expect(errorOf('builtin:multiply', { a: 1e308, b: 10 })).toBe('The result is too large.');
@@ -156,10 +212,19 @@ describe('арифметика', () => {
 
 describe('текст', () => {
   it('порты', () => {
-    expect(ports('builtin:concat')).toEqual({ inputs: ['a*:text', 'b*:text'], outputs: ['result:text'] });
-    expect(ports('builtin:text-length')).toEqual({ inputs: ['text*:text'], outputs: ['length:number'] });
+    expect(ports('builtin:concat')).toEqual({
+      inputs: ['a*:text', 'b*:text'],
+      outputs: ['result:text'],
+    });
+    expect(ports('builtin:text-length')).toEqual({
+      inputs: ['text*:text'],
+      outputs: ['length:number'],
+    });
     expect(ports('builtin:to-text')).toEqual({ inputs: ['value*:any'], outputs: ['text:text'] });
-    expect(ports('builtin:to-number')).toEqual({ inputs: ['text*:text'], outputs: ['value:number'] });
+    expect(ports('builtin:to-number')).toEqual({
+      inputs: ['text*:text'],
+      outputs: ['value:number'],
+    });
   });
   it('вычисления', () => {
     expect(run('builtin:concat', { a: 'ab', b: 'c' })).toEqual({ result: 'abc' });
@@ -176,14 +241,31 @@ describe('текст', () => {
 
 describe('сравнение и логика', () => {
   it('порты', () => {
-    expect(ports('builtin:equals')).toEqual({ inputs: ['a*:any', 'b*:any'], outputs: ['result:boolean'] });
-    expect(ports('builtin:greater')).toEqual({ inputs: ['a*:number', 'b*:number'], outputs: ['result:boolean'] });
-    expect(ports('builtin:and')).toEqual({ inputs: ['a*:boolean', 'b*:boolean'], outputs: ['result:boolean'] });
-    expect(ports('builtin:not')).toEqual({ inputs: ['value*:boolean'], outputs: ['result:boolean'] });
-    expect(ports('builtin:if')).toEqual({ inputs: ['condition*:boolean', 'then*:any', 'else*:any'], outputs: ['result:any'] });
+    expect(ports('builtin:equals')).toEqual({
+      inputs: ['a*:any', 'b*:any'],
+      outputs: ['result:boolean'],
+    });
+    expect(ports('builtin:greater')).toEqual({
+      inputs: ['a*:number', 'b*:number'],
+      outputs: ['result:boolean'],
+    });
+    expect(ports('builtin:and')).toEqual({
+      inputs: ['a*:boolean', 'b*:boolean'],
+      outputs: ['result:boolean'],
+    });
+    expect(ports('builtin:not')).toEqual({
+      inputs: ['value*:boolean'],
+      outputs: ['result:boolean'],
+    });
+    expect(ports('builtin:if')).toEqual({
+      inputs: ['condition*:boolean', 'then*:any', 'else*:any'],
+      outputs: ['result:any'],
+    });
   });
   it('вычисления', () => {
-    expect(run('builtin:equals', { a: { x: 1, y: 2 }, b: { y: 2, x: 1 } })).toEqual({ result: true });
+    expect(run('builtin:equals', { a: { x: 1, y: 2 }, b: { y: 2, x: 1 } })).toEqual({
+      result: true,
+    });
     expect(run('builtin:greater', { a: 2, b: 1 })).toEqual({ result: true });
     expect(run('builtin:less', { a: 2, b: 1 })).toEqual({ result: false });
     expect(run('builtin:and', { a: true, b: false })).toEqual({ result: false });
@@ -195,29 +277,56 @@ describe('сравнение и логика', () => {
 
 describe('массивы и объекты', () => {
   it('порты', () => {
-    expect(ports('builtin:array-append')).toEqual({ inputs: ['array:array=[]', 'item*:any'], outputs: ['array:array'] });
-    expect(ports('builtin:array-get')).toEqual({ inputs: ['array*:any', 'index*:number'], outputs: ['item:any'] });
-    expect(ports('builtin:array-length')).toEqual({ inputs: ['array*:array'], outputs: ['length:number'] });
-    expect(ports('builtin:object-set')).toEqual({ inputs: ['object:object={}', 'key*:text', 'value*:any'], outputs: ['object:object'] });
-    expect(ports('builtin:object-get')).toEqual({ inputs: ['object*:any', 'key*:text'], outputs: ['value:any'] });
+    expect(ports('builtin:array-append')).toEqual({
+      inputs: ['array:array=[]', 'item*:any'],
+      outputs: ['array:array'],
+    });
+    expect(ports('builtin:array-get')).toEqual({
+      inputs: ['array*:any', 'index*:number'],
+      outputs: ['item:any'],
+    });
+    expect(ports('builtin:array-length')).toEqual({
+      inputs: ['array*:array'],
+      outputs: ['length:number'],
+    });
+    expect(ports('builtin:object-set')).toEqual({
+      inputs: ['object:object={}', 'key*:text', 'value*:any'],
+      outputs: ['object:object'],
+    });
+    expect(ports('builtin:object-get')).toEqual({
+      inputs: ['object*:any', 'key*:text'],
+      outputs: ['value:any'],
+    });
   });
   it('вычисления не мутируют входы', () => {
     const arr = [1];
     expect(run('builtin:array-append', { array: arr, item: 2 })).toEqual({ array: [1, 2] });
     expect(arr).toEqual([1]);
     const obj = { a: 1 };
-    expect(run('builtin:object-set', { object: obj, key: 'b', value: 2 })).toEqual({ object: { a: 1, b: 2 } });
+    expect(run('builtin:object-set', { object: obj, key: 'b', value: 2 })).toEqual({
+      object: { a: 1, b: 2 },
+    });
     expect(obj).toEqual({ a: 1 });
     expect(run('builtin:array-get', { array: ['x', 'y'], index: 1 })).toEqual({ item: 'y' });
     expect(run('builtin:array-length', { array: [1, 2, 3] })).toEqual({ length: 3 });
     expect(run('builtin:object-get', { object: { k: null }, key: 'k' })).toEqual({ value: null });
   });
   it('ошибки', () => {
-    expect(errorOf('builtin:array-get', { array: 'abc', index: 0 })).toBe('Expected an array, got: text.');
-    expect(errorOf('builtin:array-get', { array: [1], index: 5 })).toBe('Index 5 is out of range: array length is 1.');
-    expect(errorOf('builtin:array-get', { array: [1], index: 0.5 })).toBe('The index must be an integer, got: 0.5.');
-    expect(errorOf('builtin:object-get', { object: [1], key: 'a' })).toBe('Expected an object, got: array.');
-    expect(errorOf('builtin:object-get', { object: { a: 1 }, key: 'b' })).toBe('Field “b” not found.');
+    expect(errorOf('builtin:array-get', { array: 'abc', index: 0 })).toBe(
+      'Expected an array, got: text.',
+    );
+    expect(errorOf('builtin:array-get', { array: [1], index: 5 })).toBe(
+      'Index 5 is out of range: array length is 1.',
+    );
+    expect(errorOf('builtin:array-get', { array: [1], index: 0.5 })).toBe(
+      'The index must be an integer, got: 0.5.',
+    );
+    expect(errorOf('builtin:object-get', { object: [1], key: 'a' })).toBe(
+      'Expected an object, got: array.',
+    );
+    expect(errorOf('builtin:object-get', { object: { a: 1 }, key: 'b' })).toBe(
+      'Field “b” not found.',
+    );
   });
 });
 

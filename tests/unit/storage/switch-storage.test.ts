@@ -21,10 +21,13 @@ function wf(id: string, name: string): Workflow {
 }
 
 function put(dir: FakeDirectory, workflows: Workflow[]) {
-  for (const w of workflows) dir.put(`workflows/${w.id}.workflow.json`, toJsonText(workflowToFile(w)));
+  for (const w of workflows)
+    dir.put(`workflows/${w.id}.workflow.json`, toJsonText(workflowToFile(w)));
   dir.put(
     'workspace.json',
-    toJsonText(workspaceToFile({ workflowOrder: workflows.map((w) => w.id), tabs: [], activeTabId: null })),
+    toJsonText(
+      workspaceToFile({ workflowOrder: workflows.map((w) => w.id), tabs: [], activeTabId: null }),
+    ),
   );
 }
 
@@ -114,7 +117,10 @@ describe('смена хранилища (FR-028c)', () => {
     expect(state().storageLocation).toEqual({ kind: 'folder', name: 'my-flows' });
     expect(state().workflowOrder).toEqual(['A', 'C']);
     expect(state().workflows.A!.name).toBe('Общий');
-    expect(state().storagePrompt).toMatchObject({ kind: 'add-from-browser', folderName: 'my-flows' });
+    expect(state().storagePrompt).toMatchObject({
+      kind: 'add-from-browser',
+      folderName: 'my-flows',
+    });
     const prompt = state().storagePrompt as { add: Workflow[]; copies: Workflow[] };
     expect(prompt.add.map((w) => w.id)).toEqual(['B']);
     expect(prompt.copies.map((w) => w.name)).toEqual(['Общий изменённый']);
@@ -176,7 +182,9 @@ describe('ошибки хранилища видны пользователю (C
     await f.p.start();
     expect(f.state().storageLocation).toMatchObject({ kind: 'none' });
     expect(f.state().notifications.at(-1)).toMatchObject({ kind: 'error' });
-    expect(f.state().notifications.at(-1)!.text).toMatch(/^Saving unavailable: the browser denied access to storage \(/);
+    expect(f.state().notifications.at(-1)!.text).toMatch(
+      /^Saving unavailable: the browser denied access to storage \(/,
+    );
     expect(f.state().workflowOrder).toHaveLength(1); // редактор работает
   });
 
@@ -199,7 +207,9 @@ describe('ошибки хранилища видны пользователю (C
     folder.permission = 'denied';
     await f.p.restoreAccess();
     expect(f.state().storageLocation).toEqual({ kind: 'folder-pending', name: 'my-flows' });
-    expect(f.state().notifications.at(-1)!.text).toMatch(/^Access not granted: the browser did not allow working with folder “/);
+    expect(f.state().notifications.at(-1)!.text).toMatch(
+      /^Access not granted: the browser did not allow working with folder “/,
+    );
   });
 
   it('сбой при переносе в папку — уведомление, данные остаются в прежнем хранилище', async () => {

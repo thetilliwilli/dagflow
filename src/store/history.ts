@@ -15,22 +15,54 @@ export interface TabHistory {
 export const emptyHistory = (): TabHistory => ({ past: [], future: [], lastKey: null, lastAt: 0 });
 
 /** Записать состояние графа до правки. */
-export function record(h: TabHistory | undefined, before: Graph, key: string | null, now: number): TabHistory {
+export function record(
+  h: TabHistory | undefined,
+  before: Graph,
+  key: string | null,
+  now: number,
+): TabHistory {
   const base = h ?? emptyHistory();
   if (key !== null && base.lastKey === key && now - base.lastAt < COALESCE_MS) {
     return { ...base, future: [], lastAt: now };
   }
-  return { past: [...base.past, before].slice(-HISTORY_LIMIT), future: [], lastKey: key, lastAt: now };
+  return {
+    past: [...base.past, before].slice(-HISTORY_LIMIT),
+    future: [],
+    lastKey: key,
+    lastAt: now,
+  };
 }
 
-export function undo(h: TabHistory | undefined, current: Graph): { history: TabHistory; graph: Graph } | null {
+export function undo(
+  h: TabHistory | undefined,
+  current: Graph,
+): { history: TabHistory; graph: Graph } | null {
   if (!h || h.past.length === 0) return null;
   const graph = h.past[h.past.length - 1]!;
-  return { graph, history: { past: h.past.slice(0, -1), future: [...h.future, current], lastKey: null, lastAt: 0 } };
+  return {
+    graph,
+    history: {
+      past: h.past.slice(0, -1),
+      future: [...h.future, current],
+      lastKey: null,
+      lastAt: 0,
+    },
+  };
 }
 
-export function redo(h: TabHistory | undefined, current: Graph): { history: TabHistory; graph: Graph } | null {
+export function redo(
+  h: TabHistory | undefined,
+  current: Graph,
+): { history: TabHistory; graph: Graph } | null {
   if (!h || h.future.length === 0) return null;
   const graph = h.future[h.future.length - 1]!;
-  return { graph, history: { past: [...h.past, current], future: h.future.slice(0, -1), lastKey: null, lastAt: 0 } };
+  return {
+    graph,
+    history: {
+      past: [...h.past, current],
+      future: h.future.slice(0, -1),
+      lastKey: null,
+      lastAt: 0,
+    },
+  };
 }

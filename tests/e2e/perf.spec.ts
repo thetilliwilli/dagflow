@@ -89,15 +89,11 @@ const appeared = (page: Page) =>
 
 test('SC-002/SC-003/SC-005: граф из 100 нодов', async ({ page }) => {
   await page.goto('/');
-  await (
-    await openSidebar(page)
-  )
-    .getByLabel('Import from file')
-    .setInputFiles({
-      name: 'perf.dagflow.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(chainExport()),
-    });
+  await (await openSidebar(page)).getByLabel('Import from file').setInputFiles({
+    name: 'perf.dagflow.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(chainExport()),
+  });
   await page.getByRole('button', { name: 'Menu' }).click(); // закрыть левую панель
   await expect(page.locator('.react-flow__node')).toHaveCount(100);
   await page.locator('.react-flow__controls-fitview').click();

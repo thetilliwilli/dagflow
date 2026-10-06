@@ -41,7 +41,8 @@ export const textNodes = [
     compute: (i) => {
       const text = i.text as string;
       const n = Number(text.trim());
-      if (text.trim() === '' || !Number.isFinite(n)) throw new NodeError(nodeErrors.notANumber(text));
+      if (text.trim() === '' || !Number.isFinite(n))
+        throw new NodeError(nodeErrors.notANumber(text));
       return { value: n };
     },
   }),

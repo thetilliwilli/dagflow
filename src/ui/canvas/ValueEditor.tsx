@@ -61,7 +61,12 @@ export function ValueEditor({ port, value, onCommit }: Props) {
   return (
     <span className="value-editor-wrap">
       {port.type === 'number' || port.type === 'text' ? (
-        <input {...common} type="text" inputMode={port.type === 'number' ? 'decimal' : undefined} onChange={(e) => change(e.target.value)} />
+        <input
+          {...common}
+          type="text"
+          inputMode={port.type === 'number' ? 'decimal' : undefined}
+          onChange={(e) => change(e.target.value)}
+        />
       ) : (
         <textarea {...common} rows={1} onChange={(e) => change(e.target.value)} />
       )}
@@ -75,7 +80,9 @@ function parse(port: PortDef, text: string): { value: JsonValue | undefined; err
   if (text.trim() === '') return { value: undefined };
   if (port.type === 'number') {
     const n = Number(text.replace(',', '.'));
-    return Number.isFinite(n) ? { value: n } : { value: undefined, error: messages.valueTypeMismatch('number') };
+    return Number.isFinite(n)
+      ? { value: n }
+      : { value: undefined, error: messages.valueTypeMismatch('number') };
   }
   try {
     return { value: JSON.parse(text) as JsonValue };

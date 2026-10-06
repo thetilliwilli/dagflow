@@ -38,7 +38,11 @@ function reject(code: RejectCode, message: string): Rejection {
 }
 
 export const rejections = {
-  cycle: () => reject('cycle', 'Cannot link: this connection would create a cycle, and the graph must stay acyclic.'),
+  cycle: () =>
+    reject(
+      'cycle',
+      'Cannot link: this connection would create a cycle, and the graph must stay acyclic.',
+    ),
   sameNode: () => reject('same-node', 'Cannot link a node to itself.'),
   typeMismatch: (from: PortType, to: PortType) =>
     reject(
@@ -47,17 +51,25 @@ export const rejections = {
     ),
   unknownPort: (port: string) => reject('unknown-port', `Port “${port}” not found.`),
   unknownType: (typeId: string) => reject('unknown-type', `Unknown node type: ${typeId}.`),
-  inputOccupied: (port: string) => reject('input-occupied', `Input “${port}” has more than one link.`),
+  inputOccupied: (port: string) =>
+    reject('input-occupied', `Input “${port}” has more than one link.`),
   compositeRecursion: (title: string) =>
-    reject('composite-recursion', `Cannot put composite node “${title}” inside itself (directly or through other composite nodes).`),
+    reject(
+      'composite-recursion',
+      `Cannot put composite node “${title}” inside itself (directly or through other composite nodes).`,
+    ),
   ioOutsideComposite: () =>
-    reject('io-node-outside-composite', 'Input and Output nodes can only be added inside a composite node.'),
+    reject(
+      'io-node-outside-composite',
+      'Input and Output nodes can only be added inside a composite node.',
+    ),
   sameSide: (side: 'in' | 'out') =>
     reject(
       'same-side',
       `${side === 'in' ? 'Cannot link an input to an input' : 'Cannot link an output to an output'}: a link goes from an output of one node to an input of another.`,
     ),
-  emptyName: () => reject('empty-name', 'The node name cannot be empty. Enter at least one character.'),
+  emptyName: () =>
+    reject('empty-name', 'The node name cannot be empty. Enter at least one character.'),
   emptyPortName: () => reject('duplicate-port-name', 'The port name cannot be empty.'),
   duplicatePort: (name: string, kind: 'input' | 'output') =>
     reject(
@@ -65,7 +77,11 @@ export const rejections = {
       `Port “${name}” already exists on another ${kind === 'input' ? 'Input' : 'Output'} node. Port names must be unique.`,
     ),
   emptySelection: () => reject('unknown-port', 'Select at least one node.'),
-  collapseIo: () => reject('io-node-outside-composite', 'Input and Output nodes cannot be collapsed into a composite node.'),
+  collapseIo: () =>
+    reject(
+      'io-node-outside-composite',
+      'Input and Output nodes cannot be collapsed into a composite node.',
+    ),
 };
 
 /** Сообщения о состоянии нода при вычислении (FR-032 001). */
@@ -101,7 +117,8 @@ export const nodeErrors = {
   expectedArray: (kind: string) => `Expected an array, got: ${kind}.`,
   expectedObject: (kind: string) => `Expected an object, got: ${kind}.`,
   indexNotInteger: (index: number) => `The index must be an integer, got: ${index}.`,
-  indexOutOfRange: (index: number, n: number) => `Index ${index} is out of range: array length is ${n}.`,
+  indexOutOfRange: (index: number, n: number) =>
+    `Index ${index} is out of range: array length is ${n}.`,
   fieldNotFound: (key: string) => `Field “${key}” not found.`,
   notANumber: (text: string) => `“${text}” is not a number.`,
 };

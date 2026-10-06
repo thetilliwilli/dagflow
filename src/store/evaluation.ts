@@ -1,5 +1,11 @@
 // Связка стора с движком: по Evaluator на вкладку, пересчёт не чаще раза за кадр (research R2, T032)
-import { createEvaluator, createRegistry, type Evaluator, type Graph, type NodeState } from '../engine';
+import {
+  createEvaluator,
+  createRegistry,
+  type Evaluator,
+  type Graph,
+  type NodeState,
+} from '../engine';
 import { tabGraph, type AppState, type AppStore } from './store';
 
 /** Внутренние ноды экземпляров имеют id `экземпляр/нод`; на холсте виден нод верхнего уровня. */
@@ -10,8 +16,14 @@ type Schedule = (fn: () => void) => void;
 
 const defaultSchedule: Schedule = (fn) => requestAnimationFrame(() => fn());
 
-export function startEvaluation({ store }: AppStore, schedule: Schedule = defaultSchedule): () => void {
-  const evaluators = new Map<string, { ev: Evaluator; graph: Graph | undefined; composites: AppState['composites'] }>();
+export function startEvaluation(
+  { store }: AppStore,
+  schedule: Schedule = defaultSchedule,
+): () => void {
+  const evaluators = new Map<
+    string,
+    { ev: Evaluator; graph: Graph | undefined; composites: AppState['composites'] }
+  >();
   let scheduled = false;
 
   function flush() {
@@ -59,12 +71,19 @@ export function startEvaluation({ store }: AppStore, schedule: Schedule = defaul
     store.setState((draft: AppState) => {
       for (const tabId of tabIds) {
         const states = (draft.nodeStates[tabId] ??= {});
-        const graph = tabGraph(draft, draft.tabs.find((t) => t.id === tabId));
+        const graph = tabGraph(
+          draft,
+          draft.tabs.find((t) => t.id === tabId),
+        );
         const alive = new Set(graph?.nodes.map((n) => n.id));
         for (const id of Object.keys(states)) if (!alive.has(id)) delete states[id];
         for (const id of markComputing[tabId]!) {
           const prev = states[id];
-          states[id] = { status: 'computing', inputs: prev?.inputs ?? {}, outputs: prev?.outputs ?? {} };
+          states[id] = {
+            status: 'computing',
+            inputs: prev?.inputs ?? {},
+            outputs: prev?.outputs ?? {},
+          };
         }
       }
     });
@@ -76,7 +95,11 @@ export function startEvaluation({ store }: AppStore, schedule: Schedule = defaul
 
   sync(store.getState());
   return store.subscribe((state, prev) => {
-    if (state.workflows !== prev.workflows || state.composites !== prev.composites || state.tabs !== prev.tabs) {
+    if (
+      state.workflows !== prev.workflows ||
+      state.composites !== prev.composites ||
+      state.tabs !== prev.tabs
+    ) {
       sync(state);
     }
   });

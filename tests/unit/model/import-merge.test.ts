@@ -11,7 +11,13 @@ function seqId() {
 }
 
 function workflowUsing(type: string): Workflow {
-  return { id: 'w', name: 'W', createdAt: '', updatedAt: '', graph: graph([{ ...node('I', type), values: { a: 1, b: 1 } }]) };
+  return {
+    id: 'w',
+    name: 'W',
+    createdAt: '',
+    updatedAt: '',
+    graph: graph([{ ...node('I', type), values: { a: 1, b: 1 } }]),
+  };
 }
 
 describe('слияние определений (FR-029a)', () => {
@@ -24,7 +30,10 @@ describe('слияние определений (FR-029a)', () => {
   });
 
   it('то же имя, другое содержимое → «(2)», при занятом «(2)» → «(3)»; уведомление на каждый конфликт', () => {
-    const existing: Record<string, CompositeDef> = { OLD: doubleSum(2, 'OLD'), OLD2: { ...doubleSum(5, 'OLD2'), name: 'Удвоенная сумма (2)' } };
+    const existing: Record<string, CompositeDef> = {
+      OLD: doubleSum(2, 'OLD'),
+      OLD2: { ...doubleSum(5, 'OLD2'), name: 'Удвоенная сумма (2)' },
+    };
     const snapshot = JSON.stringify(existing);
     const r = mergeComposites([doubleSum(3, 'DS')], existing, seqId());
     expect(r.added).toHaveLength(1);
@@ -57,7 +66,12 @@ describe('импорт и выгрузка с составными нодами'
   it('ссылки в workflow переписаны, уведомления возвращены', () => {
     const file = toJsonText(buildExport(workflowUsing('composite:DS'), [doubleSum(3, 'DS')], 't'));
     let n = 0;
-    const r = importExport(file, { workflows: {}, composites: { DS: doubleSum(2, 'DS') }, newId: () => `id${++n}`, now: () => 't' });
+    const r = importExport(file, {
+      workflows: {},
+      composites: { DS: doubleSum(2, 'DS') },
+      newId: () => `id${++n}`,
+      now: () => 't',
+    });
     if (!r.ok) throw new Error(r.message);
     expect(r.composites).toHaveLength(1);
     expect(r.workflow.graph.nodes[0]!.type).toBe(`composite:${r.composites[0]!.id}`);
