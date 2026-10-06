@@ -227,11 +227,11 @@ description: "Task list for 002-editor-ui-redesign"
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T071 Добавить в `tests/e2e/perf.spec.ts` замер SC-005 на графе из 100 нодов: от выделения до видимого окна «Свойства» и от наведения во время перетаскивания до временного окна — меньше 100 мс; проверить, что замеры SC-002/SC-003 фичи 001 проходят (SC-008), `npm run test:perf`
-- [ ] T072 [P] Прогнать `npm run test:e2e:firefox` (перетаскивание указателем, `elementFromPoint`) и исправить расхождения
-- [ ] T073 [P] Поставить пометки «уточнено в 002» со ссылкой на раздел «Связь с фичей 001» спеки 002 у FR-001, FR-003, FR-006, FR-007, FR-007a, FR-015, FR-016, FR-018, FR-031 и SC-006 в `specs/001-dag-workflow-editor/spec.md`; у `NodeInstance` в `specs/001-dag-workflow-editor/data-model.md` и в `specs/001-dag-workflow-editor/contracts/file-formats.md` — ссылку на обязательное поле `name` из `specs/002-editor-ui-redesign/contracts/file-formats.md` (research R14)
-- [ ] T074 [P] Обновить раздел «Тесты» в `CLAUDE.md`: хелперы `addNode` (палитра по Пробелу и вкладки), `connect`, `linkByClick`, `setInput`, `openSidebar`; ноды искать по `.flow-node__name` или `data-id`
-- [ ] T075 Удалить мёртвый код и стили (поля значений на карточке, `.port-*`, старые классы раскладки) в `src/ui/`; `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e` зелёные
+- [X] T071 Добавить в `tests/e2e/perf.spec.ts` замер SC-005 на графе из 100 нодов: от выделения до видимого окна «Свойства» и от наведения во время перетаскивания до временного окна — меньше 100 мс; проверить, что замеры SC-002/SC-003 фичи 001 проходят (SC-008), `npm run test:perf`
+- [X] T072 [P] Прогнать `npm run test:e2e:firefox` (перетаскивание указателем, `elementFromPoint`) и исправить расхождения
+- [X] T073 [P] Поставить пометки «уточнено в 002» со ссылкой на раздел «Связь с фичей 001» спеки 002 у FR-001, FR-003, FR-006, FR-007, FR-007a, FR-015, FR-016, FR-018, FR-031 и SC-006 в `specs/001-dag-workflow-editor/spec.md`; у `NodeInstance` в `specs/001-dag-workflow-editor/data-model.md` и в `specs/001-dag-workflow-editor/contracts/file-formats.md` — ссылку на обязательное поле `name` из `specs/002-editor-ui-redesign/contracts/file-formats.md` (research R14)
+- [X] T074 [P] Обновить раздел «Тесты» в `CLAUDE.md`: хелперы `addNode` (палитра по Пробелу и вкладки), `connect`, `linkByClick`, `setInput`, `openSidebar`; ноды искать по `.flow-node__name` или `data-id`
+- [X] T075 Удалить мёртвый код и стили (поля значений на карточке, `.port-*`, старые классы раскладки) в `src/ui/`; `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e` зелёные
 - [ ] T076 Пройти [quickstart.md](./quickstart.md) вручную (включая SC-002 — новый пользователь связывает два нода за ≤ 15 с); отклонения от плана записать в research.md, дерево файлов plan.md и контракты
 
 ---

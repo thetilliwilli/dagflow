@@ -26,7 +26,6 @@ export const messages = {
   showLess: 'свернуть',
   invalidJson: (reason: string) => `Некорректный JSON: ${reason}`,
   valueTypeMismatch: (type: PortType) => `Значение не подходит к типу порта «${typeLabels[type]}»`,
-  connected: 'подключено',
   noValue: '—',
   closeNotification: 'Закрыть уведомление',
   invalidName: 'Имя должно содержать от 1 до 100 символов',
@@ -162,7 +161,6 @@ export const propertiesMessages = {
   ghost: (port: string, type: string) => `${port} (${type})`,
   /** Поле переименования нода (FR-009). */
   nodeNameLabel: 'Имя нода',
-  renameHint: 'Двойной щелчок — переименовать',
 };
 
 /** Краткие обозначения типов портов в окне свойств (FR-013b). */

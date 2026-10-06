@@ -140,12 +140,14 @@ test('FR-006a: сообщение о хранилище — вверху лев�
   await expect(page.getByRole('region', { name: 'Хранилище' })).toHaveCount(0);
   const panel = await openSidebar(page);
   const notice = panel.getByRole('region', { name: 'Хранилище' });
-  await expect(notice).toContainText('Выберите рабочую папку');
+  // Chromium предлагает выбрать папку; без поддержки папок (Firefox) — сразу напоминание о выгрузке
+  await expect(notice).toContainText(/Выберите рабочую папку|выгрузите workflow в файл/);
   // Сообщение — первым в панели, над индикатором хранилища
   const noticeBox = (await notice.boundingBox())!;
   const indicatorBox = (await panel.getByTestId('storage-indicator').boundingBox())!;
   expect(noticeBox.y).toBeLessThan(indicatorBox.y);
-  await notice.getByRole('button', { name: 'Позже' }).click();
+  const later = notice.getByRole('button', { name: 'Позже' });
+  if (await later.isVisible()) await later.click();
   await panel
     .getByRole('region', { name: 'Хранилище' })
     .getByRole('button', { name: 'Понятно' })
