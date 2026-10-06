@@ -17,16 +17,16 @@ export type ImportResult =
   | { ok: false; message: string };
 
 export const importMessages = {
-  invalidJson: 'Файл не является корректным JSON',
-  unknownFormat: 'Неизвестный формат файла',
-  newerVersion: 'Файл создан более новой версией редактора',
-  schema: (path: string) => `Файл не похож на выгрузку workflow: ${path}`,
-  unknownTypes: (types: string[]) => `В файле есть неизвестные типы нодов: ${types.join(', ')}`,
-  invalidGraph: (reason: string) => `Граф в файле некорректен: ${reason}`,
+  invalidJson: 'The file is not valid JSON.',
+  unknownFormat: 'Unknown file format.',
+  newerVersion: 'The file was created by a newer version of the editor.',
+  schema: (path: string) => `The file does not look like a workflow export: ${path}.`,
+  unknownTypes: (types: string[]) => `The file contains unknown node types: ${types.join(', ')}.`,
+  invalidGraph: (reason: string) => `The graph in the file is invalid: ${reason}`,
   recursion: (name: string) =>
-    `Составной нод «${name}» в файле содержит сам себя, а составной нод не может быть внутри самого себя (напрямую или через другие).`,
+    `Composite node “${name}” in the file contains itself; a composite node cannot be inside itself (directly or through others).`,
   compositeRenamed: (name: string, renamed: string) =>
-    `Составной нод «${name}» уже есть в палитре с другим содержимым — добавлен как «${renamed}».`,
+    `Composite node “${name}” already exists in the palette with different content — added as “${renamed}”.`,
 };
 
 /** JSON с отсортированными ключами — для сравнения содержимого определений. */

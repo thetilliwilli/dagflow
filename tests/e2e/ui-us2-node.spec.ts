@@ -9,16 +9,16 @@ const style = (l: Locator, prop: string) =>
 
 async function rename(page: Page, node: Locator, name: string) {
   await node.locator('.flow-node__name').dblclick();
-  const input = node.getByRole('textbox', { name: 'Имя нода' });
+  const input = node.getByRole('textbox', { name: 'Node name' });
   await input.fill(name);
   await input.press('Enter');
 }
 
 test('US2 #1: прямоугольник без скруглений, тип серым и мельче имени', async ({ page }) => {
   await page.goto('/');
-  const node = await addNode(page, 'Сложить', 80, 80);
-  await expect(node.locator('.flow-node__type')).toHaveText('Сложить');
-  await expect(node.locator('.flow-node__name')).toHaveText('Сложить');
+  const node = await addNode(page, 'Add', 80, 80);
+  await expect(node.locator('.flow-node__type')).toHaveText('Add');
+  await expect(node.locator('.flow-node__name')).toHaveText('Add');
   expect(await style(card(node), 'border-top-left-radius')).toBe('0px');
   const typeColor = await style(node.locator('.flow-node__type'), 'color');
   const nameColor = await style(node.locator('.flow-node__name'), 'color');
@@ -32,45 +32,45 @@ test('US2 #2, #5, SC-007: переименование переживает пе
   page,
 }, info) => {
   await page.goto('/');
-  const node = await addNode(page, 'Сложить', 80, 80);
+  const node = await addNode(page, 'Add', 80, 80);
   await rename(page, node, 'Итого');
   await expect(node.locator('.flow-node__name')).toHaveText('Итого');
-  await expect(node.locator('.flow-node__type')).toHaveText('Сложить');
+  await expect(node.locator('.flow-node__type')).toHaveText('Add');
   await page.waitForTimeout(1000); // автосохранение — через 300 мс
   await page.reload();
   const again = page.locator('.react-flow__node').first();
   await expect(again.locator('.flow-node__name')).toHaveText('Итого');
 
   const download = page.waitForEvent('download');
-  await (await openSidebar(page)).getByRole('button', { name: 'Выгрузить в файл' }).click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Export to file' }).click();
   const path = info.outputPath('named.dagflow.json');
   await (await download).saveAs(path);
   expect(JSON.parse(readFileSync(path, 'utf8')).workflow.graph.nodes[0].name).toBe('Итого');
-  await (await openSidebar(page)).getByLabel('Загрузить из файла').setInputFiles(path);
+  await (await openSidebar(page)).getByLabel('Import from file').setInputFiles(path);
   await expect(tabBar(page).getByRole('tab')).toHaveCount(2);
   await expect(page.locator('.react-flow__node .flow-node__name')).toHaveText('Итого');
 });
 
 test('US2 #4: пустое имя и Escape не меняют имя', async ({ page }) => {
   await page.goto('/');
-  const node = await addNode(page, 'Сложить', 80, 80);
+  const node = await addNode(page, 'Add', 80, 80);
   await node.locator('.flow-node__name').dblclick();
-  const input = node.getByRole('textbox', { name: 'Имя нода' });
+  const input = node.getByRole('textbox', { name: 'Node name' });
   await input.fill('   ');
   await input.press('Enter');
   await expect(node.getByRole('alert')).toHaveText(
-    'Имя нода не может быть пустым. Введите хотя бы один символ.',
+    'The node name cannot be empty. Enter at least one character.',
   );
   await input.press('Escape');
-  await expect(node.locator('.flow-node__name')).toHaveText('Сложить');
+  await expect(node.locator('.flow-node__name')).toHaveText('Add');
 });
 
 test('FR-007a: ширина по имени от 20 до 40 символов, до 3 строк, высота одинакова', async ({
   page,
 }) => {
   await page.goto('/');
-  const short = await addNode(page, 'Число', 60, 60);
-  const long = await addNode(page, 'Число', 60, 300);
+  const short = await addNode(page, 'Number', 60, 60);
+  const long = await addNode(page, 'Number', 60, 300);
   const longName = `${'длинное имя нода '.repeat(5)}конец`; // 90 символов
   await rename(page, long, longName);
   const a = (await card(short).boundingBox())!;
@@ -94,12 +94,12 @@ test('FR-007a: ширина по имени от 20 до 40 символов, д
 
 test('US2 #6, #7: выделение — синяя рамка; состояние рамку не красит', async ({ page }) => {
   await page.goto('/');
-  const a = await addNode(page, 'Число', 60, 60);
-  const b = await addNode(page, 'Сложить', 60, 300); // ожидает входов
+  const a = await addNode(page, 'Number', 60, 60);
+  const b = await addNode(page, 'Add', 60, 300); // ожидает входов
   const black = await style(card(a), 'border-top-color');
   expect(await style(card(b), 'border-top-color')).toBe(black);
-  await expect(b.getByTestId('node-status')).toContainText('ожидает входов');
-  await expect(b.locator('.flow-node__problem')).toContainText('Заполните вход');
+  await expect(b.getByTestId('node-status')).toContainText('waiting for inputs');
+  await expect(b.locator('.flow-node__problem')).toContainText('Fill in input');
 
   await selectNode(a);
   const blue = await style(card(a), 'border-top-color');

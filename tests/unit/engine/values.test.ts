@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deepEqual, describeKind, isCompatible, matchesType } from '../../../src/engine/values';
+import { deepEqual, describeKind, formatCompact, isCompatible, matchesType } from '../../../src/engine/values';
 import type { PortType } from '../../../src/engine/types';
 
 describe('matchesType', () => {
@@ -64,12 +64,24 @@ describe('deepEqual', () => {
 });
 
 describe('describeKind', () => {
-  it('называет вид значения по-русски', () => {
-    expect(describeKind(1)).toBe('число');
-    expect(describeKind('a')).toBe('текст');
-    expect(describeKind(true)).toBe('логическое значение');
-    expect(describeKind([])).toBe('массив');
-    expect(describeKind({})).toBe('объект');
+  it('называет вид значения (contracts/ui-texts.md)', () => {
+    expect(describeKind(1)).toBe('number');
+    expect(describeKind('a')).toBe('text');
+    expect(describeKind(true)).toBe('boolean');
+    expect(describeKind([])).toBe('array');
+    expect(describeKind({})).toBe('object');
     expect(describeKind(null)).toBe('null');
+  });
+});
+
+describe('formatCompact', () => {
+  it('короткие значения — как JSON', () => {
+    expect(formatCompact([1, 2])).toBe('[1,2]');
+    expect(formatCompact({ a: 1 })).toBe('{"a":1}');
+  });
+
+  it('длинные массивы и объекты — «[items: N]», «{fields: N}»', () => {
+    expect(formatCompact([1, 2, 3], 0)).toBe('[items: 3]');
+    expect(formatCompact({ a: 1, b: 2 }, 0)).toBe('{fields: 2}');
   });
 });

@@ -9,7 +9,7 @@ function chainExport() {
     {
       id: 'src',
       type: 'builtin:number',
-      name: 'Число',
+      name: 'Number',
       position: { x: 0, y: 0 },
       values: { value: 1 },
     },
@@ -19,7 +19,7 @@ function chainExport() {
     nodes.push({
       id: `n${i}`,
       type: 'builtin:add',
-      name: 'Сложить',
+      name: 'Add',
       position: { x: 260 * (i % 10), y: 160 * Math.floor(i / 10) },
       values: { b: 1 } as never,
     });
@@ -32,7 +32,7 @@ function chainExport() {
   nodes.push({
     id: 'show',
     type: 'builtin:show',
-    name: 'Показать',
+    name: 'Show',
     position: { x: 0, y: 1700 },
     values: {} as never,
   });
@@ -92,13 +92,13 @@ test('SC-002/SC-003/SC-005: граф из 100 нодов', async ({ page }) => {
   await (
     await openSidebar(page)
   )
-    .getByLabel('Загрузить из файла')
+    .getByLabel('Import from file')
     .setInputFiles({
       name: 'perf.dagflow.json',
       mimeType: 'application/json',
       buffer: Buffer.from(chainExport()),
     });
-  await page.getByRole('button', { name: 'Меню' }).click(); // закрыть левую панель
+  await page.getByRole('button', { name: 'Menu' }).click(); // закрыть левую панель
   await expect(page.locator('.react-flow__node')).toHaveCount(100);
   await page.locator('.react-flow__controls-fitview').click();
 
@@ -128,10 +128,10 @@ test('SC-002/SC-003/SC-005: граф из 100 нодов', async ({ page }) => {
   });
 
   // SC-002: добавление нода щелчком по палитре отображается < 100 мс
-  await paletteItem(page, 'Число');
+  await paletteItem(page, 'Number');
   const addition = await page.evaluate(async () => {
     const item = [...document.querySelectorAll('.palette__item')].find(
-      (el) => el.querySelector('.palette__item-title')?.textContent === 'Число',
+      (el) => el.querySelector('.palette__item-title')?.textContent === 'Number',
     )!;
     const runs: number[] = [];
     for (let i = 0; i < 5; i++) {
@@ -174,7 +174,7 @@ test('SC-002/SC-003/SC-005: граф из 100 нодов', async ({ page }) => {
   const gridRuns: number[] = [];
   for (const id of ['n10', 'n20', 'n30']) {
     await page.locator('.react-flow__pane').click({ position: { x: 5, y: 5 } });
-    await expect(page.getByRole('dialog', { name: 'Свойства' })).toHaveCount(0);
+    await expect(page.getByRole('dialog', { name: 'Properties' })).toHaveCount(0);
     await armAppearance(page, 'pointerdown', '.prop-grid');
     await selectNode(node(page, id));
     gridRuns.push(await appeared(page));

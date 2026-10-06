@@ -67,11 +67,11 @@ describe('составные ноды: действия', () => {
         <Workbench />
       </AppProvider>,
     );
-    const palette = within(openPalette('Мои составные ноды'));
-    expect(palette.getByRole('tab', { name: 'Мои составные ноды' })).toBeInTheDocument();
+    const palette = within(openPalette('My composite nodes'));
+    expect(palette.getByRole('tab', { name: 'My composite nodes' })).toBeInTheDocument();
     expect(palette.getByText('Удвоенная сумма')).toBeInTheDocument();
-    expect(palette.queryByText('Вход')).toBeNull();
-    expect(palette.queryByRole('tab', { name: 'Интерфейс составного нода' })).toBeNull();
+    expect(palette.queryByText('Input')).toBeNull();
+    expect(palette.queryByRole('tab', { name: 'Composite interface' })).toBeNull();
   });
 
   it('открытие — вкладка вида composite; правка внутри применяется во всех вкладках (FR-031b)', () => {
@@ -123,7 +123,7 @@ describe('составные ноды: действия', () => {
     const wf = Object.values(state().workflows)[0]!;
     expect(wf.graph.edges.some((e) => e.target.node === ids.inst && e.target.port === 'a')).toBe(false);
     expect(wf.graph.edges.some((e) => e.target.node === ids.inst && e.target.port === 'b')).toBe(true);
-    expect(state().notifications.at(-1)!.text).toMatch(/Удалено связей: 1/);
+    expect(state().notifications.at(-1)!.text).toMatch(/Links removed: 1/);
   });
 
   it('дубль имени порта отклоняется (FR-021c)', () => {
@@ -149,7 +149,7 @@ describe('составные ноды: действия', () => {
     });
     const r = actions.collapseSelection([other], 'Удвоенная сумма');
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.message).toContain('занято');
+    if (!r.ok) expect(r.message).toContain('already taken');
     let second!: ReturnType<typeof actions.collapseSelection>;
     act(() => {
       second = actions.collapseSelection([other], 'Сумма');
@@ -168,10 +168,10 @@ describe('составные ноды: действия', () => {
         <Workbench />
       </AppProvider>,
     );
-    openPalette('Мои составные ноды');
-    await user.click(screen.getByRole('button', { name: 'Удалить составной нод «Удвоенная сумма»' }));
-    expect(screen.getByRole('dialog', { name: 'Удалить составной нод?' })).toHaveTextContent('Используется в 1 месте');
-    await user.click(within(screen.getByRole('dialog', { name: 'Удалить составной нод?' })).getByRole('button', { name: 'Удалить' }));
+    openPalette('My composite nodes');
+    await user.click(screen.getByRole('button', { name: 'Delete composite node “Удвоенная сумма”' }));
+    expect(screen.getByRole('dialog', { name: 'Delete composite node?' })).toHaveTextContent('Instances in use: 1.');
+    await user.click(within(screen.getByRole('dialog', { name: 'Delete composite node?' })).getByRole('button', { name: 'Delete' }));
     expect(state().composites[ids.compositeId]).toBeUndefined();
     expect(Object.values(state().workflows)[0]!.graph.nodes.some((n) => n.id === ids.inst)).toBe(false);
   });

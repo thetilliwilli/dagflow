@@ -1,7 +1,7 @@
 // Реактивное инкрементальное вычисление (research R2, contracts/engine-api.md E1–E7)
 import { IO_INPUT } from './builtins/io';
 import { flatten } from './composite';
-import { internalErrorMessage, NodeError } from './errors';
+import { NodeError, stateMessages } from './errors';
 import type {
   CompositeDef,
   Graph,
@@ -85,8 +85,8 @@ export function createEvaluator(source: RegistrySource): Evaluator {
 
   function blockedMessage(sourceId: string, source: NodeState | undefined): string {
     if (source?.status === 'blocked' && source.message) return source.message;
-    if (source?.status === 'waiting') return `Нод «${title(sourceId)}» выше по графу ожидает входов`;
-    return `Нод «${title(sourceId)}» выше по графу завершился ошибкой`;
+    if (source?.status === 'waiting') return stateMessages.upstreamWaiting(title(sourceId));
+    return stateMessages.upstreamFailed(title(sourceId));
   }
 
   function evaluateNode(id: string): NodeState {
@@ -94,7 +94,7 @@ export function createEvaluator(source: RegistrySource): Evaluator {
     const def = registry.get(n.type);
     const ports = nodePorts(n, registry);
     if (!def || !ports) {
-      return { status: 'error', inputs: {}, outputs: {}, message: `Неизвестный тип нода: ${n.type}` };
+      return { status: 'error', inputs: {}, outputs: {}, message: stateMessages.unknownType(n.type) };
     }
     const inputs: Inputs = {};
     let missing: string | undefined;
@@ -106,7 +106,7 @@ export function createEvaluator(source: RegistrySource): Evaluator {
         const v = s?.status === 'ok' ? s.outputs[src.port] : undefined;
         if (v === undefined) {
           blocked ??=
-            s?.status === 'ok' ? `Нет значения на выходе «${src.port}» нода «${title(src.node)}»` : blockedMessage(src.node, s);
+            s?.status === 'ok' ? stateMessages.noOutputValue(src.port, title(src.node)) : blockedMessage(src.node, s);
         }
         else inputs[p.name] = v;
       } else if (Object.hasOwn(n.values, p.name)) {
@@ -123,12 +123,12 @@ export function createEvaluator(source: RegistrySource): Evaluator {
       for (const p of n.ports ?? []) if (p.default !== undefined) outputs[p.name] = p.default;
       return { status: 'ok', inputs: {}, outputs };
     }
-    if (missing) return { status: 'waiting', inputs, outputs: {}, message: `Заполните вход «${missing}»` };
+    if (missing) return { status: 'waiting', inputs, outputs: {}, message: stateMessages.fillInput(missing) };
     if (blocked) return { status: 'blocked', inputs, outputs: {}, message: blocked };
     try {
       return { status: 'ok', inputs, outputs: def.compute ? def.compute(inputs) : {} };
     } catch (e) {
-      const message = e instanceof NodeError ? e.userMessage : internalErrorMessage(def.title);
+      const message = e instanceof NodeError ? e.userMessage : stateMessages.internalError(def.title);
       return { status: 'error', inputs, outputs: {}, message };
     }
   }

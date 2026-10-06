@@ -39,7 +39,7 @@ describe('объяснение отказа в соединении', () => {
       tryConnect(actions, { node: c, port: 'result' }, { node: a, port: 'a' });
     });
     expect(edges()).toHaveLength(2);
-    expect(screen.getByRole('alert')).toHaveTextContent(/цикл/);
+    expect(screen.getByRole('alert')).toHaveTextContent(/cycle/);
   });
 
   it('несовместимые типы: связь не создаётся, показаны оба типа (US2 #2, SC-004)', () => {
@@ -50,7 +50,7 @@ describe('объяснение отказа в соединении', () => {
       tryConnect(actions, { node: t, port: 'value' }, { node: s, port: 'a' });
     });
     expect(edges()).toHaveLength(0);
-    expect(screen.getByRole('alert')).toHaveTextContent('Несовместимые типы: текст → число');
+    expect(screen.getByRole('alert')).toHaveTextContent('Incompatible types: text → number');
   });
 
   it('успешное соединение уведомлений не показывает', () => {
@@ -80,7 +80,7 @@ describe('объяснение отказа в соединении', () => {
         actions.notify('info', 'Второе');
       });
       act(() => {
-        screen.getByRole('button', { name: 'Закрыть уведомление' }).click();
+        screen.getByRole('button', { name: 'Close notification' }).click();
       });
       expect(app.store.getState().notifications).toEqual([]);
     } finally {

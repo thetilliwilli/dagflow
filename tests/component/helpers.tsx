@@ -24,17 +24,17 @@ export function testStore(): AppStore {
 
 /** Открывает левую панель кнопкой меню (фича 002: панель — плавающее окно за кнопкой ☰). */
 export function openSidebar() {
-  const button = screen.getByRole('button', { name: 'Меню' });
+  const button = screen.getByRole('button', { name: 'Menu' });
   if (button.getAttribute('aria-expanded') !== 'true') fireEvent.click(button);
-  return screen.getByRole('dialog', { name: 'Workflow и хранилище' });
+  return screen.getByRole('dialog', { name: 'Workflows & storage' });
 }
 
 /** Открывает палитру Пробелом и, если задано, вкладку категории (фича 002). */
 export function openPalette(category?: string) {
-  if (!screen.queryByRole('dialog', { name: 'Палитра' })) {
+  if (!screen.queryByRole('dialog', { name: 'Palette' })) {
     fireEvent.keyDown(document.body, { key: ' ', code: 'Space' });
   }
-  const palette = screen.getByRole('dialog', { name: 'Палитра' });
+  const palette = screen.getByRole('dialog', { name: 'Palette' });
   if (category) fireEvent.click(within(palette).getByRole('tab', { name: category }));
   return palette;
 }

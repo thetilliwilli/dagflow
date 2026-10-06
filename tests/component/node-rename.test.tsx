@@ -35,8 +35,8 @@ describe('переименование нода', () => {
   it('#2: двойной щелчок по имени — поле; Enter сохраняет', async () => {
     const h = setup();
     h.startOnCard();
-    const input = within(h.card()).getByRole('textbox', { name: 'Имя нода' });
-    expect(input).toHaveValue('Сложить');
+    const input = within(h.card()).getByRole('textbox', { name: 'Node name' });
+    expect(input).toHaveValue('Add');
     await h.user.clear(input);
     await h.user.type(input, 'Итого{Enter}');
     expect(h.name()).toBe('Итого');
@@ -47,7 +47,7 @@ describe('переименование нода', () => {
   it('потеря фокуса тоже сохраняет', async () => {
     const h = setup();
     h.startOnCard();
-    const input = within(h.card()).getByRole('textbox', { name: 'Имя нода' });
+    const input = within(h.card()).getByRole('textbox', { name: 'Node name' });
     await h.user.clear(input);
     await h.user.type(input, 'Сумма');
     fireEvent.blur(input);
@@ -57,44 +57,32 @@ describe('переименование нода', () => {
   it('#4: Escape отменяет ввод', async () => {
     const h = setup();
     h.startOnCard();
-    const input = within(h.card()).getByRole('textbox', { name: 'Имя нода' });
+    const input = within(h.card()).getByRole('textbox', { name: 'Node name' });
     await h.user.clear(input);
     await h.user.type(input, 'Другое{Escape}');
-    expect(h.name()).toBe('Сложить');
+    expect(h.name()).toBe('Add');
     expect(within(h.card()).queryByRole('textbox')).toBeNull();
   });
 
   it('#4: пустое имя не принимается — текст отказа под полем, имя прежнее', async () => {
     const h = setup();
     h.startOnCard();
-    const input = within(h.card()).getByRole('textbox', { name: 'Имя нода' });
+    const input = within(h.card()).getByRole('textbox', { name: 'Node name' });
     await h.user.clear(input);
     await h.user.type(input, '   {Enter}');
-    expect(h.name()).toBe('Сложить');
+    expect(h.name()).toBe('Add');
     expect(within(h.card()).getByRole('alert')).toHaveTextContent(
-      'Имя нода не может быть пустым. Введите хотя бы один символ.',
+      'The node name cannot be empty. Enter at least one character.',
     );
     expect(input).toHaveAttribute('aria-invalid', 'true');
-  });
-
-  it('имя длиннее 100 символов — отказ name-too-long', async () => {
-    const h = setup();
-    h.startOnCard();
-    const input = within(h.card()).getByRole('textbox', { name: 'Имя нода' });
-    fireEvent.change(input, { target: { value: 'я'.repeat(101) } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(h.name()).toBe('Сложить');
-    expect(within(h.card()).getByRole('alert')).toHaveTextContent(
-      'Имя нода длиннее 100 символов. Сократите его.',
-    );
   });
 
   it('FR-009: тот же редактор — в заголовке окна свойств', async () => {
     const h = setup();
     act(() => h.ui().setSelection([h.id]));
-    const grid = screen.getByRole('dialog', { name: 'Свойства' });
+    const grid = screen.getByRole('dialog', { name: 'Properties' });
     fireEvent.doubleClick(within(grid).getByTestId('prop-grid-name'));
-    const input = within(grid).getByRole('textbox', { name: 'Имя нода' });
+    const input = within(grid).getByRole('textbox', { name: 'Node name' });
     await h.user.clear(input);
     await h.user.type(input, 'Из окна{Enter}');
     expect(h.name()).toBe('Из окна');

@@ -1,5 +1,5 @@
 // Значения, типы портов и их совместимость (FR-005, FR-005a)
-import { plural } from './errors';
+import { compactFormats, kindNames } from './errors';
 import type { JsonValue, PortType } from './types';
 
 export function isPlainObject(value: JsonValue): value is { [key: string]: JsonValue } {
@@ -42,17 +42,17 @@ export function deepEqual(a: JsonValue, b: JsonValue): boolean {
 
 /** Вид значения для сообщений «получено: <вид>». */
 export function describeKind(value: JsonValue): string {
-  if (value === null) return 'null';
-  if (Array.isArray(value)) return 'массив';
+  if (value === null) return kindNames.null;
+  if (Array.isArray(value)) return kindNames.array;
   switch (typeof value) {
     case 'number':
-      return 'число';
+      return kindNames.number;
     case 'string':
-      return 'текст';
+      return kindNames.text;
     case 'boolean':
-      return 'логическое значение';
+      return kindNames.boolean;
     default:
-      return 'объект';
+      return kindNames.object;
   }
 }
 
@@ -61,13 +61,12 @@ export function formatCompact(value: JsonValue, maxLength = 40): string {
   if (Array.isArray(value)) {
     const json = JSON.stringify(value);
     if (json.length <= maxLength) return json;
-    return `[${value.length} ${plural(value.length, 'элемент', 'элемента', 'элементов')}]`;
+    return compactFormats.array(value.length);
   }
   if (isPlainObject(value)) {
     const json = JSON.stringify(value);
     if (json.length <= maxLength) return json;
-    const n = Object.keys(value).length;
-    return `{${n} ${plural(n, 'поле', 'поля', 'полей')}}`;
+    return compactFormats.object(Object.keys(value).length);
   }
   const text = typeof value === 'string' ? value : JSON.stringify(value);
   return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1)}…`;

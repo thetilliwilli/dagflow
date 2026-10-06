@@ -21,7 +21,7 @@ function portsLine(def: NodeTypeDef): string {
 function portsSummary(def: NodeTypeDef): string {
   const fmt = (ps: NodeTypeDef['inputs']) =>
     ps.map((p) => `${p.name}: ${typeLabels[p.type]}`).join(', ') || '—';
-  return `Входы: ${fmt(def.inputs)}. Выходы: ${fmt(def.outputs)}.`;
+  return messages.portsSummary(fmt(def.inputs), fmt(def.outputs));
 }
 
 /** Порядок вкладок: категории движка, затем составные ноды, затем остальные (интерфейс составного нода). */
@@ -110,7 +110,9 @@ export function Palette() {
             onDragStart={(e) => onDragStart(e, def.id)}
             onClick={() => addAtCenter(def.id)}
           >
-            <span className="palette__item-title">{def.title}</span>
+            <span className="palette__item-title" title={def.title}>
+              {def.title}
+            </span>
             <span className="palette__item-desc">{def.description}</span>
             {def.paletteScope !== 'composite' && (
               <span className="palette__item-ports">{portsLine(def)}</span>

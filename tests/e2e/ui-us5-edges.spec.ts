@@ -5,7 +5,7 @@ import { addNode, connect, selectNode, valueOf } from './helpers';
 const edges = (page: Page) => page.locator('.react-flow__edge');
 const label = (page: Page) => page.locator('.bundle-label');
 const lines = (page: Page) => label(page).locator('.bundle-label__line');
-const linksWindow = (page: Page) => page.getByRole('dialog', { name: 'Связи: Число → Сложить' });
+const linksWindow = (page: Page) => page.getByRole('dialog', { name: 'Links: Number → Add' });
 const zoom = (page: Page) =>
   page
     .locator('.react-flow__viewport')
@@ -13,8 +13,8 @@ const zoom = (page: Page) =>
 
 async function pair(page: Page) {
   await page.goto('/');
-  const num = await addNode(page, 'Число', 60, 100);
-  const sum = await addNode(page, 'Сложить', 460, 100);
+  const num = await addNode(page, 'Number', 60, 100);
+  const sum = await addNode(page, 'Add', 460, 100);
   await connect(page, num, 'value', sum, 'a');
   await connect(page, num, 'value', sum, 'b');
   await page.locator('.react-flow__pane').click({ position: { x: 700, y: 450 } }); // снять выделение
@@ -60,18 +60,18 @@ test('US5 #4–#7, SC-006: окно связей — удаление крест
   // #4: щелчок по подписи
   await label(page).click();
   await expect(linksWindow(page).getByRole('listitem')).toHaveCount(2);
-  await linksWindow(page).getByRole('button', { name: 'Закрыть' }).click();
+  await linksWindow(page).getByRole('button', { name: 'Close' }).click();
   await expect(linksWindow(page)).toHaveCount(0);
   // #4: щелчок по линии; #5, SC-006: второй щелчок — крестик
   await clickLine(page);
-  await linksWindow(page).getByRole('button', { name: 'Удалить связь «value→b»' }).click();
+  await linksWindow(page).getByRole('button', { name: 'Delete link “value→b”' }).click();
   await expect(lines(page)).toHaveText(['value→a']);
   await expect(linksWindow(page).getByRole('listitem')).toHaveCount(1);
   // #7: пустой холст закрывает окно
   await page.locator('.react-flow__pane').click({ position: { x: 700, y: 450 } });
   await expect(linksWindow(page)).toHaveCount(0);
   await selectNode(sum);
-  const b = page.getByRole('dialog', { name: 'Свойства' }).locator('li.prop-row[data-port="b"]');
+  const b = page.getByRole('dialog', { name: 'Properties' }).locator('li.prop-row[data-port="b"]');
   await expect(b.locator('.prop-marker')).not.toHaveClass(/is-linked/);
   // #6: отмена возвращает связь
   await page.locator('.react-flow__pane').click({ position: { x: 700, y: 450 } });
@@ -87,8 +87,8 @@ test('US5 #4–#7, SC-006: окно связей — удаление крест
 test('US5 #5: последняя связь удалена — линия и окно исчезают', async ({ page }) => {
   await pair(page);
   await label(page).click();
-  await linksWindow(page).getByRole('button', { name: 'Удалить связь «value→a»' }).click();
-  await linksWindow(page).getByRole('button', { name: 'Удалить связь «value→b»' }).click();
+  await linksWindow(page).getByRole('button', { name: 'Delete link “value→a”' }).click();
+  await linksWindow(page).getByRole('button', { name: 'Delete link “value→b”' }).click();
   await expect(edges(page)).toHaveCount(0);
   await expect(linksWindow(page)).toHaveCount(0);
 });
@@ -111,7 +111,7 @@ test('выделенная линия + Delete удаляет все связи 
   const { sum } = await pair(page);
   await clickLine(page);
   // Закрыть окно связей кнопкой: Escape в React Flow снимает выделение с линии в фокусе
-  await linksWindow(page).getByRole('button', { name: 'Закрыть' }).click();
+  await linksWindow(page).getByRole('button', { name: 'Close' }).click();
   await expect(edges(page).first()).toHaveClass(/selected/);
   await page.keyboard.press('Delete');
   await expect(edges(page)).toHaveCount(0);

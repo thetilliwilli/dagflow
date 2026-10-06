@@ -76,7 +76,7 @@ describe('вычисление составных нодов', () => {
       edges: [edge('i', 'b', 'd', 'b'), edge('d', 'result', 'o', 'r')],
     });
     const ev = run(graph([{ ...node('I', 'composite:DIV'), values: { b: 0 } }]), [div]);
-    expect(ev.state('I')).toMatchObject({ status: 'error', message: 'Деление на ноль: задайте ненулевой делитель' });
+    expect(ev.state('I')).toMatchObject({ status: 'error', message: 'Division by zero: set a non-zero divisor.' });
   });
 
   it('E9: ошибка снаружи на входе экземпляра → blocked', () => {

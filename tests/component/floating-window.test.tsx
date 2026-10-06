@@ -37,7 +37,7 @@ describe('FloatingWindow', () => {
     expect(win).toHaveClass('floating');
     expect(win).toHaveAttribute('aria-modal', 'false');
     expect(screen.getByText('содержимое')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Закрыть' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
@@ -85,7 +85,7 @@ describe('FloatingWindow', () => {
   it('нажатие на кнопку закрытия не начинает перетаскивание', () => {
     setViewport(1000, 800);
     const { win, onMove } = renderWindow();
-    const close = screen.getByRole('button', { name: 'Закрыть' });
+    const close = screen.getByRole('button', { name: 'Close' });
     fireEvent.pointerDown(close, { clientX: 110, clientY: 110, pointerId: 1, button: 0 });
     fireEvent.pointerMove(close, { clientX: 300, clientY: 300, pointerId: 1 });
     expect(win.style.left).toBe('100px');

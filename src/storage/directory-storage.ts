@@ -64,7 +64,7 @@ export class DirectoryStorage {
     } else if (this.fallbackWrite) {
       await this.fallbackWrite(dir, name, text);
     } else {
-      throw new Error('Браузер не поддерживает запись файлов');
+      throw new Error('The browser does not support writing files.');
     }
   }
 
@@ -104,8 +104,8 @@ export class DirectoryStorage {
         const text = await ((await (entry as FileSystemFileHandle).getFile()).text());
         out.items.push(decode(JSON.parse(text)));
       } catch (e) {
-        const detail = e instanceof SyntaxError ? 'некорректный JSON' : (e as Error).message;
-        out.unavailable.push({ id, kind, reason: `Файл повреждён: ${detail}` });
+        const detail = e instanceof SyntaxError ? 'invalid JSON' : (e as Error).message;
+        out.unavailable.push({ id, kind, reason: `The file is damaged: ${detail}` });
       }
     }
   }
@@ -169,7 +169,7 @@ export class DirectoryStorage {
 
   /** Копирует содержимое в другое хранилище; только если оно пустое (FR-028c). */
   async copyTo(other: DirectoryStorage) {
-    if (await other.hasData()) throw new Error('Хранилище назначения не пустое');
+    if (await other.hasData()) throw new Error('The target storage is not empty.');
     const data = await this.loadAll();
     await other.saveAll({
       workspace: data.workspace ?? { workflowOrder: data.workflows.map((w) => w.id), tabs: [], activeTabId: null },

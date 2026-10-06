@@ -5,13 +5,13 @@ test('US5: большой граф, выделение рамкой, удале�
   await page.setViewportSize({ width: 1500, height: 900 });
   await page.goto('/');
   // 20 нодов щелчком по палитре (фича 002: одиночный щелчок)
-  const item = await paletteItem(page, 'Число');
+  const item = await paletteItem(page, 'Number');
   for (let i = 0; i < 20; i++) await item.click();
   await expect(page.locator('.react-flow__node')).toHaveCount(20);
 
   // Отдельная пара нодов внизу холста
-  const sum = await addNode(page, 'Сложить', 40, 560);
-  const show = await addNode(page, 'Показать', 320, 560);
+  const sum = await addNode(page, 'Add', 40, 560);
+  const show = await addNode(page, 'Show', 320, 560);
   await setInput(page, sum, 'a', '2');
   await setInput(page, sum, 'b', '5');
   await connect(page, sum, 'result', show, 'value');
@@ -37,10 +37,10 @@ test('US5: большой граф, выделение рамкой, удале�
   await page.keyboard.press('Control+z');
   await expect(page.locator('.react-flow__node')).toHaveCount(22);
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);
-  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('7');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Show' }), 'in', 'value')).toHaveText('7');
   await page.keyboard.press('Control+Shift+z');
   await expect(page.locator('.react-flow__node')).toHaveCount(20);
-  await page.getByRole('button', { name: 'Отменить' }).click();
+  await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.locator('.react-flow__node')).toHaveCount(22);
 
   // Масштаб и мини-карта (#1, FR-008)

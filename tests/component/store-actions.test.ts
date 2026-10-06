@@ -20,7 +20,7 @@ describe('действия редактирования графа', () => {
     const { app, graph } = setup();
     const s = app.store.getState();
     expect(s.tabs).toHaveLength(1);
-    expect(s.workflows[s.tabs[0]!.targetId]!.name).toBe('Новый workflow');
+    expect(s.workflows[s.tabs[0]!.targetId]!.name).toBe('New workflow');
     expect(graph()).toEqual({ nodes: [], edges: [] });
   });
 
@@ -28,7 +28,7 @@ describe('действия редактирования графа', () => {
     const { actions, graph } = setup();
     const r = actions.addNode('builtin:add', { x: 10, y: 20 });
     expect(r.ok).toBe(true);
-    expect(graph().nodes).toEqual([{ id: expect.any(String), type: 'builtin:add', name: 'Сложить', position: { x: 10, y: 20 }, values: {} }]);
+    expect(graph().nodes).toEqual([{ id: expect.any(String), type: 'builtin:add', name: 'Add', position: { x: 10, y: 20 }, values: {} }]);
   });
 
   it('addNode отклоняет «Вход» вне составного нода', () => {
@@ -95,7 +95,7 @@ describe('действия редактирования графа', () => {
     expect(graph().nodes[0]!.values).toEqual({ a: 3 });
     const bad = actions.setInputValue(a, 'a', 'три');
     expect(bad.ok).toBe(false);
-    if (!bad.ok) expect(bad.message).toContain('число');
+    if (!bad.ok) expect(bad.message).toContain('number');
     expect(graph().nodes[0]!.values).toEqual({ a: 3 });
     actions.setInputValue(a, 'a', undefined);
     expect(graph().nodes[0]!.values).toEqual({});

@@ -27,7 +27,7 @@ export function NameDialog({ title, label, submitLabel, initial = '', onSubmit, 
         <h2 id="name-dialog-title">{title}</h2>
         <label className="field">
           {label}
-          <input autoFocus value={name} maxLength={100} aria-invalid={error ? true : undefined} onChange={(e) => setName(e.target.value)} />
+          <input autoFocus value={name} aria-invalid={error ? true : undefined} onChange={(e) => setName(e.target.value)} />
         </label>
         {error && <p className="field__error">{error}</p>}
         <div className="modal__actions">

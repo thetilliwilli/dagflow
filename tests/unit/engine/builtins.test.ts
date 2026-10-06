@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { builtinNodes } from '../../../src/engine/builtins';
+import { createRegistry } from '../../../src/engine/registry';
 import { NodeError } from '../../../src/engine/errors';
 import type { Inputs, JsonValue, NodeTypeDef } from '../../../src/engine/types';
 
@@ -54,6 +55,70 @@ describe('каталог', () => {
       expect(n.description).not.toBe('');
     }
   });
+  it('названия, описания и категории — дословно по contracts/ui-texts.md (SC-002)', () => {
+    const constants = 'Constants';
+    const math = 'Math';
+    const text = 'Text';
+    const logic = 'Comparison & logic';
+    const condition = 'Condition';
+    const collections = 'Arrays & objects';
+    const display = 'Display';
+    const iface = 'Composite interface';
+    const expected: Record<string, [string, string, string]> = {
+      'builtin:number': ['Number', 'Sets a number manually.', constants],
+      'builtin:text': ['Text', 'Sets text manually.', constants],
+      'builtin:boolean': ['Boolean', 'Sets a boolean: yes or no.', constants],
+      'builtin:json': ['JSON value', 'Sets any JSON value: array, object, null, etc.', constants],
+      'builtin:add': ['Add', 'a + b', math],
+      'builtin:subtract': ['Subtract', 'a − b', math],
+      'builtin:multiply': ['Multiply', 'a × b', math],
+      'builtin:divide': ['Divide', 'a ÷ b; the divisor must not be zero', math],
+      'builtin:concat': ['Concatenate', 'Joins two texts: a + b.', text],
+      'builtin:text-length': ['Text length', 'Number of characters in the text.', text],
+      'builtin:to-text': ['To text', 'Turns any value into text: text as is, everything else as JSON.', text],
+      'builtin:to-number': ['To number', 'Turns text into a number.', text],
+      'builtin:equals': ['Equals', 'Checks that a and b are equal (including nested arrays and objects).', logic],
+      'builtin:greater': ['Greater than', 'a > b', logic],
+      'builtin:less': ['Less than', 'a < b', logic],
+      'builtin:and': ['And', 'True if both values are true.', logic],
+      'builtin:or': ['Or', 'True if at least one value is true.', logic],
+      'builtin:not': ['Not', 'Inverts a boolean.', logic],
+      'builtin:if': ['If', 'Picks “then” if the condition is true, otherwise “else”.', condition],
+      'builtin:array-append': ['Append to array', 'A new array with the item added at the end.', collections],
+      'builtin:array-get': ['Array item', 'Array item by index (from zero).', collections],
+      'builtin:array-length': ['Array length', 'Number of items in the array.', collections],
+      'builtin:object-set': ['Set field', 'A new object with the field set.', collections],
+      'builtin:object-get': ['Object field', 'Value of an object field by name.', collections],
+      'builtin:show': ['Show', 'Shows the value in large type.', display],
+      'builtin:input': [
+        'Input',
+        'Ports of this node become inputs of the composite node. Inside, it gives default values.',
+        iface,
+      ],
+      'builtin:output': ['Output', 'Ports of this node become outputs of the composite node.', iface],
+      'builtin:passthrough': ['Composite port', 'Passes values across the composite node boundary.', iface],
+    };
+    const reg = createRegistry();
+    const actual = Object.fromEntries(
+      Object.keys(expected).map((id) => {
+        const d = reg.get(id);
+        return [id, d ? [d.title, d.description, d.category] : undefined];
+      }),
+    );
+    expect(actual).toEqual(expected);
+    // Все встроенные ноды палитры покрыты таблицей
+    for (const n of builtinNodes) expect(Object.keys(expected)).toContain(n.id);
+  });
+
+  it('составной нод: категория «My composite nodes», описание по умолчанию «Composite node»', () => {
+    const graph = { nodes: [], edges: [] };
+    const reg = createRegistry([
+      { id: 'c1', name: 'Итого', description: '', graph, createdAt: '', updatedAt: '' },
+      { id: 'c2', name: 'Своё', description: 'Моё описание', graph, createdAt: '', updatedAt: '' },
+    ]);
+    expect(reg.get('composite:c1')).toMatchObject({ title: 'Итого', category: 'My composite nodes', description: 'Composite node' });
+    expect(reg.get('composite:c2')).toMatchObject({ category: 'My composite nodes', description: 'Моё описание' });
+  });
 });
 
 describe('константы', () => {
@@ -82,10 +147,10 @@ describe('арифметика', () => {
     expect(run('builtin:divide', { a: 3, b: 2 })).toEqual({ result: 1.5 });
   });
   it('деление на ноль', () => {
-    expect(errorOf('builtin:divide', { a: 1, b: 0 })).toBe('Деление на ноль: задайте ненулевой делитель');
+    expect(errorOf('builtin:divide', { a: 1, b: 0 })).toBe('Division by zero: set a non-zero divisor.');
   });
   it('слишком большой результат', () => {
-    expect(errorOf('builtin:multiply', { a: 1e308, b: 10 })).toBe('Результат слишком большой');
+    expect(errorOf('builtin:multiply', { a: 1e308, b: 10 })).toBe('The result is too large.');
   });
 });
 
@@ -104,8 +169,8 @@ describe('текст', () => {
     expect(run('builtin:to-number', { text: ' 42.5 ' })).toEqual({ value: 42.5 });
   });
   it('не число', () => {
-    expect(errorOf('builtin:to-number', { text: 'abc' })).toBe('"abc" не является числом');
-    expect(errorOf('builtin:to-number', { text: '' })).toBe('"" не является числом');
+    expect(errorOf('builtin:to-number', { text: 'abc' })).toBe('“abc” is not a number.');
+    expect(errorOf('builtin:to-number', { text: '' })).toBe('“” is not a number.');
   });
 });
 
@@ -148,11 +213,11 @@ describe('массивы и объекты', () => {
     expect(run('builtin:object-get', { object: { k: null }, key: 'k' })).toEqual({ value: null });
   });
   it('ошибки', () => {
-    expect(errorOf('builtin:array-get', { array: 'abc', index: 0 })).toBe('Ожидался массив, получено: текст');
-    expect(errorOf('builtin:array-get', { array: [1], index: 5 })).toBe('Индекс 5 вне диапазона: в массиве 1 элемент');
-    expect(errorOf('builtin:array-get', { array: [1], index: 0.5 })).toBe('Индекс должен быть целым числом, получено: 0.5');
-    expect(errorOf('builtin:object-get', { object: [1], key: 'a' })).toBe('Ожидался объект, получено: массив');
-    expect(errorOf('builtin:object-get', { object: { a: 1 }, key: 'b' })).toBe('Поле "b" не найдено');
+    expect(errorOf('builtin:array-get', { array: 'abc', index: 0 })).toBe('Expected an array, got: text.');
+    expect(errorOf('builtin:array-get', { array: [1], index: 5 })).toBe('Index 5 is out of range: array length is 1.');
+    expect(errorOf('builtin:array-get', { array: [1], index: 0.5 })).toBe('The index must be an integer, got: 0.5.');
+    expect(errorOf('builtin:object-get', { object: [1], key: 'a' })).toBe('Expected an object, got: array.');
+    expect(errorOf('builtin:object-get', { object: { a: 1 }, key: 'b' })).toBe('Field “b” not found.');
   });
 });
 

@@ -51,7 +51,7 @@ function sumGraph() {
   return { ...h, n1, n2, sum };
 }
 
-const grid = () => screen.getByRole('dialog', { name: 'Свойства' });
+const grid = () => screen.getByRole('dialog', { name: 'Properties' });
 const row = (side: 'in' | 'out', port: string) =>
   grid().querySelector<HTMLElement>(`li.prop-row[data-side="${side}"][data-port="${port}"]`)!;
 
@@ -59,10 +59,10 @@ describe('окно свойств (US3)', () => {
   it('#1: имя, тип, панели «Входы» и «Выходы», строки [маркер][тип][имя][значение]', () => {
     const { sum, select } = sumGraph();
     select(sum);
-    expect(within(grid()).getByTestId('prop-grid-name')).toHaveTextContent('Сложить');
-    expect(within(grid()).getByTestId('prop-grid-type')).toHaveTextContent('Сложить');
-    const inputs = within(grid()).getByRole('region', { name: 'Входы' });
-    const outputs = within(grid()).getByRole('region', { name: 'Выходы' });
+    expect(within(grid()).getByTestId('prop-grid-name')).toHaveTextContent('Add');
+    expect(within(grid()).getByTestId('prop-grid-type')).toHaveTextContent('Add');
+    const inputs = within(grid()).getByRole('region', { name: 'Inputs' });
+    const outputs = within(grid()).getByRole('region', { name: 'Outputs' });
     expect(
       [...inputs.querySelectorAll('li.prop-row')].map((li) => li.getAttribute('data-port')),
     ).toEqual(['a', 'b']);
@@ -73,12 +73,12 @@ describe('окно свойств (US3)', () => {
     const a = row('in', 'a');
     const parts = [...a.children].map((el) => el.className.split(' ')[0]);
     expect(parts).toEqual(['prop-marker', 'prop-type', 'prop-name', 'prop-value']);
-    expect(within(a).getByRole('button', { name: 'Связать «a»' })).toHaveAttribute(
+    expect(within(a).getByRole('button', { name: 'Link “a”' })).toHaveAttribute(
       'aria-pressed',
       'false',
     );
     expect(a.querySelector('.prop-type')).toHaveTextContent('num');
-    expect(a.querySelector('.prop-type')).toHaveAttribute('title', 'число');
+    expect(a.querySelector('.prop-type')).toHaveAttribute('title', 'number');
     expect(a.querySelector('.prop-name')).toHaveTextContent('a');
     expect(row('out', 'result').querySelector('.prop-value')).toHaveTextContent('5');
   });
@@ -138,7 +138,7 @@ describe('окно свойств (US3)', () => {
     const a = row('in', 'a');
     expect(within(a).queryByRole('textbox')).toBeNull();
     expect(a.querySelector('.prop-value')).toHaveTextContent('2');
-    expect(a.querySelector('.prop-source')).toHaveTextContent('← Число.value');
+    expect(a.querySelector('.prop-source')).toHaveTextContent('← Number.value');
   });
 
   it('FR-007a: большое значение — компактно, раскрывается по щелчку', () => {
@@ -154,30 +154,30 @@ describe('окно свойств (US3)', () => {
     h.flush();
     h.select(j);
     const out = row('out', 'value').querySelector<HTMLElement>('.value-view')!;
-    expect(out).toHaveTextContent('[50 элементов]');
-    fireEvent.click(within(out).getByRole('button', { name: 'показать' }));
+    expect(out).toHaveTextContent('[items: 50]');
+    fireEvent.click(within(out).getByRole('button', { name: 'show' }));
     expect(out.querySelector('pre')).toHaveTextContent('49');
   });
 
   it('#5: пустая панель — «Нет выходов»', () => {
     const h = setup();
     h.select(h.add('builtin:show'));
-    expect(within(grid()).getByRole('region', { name: 'Выходы' })).toHaveTextContent('Нет выходов');
+    expect(within(grid()).getByRole('region', { name: 'Outputs' })).toHaveTextContent('No outputs');
   });
 
   it('#7: при нескольких выделенных нодах окна нет', () => {
     const { n1, n2, select } = sumGraph();
     select(n1, n2);
-    expect(screen.queryByRole('dialog', { name: 'Свойства' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Properties' })).toBeNull();
     select();
-    expect(screen.queryByRole('dialog', { name: 'Свойства' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Properties' })).toBeNull();
   });
 
   it('#6: «Закрыть» скрывает окно и снимает выделение', () => {
     const { sum, select } = sumGraph();
     select(sum);
-    fireEvent.click(within(grid()).getByRole('button', { name: 'Закрыть' }));
-    expect(screen.queryByRole('dialog', { name: 'Свойства' })).toBeNull();
+    fireEvent.click(within(grid()).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Properties' })).toBeNull();
     expect(document.querySelector('.react-flow__node.selected')).toBeNull();
   });
 
@@ -189,19 +189,19 @@ describe('окно свойств (US3)', () => {
     });
     const inst = h.graph().nodes[0]!;
     h.select(inst.id);
-    fireEvent.click(within(grid()).getByRole('button', { name: 'Развернуть «Мой составной»' }));
+    fireEvent.click(within(grid()).getByRole('button', { name: 'Expand “Мой составной”' }));
     expect(h.graph().nodes.map((x) => x.type)).toEqual(['builtin:number']);
     act(() => {
       h.actions.collapseSelection([h.graph().nodes[0]!.id], 'Мой составной 2');
     });
     h.select(h.graph().nodes[0]!.id);
     fireEvent.click(
-      within(grid()).getByRole('button', { name: 'Открыть составной нод «Мой составной 2»' }),
+      within(grid()).getByRole('button', { name: 'Open composite node “Мой составной 2”' }),
     );
     const io = h.add('builtin:input');
     h.select(io);
-    expect(within(grid()).getByRole('region', { name: 'Входы' })).toHaveTextContent('Нет входов');
-    expect(within(grid()).getAllByLabelText('Имя порта').length).toBeGreaterThan(0);
+    expect(within(grid()).getByRole('region', { name: 'Inputs' })).toHaveTextContent('No inputs');
+    expect(within(grid()).getAllByLabelText('Port name').length).toBeGreaterThan(0);
   });
 
   it('#9: у нода в ожидании входов — состояние и понятный текст проблемы', () => {
@@ -209,7 +209,7 @@ describe('окно свойств (US3)', () => {
     const sum = h.add('builtin:add', { b: 1 });
     h.flush();
     h.select(sum);
-    expect(within(grid()).getByTestId('node-status')).toHaveTextContent('ожидает входов');
+    expect(within(grid()).getByTestId('node-status')).toHaveTextContent('waiting for inputs');
     expect(within(grid()).getByTestId('node-message')).toHaveTextContent('a');
   });
 });

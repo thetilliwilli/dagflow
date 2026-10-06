@@ -5,7 +5,7 @@ export type JsonValue = null | boolean | number | string | JsonValue[] | { [key:
 export type PortType = 'number' | 'text' | 'boolean' | 'array' | 'object' | 'any';
 
 export interface PortDef {
-  /** Уникально среди входов (или среди выходов) нода; 1–40 символов. */
+  /** Уникально среди входов (или среди выходов) нода; не пустое. */
   name: string;
   type: PortType;
   /** Только для входов: незаполненный вход переводит нод в `waiting`. */

@@ -17,10 +17,10 @@ describe('ErrorBoundary', () => {
         <Bomb />
       </ErrorBoundary>,
     );
-    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось отобразить вкладку');
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not display the tab');
     expect(screen.getByRole('alert').textContent).not.toContain('boom');
     shouldThrow = false;
-    await userEvent.click(screen.getByRole('button', { name: 'Перезагрузить вкладку' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Reload tab' }));
     expect(screen.getByText('Холст работает')).toBeInTheDocument();
     spy.mockRestore();
   });

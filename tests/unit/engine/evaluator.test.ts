@@ -166,7 +166,7 @@ describe('Evaluator', () => {
       [],
     );
     ev.flush();
-    expect(ev.state('Div')).toMatchObject({ status: 'error', message: 'Деление на ноль: задайте ненулевой делитель' });
+    expect(ev.state('Div')).toMatchObject({ status: 'error', message: 'Division by zero: set a non-zero divisor.' });
     expect(ev.state('Show').status).toBe('blocked');
     expect(ev.state('Show2')).toMatchObject({ status: 'ok', inputs: { value: 3 } });
   });
@@ -190,7 +190,7 @@ describe('Evaluator', () => {
       [],
     );
     ev.flush();
-    expect(ev.state('Get')).toMatchObject({ status: 'error', message: 'Ожидался массив, получено: объект' });
+    expect(ev.state('Get')).toMatchObject({ status: 'error', message: 'Expected an array, got: object.' });
   });
 
   it('исключение, не являющееся NodeError, → «Внутренняя ошибка нода» без трассировки', () => {
@@ -198,7 +198,7 @@ describe('Evaluator', () => {
     const ev = createEvaluator(registry);
     ev.setGraph(graph([node('S', 'test:src', { value: 1 }), node('B', 'test:boom')], [edge('S', 'value', 'B', 'x')]), []);
     ev.flush();
-    expect(ev.state('B')).toMatchObject({ status: 'error', message: 'Внутренняя ошибка нода "Бомба"' });
+    expect(ev.state('B')).toMatchObject({ status: 'error', message: 'Internal error in node “Бомба”.' });
   });
 
   it('NodeError из compute передаёт текст пользователю', () => {

@@ -29,21 +29,21 @@ function fail(text: string, c = ctx()): string {
 
 describe('импорт файла выгрузки', () => {
   it('некорректный JSON', () => {
-    expect(fail('{ not json')).toBe('Файл не является корректным JSON');
+    expect(fail('{ not json')).toBe('The file is not valid JSON.');
   });
 
   it('чужой format', () => {
-    expect(fail(JSON.stringify({ format: 'something-else', version: 1 }))).toBe('Неизвестный формат файла');
-    expect(fail('[1, 2, 3]')).toBe('Неизвестный формат файла');
+    expect(fail(JSON.stringify({ format: 'something-else', version: 1 }))).toBe('Unknown file format.');
+    expect(fail('[1, 2, 3]')).toBe('Unknown file format.');
   });
 
   it('более новая версия', () => {
-    expect(fail(exportText((e) => (e.version = 2)))).toBe('Файл создан более новой версией редактора');
+    expect(fail(exportText((e) => (e.version = 2)))).toBe('The file was created by a newer version of the editor.');
   });
 
   it('ошибка схемы — сообщение с путём к полю', () => {
     const msg = fail(exportText((e) => ((e.workflow as Record<string, unknown>).graph = { nodes: 'oops', edges: [] })));
-    expect(msg).toMatch(/^Файл не похож на выгрузку workflow: /);
+    expect(msg).toMatch(/^The file does not look like a workflow export: .+\.$/);
     expect(msg).toContain('workflow.graph.nodes');
   });
 
@@ -53,7 +53,7 @@ describe('импорт файла выгрузки', () => {
         for (const n of (e.workflow as { graph: { nodes: Array<Record<string, unknown>> } }).graph.nodes) delete n.name;
       }),
     );
-    expect(msg).toMatch(/^Файл не похож на выгрузку workflow: /);
+    expect(msg).toMatch(/^The file does not look like a workflow export: .+\.$/);
     expect(msg).toContain('workflow.graph.nodes.0.name');
   });
 
@@ -82,7 +82,7 @@ describe('импорт файла выгрузки', () => {
         g.edges.push({ id: 'e3', source: { node: 'n2', port: 'result' }, target: { node: 'n2', port: 'b' } });
       }),
     );
-    expect(msg).toMatch(/цикл/);
+    expect(msg).toMatch(/^The graph in the file is invalid: Cannot link: this connection would create a cycle/);
   });
 
   it('успешный импорт выдаёт workflow с новым id и тем же графом', () => {

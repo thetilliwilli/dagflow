@@ -1,0 +1,125 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-05T18:00:00.000Z",
+  "workflow": {
+    "id": "wf-legacy",
+    "name": "Расчёт",
+    "createdAt": "2026-10-05T17:00:00.000Z",
+    "updatedAt": "2026-10-05T17:30:00.000Z",
+    "graph": {
+      "nodes": [
+        {
+          "id": "n1",
+          "type": "builtin:number",
+          "name": "Число",
+          "position": { "x": 0, "y": 0 },
+          "values": { "value": 2 }
+        },
+        {
+          "id": "n2",
+          "type": "builtin:number",
+          "name": "Число",
+          "position": { "x": 0, "y": 220 },
+          "values": { "value": 3 }
+        },
+        {
+          "id": "add",
+          "type": "builtin:add",
+          "name": "Сложить",
+          "position": { "x": 300, "y": 100 },
+          "values": {}
+        },
+        {
+          "id": "show",
+          "type": "builtin:show",
+          "name": "Показать",
+          "position": { "x": 600, "y": 0 },
+          "values": {}
+        },
+        {
+          "id": "dbl",
+          "type": "composite:double",
+          "name": "Удвоить",
+          "position": { "x": 600, "y": 260 },
+          "values": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": { "node": "n1", "port": "value" },
+          "target": { "node": "add", "port": "a" }
+        },
+        {
+          "id": "e2",
+          "source": { "node": "n2", "port": "value" },
+          "target": { "node": "add", "port": "b" }
+        },
+        {
+          "id": "e3",
+          "source": { "node": "add", "port": "result" },
+          "target": { "node": "show", "port": "value" }
+        },
+        {
+          "id": "e4",
+          "source": { "node": "add", "port": "result" },
+          "target": { "node": "dbl", "port": "x" }
+        }
+      ]
+    }
+  },
+  "composites": [
+    {
+      "id": "double",
+      "name": "Удвоить",
+      "description": "",
+      "createdAt": "2026-10-05T17:10:00.000Z",
+      "updatedAt": "2026-10-05T17:10:00.000Z",
+      "graph": {
+        "nodes": [
+          {
+            "id": "in",
+            "type": "builtin:input",
+            "name": "Вход",
+            "position": { "x": 0, "y": 0 },
+            "values": {},
+            "ports": [{ "name": "x", "type": "number", "required": true }]
+          },
+          {
+            "id": "sum",
+            "type": "builtin:add",
+            "name": "Сложить",
+            "position": { "x": 260, "y": 0 },
+            "values": {}
+          },
+          {
+            "id": "out",
+            "type": "builtin:output",
+            "name": "Выход",
+            "position": { "x": 520, "y": 0 },
+            "values": {},
+            "ports": [{ "name": "результат", "type": "number" }]
+          }
+        ],
+        "edges": [
+          {
+            "id": "c1",
+            "source": { "node": "in", "port": "x" },
+            "target": { "node": "sum", "port": "a" }
+          },
+          {
+            "id": "c2",
+            "source": { "node": "in", "port": "x" },
+            "target": { "node": "sum", "port": "b" }
+          },
+          {
+            "id": "c3",
+            "source": { "node": "sum", "port": "result" },
+            "target": { "node": "out", "port": "результат" }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -42,6 +42,6 @@ describe('bundleLabel', () => {
 
   it('больше 5 связей — первые 5 и «ещё N»', () => {
     const [b] = bundleEdges(Array.from({ length: 8 }, (_, i) => e(`${i}`, 'A', 'o', 'B', `i${i}`)));
-    expect(bundleLabel(b!)).toEqual(['o→i0', 'o→i1', 'o→i2', 'o→i3', 'o→i4', 'ещё 3']);
+    expect(bundleLabel(b!)).toEqual(['o→i0', 'o→i1', 'o→i2', 'o→i3', 'o→i4', '+3 more']);
   });
 });

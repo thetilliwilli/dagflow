@@ -4,6 +4,9 @@ import { toJsonText, workflowToFile } from '../../../src/model/serialize';
 import type { CompositeDef, Workspace } from '../../../src/engine';
 import { sampleWorkflow } from '../model/fixtures';
 import { FakeDirectory } from './fake-directory';
+import { readFileSync } from 'node:fs';
+import { createEvaluator } from '../../../src/engine/evaluator';
+import { createRegistry } from '../../../src/engine/registry';
 
 const composite: CompositeDef = {
   id: 'c1',
@@ -60,7 +63,7 @@ describe('DirectoryStorage', () => {
     dir.put('workflows/bad.workflow.json', '{ broken');
     const data = await s.loadAll();
     expect(data.workflows.map((w) => w.id)).toEqual(['wf1']);
-    expect(data.unavailable).toEqual([{ id: 'bad', kind: 'workflow', reason: expect.stringContaining('повреждён') }]);
+    expect(data.unavailable).toEqual([{ id: 'bad', kind: 'workflow', reason: 'The file is damaged: invalid JSON' }]);
   });
 
   it('workflow с нодом без имени (файл до фичи 002) — «недоступен» с причиной, остальные загружаются', async () => {
@@ -106,6 +109,44 @@ describe('DirectoryStorage', () => {
     await s.saveWorkflow(sampleWorkflow('wf1'));
     expect(writes).toEqual(['workflows/wf1.workflow.json']);
     const noFallback = new DirectoryStorage(dir.asHandle());
-    await expect(noFallback.saveWorkspace(workspace)).rejects.toThrow('не поддерживает запись');
+    await expect(noFallback.saveWorkspace(workspace)).rejects.toThrow('The browser does not support writing files.');
+  });
+});
+
+describe('рабочая папка, сохранённая до фичи 003 (US3 #1, SC-005)', () => {
+  // Те же данные, что в выгрузке для e2e: русские имена, в том числе имена по умолчанию из 002
+  const legacy = JSON.parse(
+    readFileSync(new URL('../../e2e/fixtures/legacy-002-export.json', import.meta.url), 'utf8'),
+  );
+
+  function legacyFolder() {
+    const dir = new FakeDirectory();
+    const wf = { ...legacy.workflow, name: 'Новый workflow' };
+    const def = legacy.composites[0];
+    dir.put(`workflows/${wf.id}.workflow.json`, JSON.stringify({ format: 'dagflow-workflow', version: 1, ...wf }, null, 2));
+    dir.put(`composites/${def.id}.composite.json`, JSON.stringify({ format: 'dagflow-composite', version: 1, ...def }, null, 2));
+    dir.put(
+      'workspace.json',
+      JSON.stringify({ format: 'dagflow-workspace', version: 1, workflowOrder: [wf.id], tabs: [], activeTabId: null }),
+    );
+    return dir;
+  }
+
+  it('читается без недоступных файлов, имена — посимвольно прежние', async () => {
+    const data = await new DirectoryStorage(legacyFolder().asHandle()).loadAll();
+    expect(data.unavailable).toEqual([]);
+    expect(data.workflows.map((w) => w.name)).toEqual(['Новый workflow']);
+    expect(data.workflows[0]!.graph.nodes.map((n) => n.name)).toEqual(['Число', 'Число', 'Сложить', 'Показать', 'Удвоить']);
+    expect(data.composites.map((c) => c.name)).toEqual(['Удвоить']);
+    expect(data.composites[0]!.graph.nodes.flatMap((n) => n.ports ?? []).map((p) => p.name)).toEqual(['x', 'результат']);
+  });
+
+  it('вычисляется с теми же значениями', async () => {
+    const data = await new DirectoryStorage(legacyFolder().asHandle()).loadAll();
+    const ev = createEvaluator((c) => createRegistry(c));
+    ev.setGraph(data.workflows[0]!.graph, data.composites);
+    ev.flush();
+    expect(ev.state('show').inputs).toEqual({ value: 5 });
+    expect(ev.state('dbl')).toMatchObject({ status: 'ok', outputs: { результат: 10 } });
   });
 });

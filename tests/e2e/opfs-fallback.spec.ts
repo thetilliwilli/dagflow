@@ -9,7 +9,7 @@ test('OPFS без createWritable: автосохранение через Web Wo
   });
   await page.goto('/');
   expect(await page.evaluate(() => 'createWritable' in FileSystemFileHandle.prototype)).toBe(false);
-  const n = await addNode(page, 'Число', 60, 60);
+  const n = await addNode(page, 'Number', 60, 60);
   await setInput(page, n, 'value', '777');
   await page.waitForTimeout(1000);
   await page.reload();

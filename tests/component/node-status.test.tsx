@@ -47,8 +47,8 @@ describe('статусы нодов', () => {
     });
     flush();
     const el = nodeEl(s);
-    expect(el.getByTestId('node-status')).toHaveTextContent('ожидает входов');
-    expect(el.getByTestId('node-message')).toHaveTextContent('Заполните вход «b»');
+    expect(el.getByTestId('node-status')).toHaveTextContent('waiting for inputs');
+    expect(el.getByTestId('node-message')).toHaveTextContent('Fill in input “b”.');
   });
 
   it('ошибка: текст без трассировки; потомки — «проблема выше по графу» (US2 #4, #6)', () => {
@@ -61,15 +61,15 @@ describe('статусы нодов', () => {
       actions.connect({ node: div, port: 'result' }, { node: show, port: 'value' });
     });
     flush();
-    expect(nodeEl(div).getByTestId('node-status')).toHaveTextContent('ошибка');
+    expect(nodeEl(div).getByTestId('node-status')).toHaveTextContent('error');
     expect(nodeEl(div).getByTestId('node-message')).toHaveTextContent(
-      'Деление на ноль: задайте ненулевой делитель',
+      'Division by zero: set a non-zero divisor.',
     );
     expect(nodeEl(div).getByTestId('node-message').textContent).not.toMatch(/at |Error/);
     expect(nodeEl(show).getByTestId('node-status')).toHaveTextContent(
-      'не вычислен: проблема выше по графу',
+      'not computed: upstream problem',
     );
-    expect(nodeEl(show).getByTestId('node-message')).toHaveTextContent('Разделить');
+    expect(nodeEl(show).getByTestId('node-message')).toHaveTextContent('Divide');
   });
 
   it('потомки нода, ожидающего входов, тоже «проблема выше по графу»', () => {
@@ -83,9 +83,9 @@ describe('статусы нодов', () => {
     });
     flush();
     expect(nodeEl(show).getByTestId('node-status')).toHaveTextContent(
-      'не вычислен: проблема выше по графу',
+      'not computed: upstream problem',
     );
-    expect(nodeEl(show).getByTestId('node-message')).toHaveTextContent('ожидает входов');
+    expect(nodeEl(show).getByTestId('node-message')).toHaveTextContent('waiting for inputs');
   });
 
   it('после исправления статусы возвращаются к «вычислен» (US2 #5)', () => {
@@ -102,7 +102,7 @@ describe('статусы нодов', () => {
       actions.setInputValue(div, 'b', 4);
     });
     flush();
-    expect(nodeEl(div).getByTestId('node-status')).toHaveTextContent('вычислен');
+    expect(nodeEl(div).getByTestId('node-status')).toHaveTextContent('computed');
     expect(nodeEl(div).queryByTestId('node-message')).toBeNull();
     expect(inputValue(show, 'value')).toHaveTextContent('0.25');
   });

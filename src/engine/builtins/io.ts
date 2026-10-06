@@ -1,28 +1,27 @@
 // Служебные ноды составного нода (FR-021a): «Вход», «Выход» и сквозной нод для вычисления экземпляров
 import type { NodeTypeDef } from '../types';
+import { compositeCategory } from './define';
 
 export const IO_INPUT = 'builtin:input';
 export const IO_OUTPUT = 'builtin:output';
 /** Во что превращаются «Вход»/«Выход» экземпляра при разворачивании (research R3). Не виден в палитре. */
 export const PASSTHROUGH = 'builtin:passthrough';
 
-export const compositeCategory = 'Интерфейс составного нода';
-
 export const ioNodes: NodeTypeDef[] = [
   {
     id: IO_INPUT,
-    title: 'Вход',
+    title: 'Input',
     category: compositeCategory,
-    description: 'Порты этого нода становятся входами составного нода. Внутри отдаёт значения по умолчанию.',
+    description: 'Ports of this node become inputs of the composite node. Inside, it gives default values.',
     inputs: [],
     outputs: [],
     paletteScope: 'composite',
   },
   {
     id: IO_OUTPUT,
-    title: 'Выход',
+    title: 'Output',
     category: compositeCategory,
-    description: 'Порты этого нода становятся выходами составного нода.',
+    description: 'Ports of this node become outputs of the composite node.',
     inputs: [],
     outputs: [],
     compute: () => ({}),
@@ -30,9 +29,9 @@ export const ioNodes: NodeTypeDef[] = [
   },
   {
     id: PASSTHROUGH,
-    title: 'Порт составного нода',
+    title: 'Composite port',
     category: compositeCategory,
-    description: 'Передаёт значения через границу составного нода.',
+    description: 'Passes values across the composite node boundary.',
     inputs: [],
     outputs: [],
     compute: (inputs) => ({ ...inputs }),

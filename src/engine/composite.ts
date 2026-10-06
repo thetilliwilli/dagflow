@@ -1,6 +1,6 @@
 // Составные ноды: порты, зависимости, сворачивание/разворачивание, разворачивание для вычисления (research R3)
 import { IO_INPUT, IO_OUTPUT, PASSTHROUGH } from './builtins/io';
-import type { Rejection } from './errors';
+import { rejections, type Rejection } from './errors';
 import type { CompositeDef, Edge, Graph, JsonValue, NodeInstance, NodeRegistry, PortDef, PortRef } from './types';
 import { nodePorts } from './validate';
 
@@ -30,7 +30,7 @@ export function compositePorts(def: CompositeDef): { inputs: PortDef[]; outputs:
   return { inputs, outputs };
 }
 
-/** Уникальность и длина имён портов нодов «Вход» и, отдельно, «Выход» (FR-021c). */
+/** Уникальность и непустота имён портов нодов «Вход» и, отдельно, «Выход» (FR-021c). */
 export function validateIoPorts(graph: Graph): Rejection | null {
   for (const kind of [IO_INPUT, IO_OUTPUT]) {
     const seen = new Set<string>();
@@ -38,12 +38,9 @@ export function validateIoPorts(graph: Graph): Rejection | null {
       if (n.type !== kind) continue;
       for (const p of n.ports ?? []) {
         const name = p.name.trim();
-        if (name.length < 1 || name.length > 40) {
-          return { ok: false, code: 'duplicate-port-name', message: 'Имя порта должно содержать от 1 до 40 символов.' };
-        }
+        if (name.length === 0) return rejections.emptyPortName();
         if (seen.has(name)) {
-          const what = kind === IO_INPUT ? 'Вход' : 'Выход';
-          return { ok: false, code: 'duplicate-port-name', message: `Порт «${name}» уже есть у другого нода «${what}». Имена портов должны быть уникальны.` };
+          return rejections.duplicatePort(name, kind === IO_INPUT ? 'input' : 'output');
         }
         seen.add(name);
       }
@@ -90,10 +87,8 @@ export function collapse(
 ): { graph: Graph; composite: CompositeDef; instanceId: string } | Rejection {
   const group = new Set(nodeIds);
   const inner = graph.nodes.filter((n) => group.has(n.id));
-  if (inner.length === 0) return { ok: false, code: 'unknown-port', message: 'Выделите хотя бы один нод.' };
-  if (inner.some(isIo)) {
-    return { ok: false, code: 'io-node-outside-composite', message: 'Ноды «Вход» и «Выход» нельзя сворачивать в составной нод.' };
-  }
+  if (inner.length === 0) return rejections.emptySelection();
+  if (inner.some(isIo)) return rejections.collapseIo();
   const xs = inner.map((n) => n.position.x);
   const ys = inner.map((n) => n.position.y);
   const minX = Math.min(...xs);

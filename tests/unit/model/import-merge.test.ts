@@ -80,6 +80,10 @@ describe('рекурсия определений в файле (FR-026)', () =>
     const file = toJsonText(buildExport(workflowUsing('composite:A'), [a, b], 't'));
     const r = importExport(file, { workflows: {}, composites: {}, newId: seqId(), now: () => 't' });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.message).toMatch(/внутри самого себя/);
+    if (!r.ok) {
+      expect(r.message).toMatch(
+        /^Composite node “[AB]” in the file contains itself; a composite node cannot be inside itself \(directly or through others\)\.$/,
+      );
+    }
   });
 });

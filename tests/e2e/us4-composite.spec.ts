@@ -5,11 +5,11 @@ test('US4: свернуть, второй экземпляр, правка вн�
   await page.setViewportSize({ width: 1600, height: 900 });
   await page.goto('/');
   // (a + b) × 2
-  const n1 = await addNode(page, 'Число', 20, 40);
-  const n2 = await addNode(page, 'Число', 20, 220);
-  const add = await addNode(page, 'Сложить', 260, 120);
-  const mul = await addNode(page, 'Умножить', 500, 120);
-  const show = await addNode(page, 'Показать', 740, 120);
+  const n1 = await addNode(page, 'Number', 20, 40);
+  const n2 = await addNode(page, 'Number', 20, 220);
+  const add = await addNode(page, 'Add', 260, 120);
+  const mul = await addNode(page, 'Multiply', 500, 120);
+  const show = await addNode(page, 'Show', 740, 120);
   await setInput(page, n1, 'value', '2');
   await setInput(page, n2, 'value', '3');
   await setInput(page, mul, 'b', '2');
@@ -24,11 +24,11 @@ test('US4: свернуть, второй экземпляр, правка вн�
   await page.keyboard.down('Control');
   await mul.locator('.flow-node__name').click();
   await page.keyboard.up('Control');
-  await page.getByRole('button', { name: 'Свернуть в составной нод' }).click();
-  await page.getByRole('dialog', { name: 'Свернуть в составной нод' }).getByLabel('Имя составного нода').fill('Удвоенная сумма');
-  await page.getByRole('dialog', { name: 'Свернуть в составной нод' }).getByRole('button', { name: 'Свернуть' }).click();
+  await page.getByRole('button', { name: 'Collapse into composite node' }).click();
+  await page.getByRole('dialog', { name: 'Collapse into composite node' }).getByLabel('Composite node name').fill('Удвоенная сумма');
+  await page.getByRole('dialog', { name: 'Collapse into composite node' }).getByRole('button', { name: 'Collapse' }).click();
   // После сворачивания порядок нодов меняется — ищем по содержимому
-  const showNode = page.locator('.react-flow__node').filter({ hasText: 'Показать' });
+  const showNode = page.locator('.react-flow__node').filter({ hasText: 'Show' });
   await expect(await valueOf(page, showNode, 'in', 'value')).toHaveText('10');
   await expect(page.locator('.react-flow__node')).toHaveCount(4);
 
@@ -39,32 +39,32 @@ test('US4: свернуть, второй экземпляр, правка вн�
   await expect(await valueOf(page, second, 'out', 'result')).toHaveText('4');
 
   // 3. Правка внутри: ×2 → ×3
-  await page.getByRole('button', { name: 'Открыть составной нод «Удвоенная сумма»' }).first().click();
-  await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('Составной нод: Удвоенная сумма');
-  const innerMul = page.locator('.react-flow__node').filter({ hasText: 'Умножить' });
+  await page.getByRole('button', { name: 'Open composite node “Удвоенная сумма”' }).first().click();
+  await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('Composite node: Удвоенная сумма');
+  const innerMul = page.locator('.react-flow__node').filter({ hasText: 'Multiply' });
   await setInput(page, innerMul, 'b', '3');
 
   // 4. Отказ рекурсии
   await addNodeExpectRejection();
   async function addNodeExpectRejection() {
     await (await paletteItem(page, 'Удвоенная сумма')).dragTo(page.locator('.react-flow__pane'), { targetPosition: { x: 300, y: 400 } });
-    await expect(page.getByRole('alert')).toContainText('самого себя');
+    await expect(page.getByRole('alert')).toContainText('inside itself');
   }
 
-  await tabBar(page).getByRole('tab', { name: 'Новый workflow' }).click();
-  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('15');
+  await tabBar(page).getByRole('tab', { name: 'New workflow' }).click();
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Show' }), 'in', 'value')).toHaveText('15');
   await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Удвоенная сумма' }).last(), 'out', 'result')).toHaveText('6');
 
   // 5. Выгрузка → удаление → загрузка
   const downloadPromise = page.waitForEvent('download');
-  await (await openSidebar(page)).getByRole('button', { name: 'Выгрузить в файл' }).click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Export to file' }).click();
   const path = info.outputPath('composite.dagflow.json');
   await (await downloadPromise).saveAs(path);
   await paletteItem(page, 'Удвоенная сумма');
-  await page.getByRole('button', { name: 'Удалить составной нод «Удвоенная сумма»' }).click();
-  await page.getByRole('dialog', { name: 'Удалить составной нод?' }).getByRole('button', { name: 'Удалить' }).click();
+  await page.getByRole('button', { name: 'Delete composite node “Удвоенная сумма”' }).click();
+  await page.getByRole('dialog', { name: 'Delete composite node?' }).getByRole('button', { name: 'Delete' }).click();
   await expect(page.getByTestId('palette').getByText('Удвоенная сумма')).toHaveCount(0);
-  await (await openSidebar(page)).getByLabel('Загрузить из файла').setInputFiles(path);
+  await (await openSidebar(page)).getByLabel('Import from file').setInputFiles(path);
   await expect(page.getByTestId('palette').getByText('Удвоенная сумма')).toHaveCount(1);
-  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('15');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Show' }), 'in', 'value')).toHaveText('15');
 });

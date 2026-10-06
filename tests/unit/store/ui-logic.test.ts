@@ -94,7 +94,7 @@ describe('окна', () => {
   });
 
   it('вкладка палитры запоминается', () => {
-    expect(setPaletteCategory(initialUiState(), 'Арифметика').paletteCategory).toBe('Арифметика');
+    expect(setPaletteCategory(initialUiState(), 'Math').paletteCategory).toBe('Math');
   });
 });
 
@@ -211,7 +211,7 @@ describe('машина связывания (US4, research R5)', () => {
   const A = { node: 'A', port: 'value', side: 'out' as const };
   const B_a = { node: 'B', port: 'a', side: 'in' as const };
   const ok = { ok: true as const };
-  const bad = { ok: false as const, message: 'Несовместимые типы: текст → число.' };
+  const bad = { ok: false as const, message: 'Incompatible types: text → number.' };
   const picking = () => releasePointer(pressLink(initialUiState(), A, { x: 0, y: 0 }, true));
   const dragging = () =>
     movePointer(pressLink(initialUiState(), A, { x: 0, y: 0 }, false), { x: 10, y: 0 });
@@ -257,10 +257,10 @@ describe('машина связывания (US4, research R5)', () => {
 
   it('на недоступной строке — сообщение; перетаскивание кончается, режим привязки — нет (US4 #5, #11)', () => {
     const d = linkTo(dragging(), B_a, bad);
-    expect(d.intent).toEqual({ kind: 'notify', message: 'Несовместимые типы: текст → число.' });
+    expect(d.intent).toEqual({ kind: 'notify', message: 'Incompatible types: text → number.' });
     expect(d.state.linking).toEqual({ kind: 'idle' });
     const p = linkTo(setPeek(picking(), 'B'), B_a, bad);
-    expect(p.intent).toEqual({ kind: 'notify', message: 'Несовместимые типы: текст → число.' });
+    expect(p.intent).toEqual({ kind: 'notify', message: 'Incompatible types: text → number.' });
     expect(p.state.linking).toMatchObject({ kind: 'picking', peek: 'B' });
   });
 
