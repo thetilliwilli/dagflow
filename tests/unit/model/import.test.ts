@@ -47,6 +47,22 @@ describe('импорт файла выгрузки', () => {
     expect(msg).toContain('workflow.graph.nodes');
   });
 
+  it('файл до фичи 002 (ноды без имён) отклоняется с путём к полю, список не меняется', () => {
+    const msg = fail(
+      exportText((e) => {
+        for (const n of (e.workflow as { graph: { nodes: Array<Record<string, unknown>> } }).graph.nodes) delete n.name;
+      }),
+    );
+    expect(msg).toMatch(/^Файл не похож на выгрузку workflow: /);
+    expect(msg).toContain('workflow.graph.nodes.0.name');
+  });
+
+  it('выгрузка и загрузка сохраняют имена нодов (SC-007)', () => {
+    const r = importExport(exportText(), ctx());
+    if (!r.ok) throw new Error(r.message);
+    expect(r.workflow.graph.nodes.map((n) => n.name)).toEqual(sampleWorkflow().graph.nodes.map((n) => n.name));
+  });
+
   it('неизвестные типы нодов перечислены в сообщении', () => {
     const msg = fail(
       exportText((e) => {

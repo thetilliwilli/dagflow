@@ -45,6 +45,8 @@ export interface Position {
 export interface NodeInstance {
   id: string;
   type: string;
+  /** Имя экземпляра (FR-009, фича 002): обязательно; при создании равно названию типа; 1–100 символов. */
+  name: string;
   position: Position;
   /** Вручную заданные значения входов (FR-007). */
   values: Record<string, JsonValue>;
@@ -61,6 +63,16 @@ export interface Edge {
   id: string;
   source: PortRef;
   target: PortRef;
+}
+
+/** Сторона параметра нода при связывании (фича 002). */
+export type PortSide = 'in' | 'out';
+
+/** Параметр, с которого начато связывание: нод, порт и его сторона. */
+export interface LinkEnd {
+  node: string;
+  port: string;
+  side: PortSide;
 }
 
 export interface Graph {

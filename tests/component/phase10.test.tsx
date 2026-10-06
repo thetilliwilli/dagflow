@@ -6,30 +6,36 @@ import { startEvaluation } from '../../src/store/evaluation';
 import { AppProvider } from '../../src/store/react';
 import { activeTab, tabGraph } from '../../src/store/store';
 import { Workbench } from '../../src/ui/Workbench';
-import { manualScheduler, testStore } from './helpers';
+import type { UiActions } from '../../src/store/ui';
+import { manualScheduler, openPalette, testStore, UiProbe } from './helpers';
 
 function setup() {
   const app = testStore();
   const actions = createActions(app);
   const frames = manualScheduler();
   startEvaluation(app, frames.schedule);
+  let ui!: UiActions;
   render(
     <AppProvider app={app}>
       <Workbench />
+      <UiProbe onReady={(u) => (ui = u)} />
     </AppProvider>,
   );
   const state = () => app.store.getState();
   const flush = () => act(() => frames.flushFrames());
-  return { app, actions, state, flush };
+  return { app, actions, state, flush, select: (ids: string[]) => act(() => ui.setSelection(ids)) };
 }
 
 describe('T103: входы и выходы на карточке палитры (FR-001)', () => {
   it('у каждого нода видна строка портов', () => {
     setup();
-    const palette = within(screen.getByTestId('palette'));
-    const add = palette.getByText('Сложить').closest('.palette__item') as HTMLElement;
+    const add = within(openPalette('Арифметика'))
+      .getByText('Сложить')
+      .closest('.palette__item') as HTMLElement;
     expect(within(add).getByText('a, b → result')).toBeVisible();
-    const show = palette.getByText('Показать').closest('.palette__item') as HTMLElement;
+    const show = within(openPalette('Отображение'))
+      .getByText('Показать')
+      .closest('.palette__item') as HTMLElement;
     expect(within(show).getByText('value → —')).toBeInTheDocument();
   });
 });
@@ -61,7 +67,7 @@ describe('T104: значения по умолчанию у портов «Вх�
 
   it('значение по умолчанию: вкладка составного нода считает, а экземпляр без входа не ждёт', async () => {
     const user = userEvent.setup();
-    const { actions, state, flush, compositeId, instanceId } = withComposite();
+    const { actions, state, flush, compositeId, instanceId, select } = withComposite();
     const workflowTab = state().activeTabId!;
     // Экземпляр без подключённого входа «a»
     act(() => {
@@ -73,25 +79,40 @@ describe('T104: значения по умолчанию у портов «Вх�
     expect(state().nodeStates[workflowTab]![instanceId]!.status).toBe('waiting');
 
     act(() => actions.openComposite(compositeId));
+    // Редактор портов нода «Вход» — в окне свойств (фича 002)
+    const io = state().composites[compositeId]!.graph.nodes.find(
+      (n) => n.type === 'builtin:input',
+    )!;
+    select([io.id]);
     await user.type(screen.getByLabelText('По умолчанию: a'), '5');
     flush();
     const def = state().composites[compositeId]!;
     const input = def.graph.nodes.find((n) => n.type === 'builtin:input')!;
     expect(input.ports![0]!.default).toBe(5);
-    const inner = tabGraph(state(), activeTab(state()))!.nodes.find((n) => n.type === 'builtin:add')!;
+    const inner = tabGraph(state(), activeTab(state()))!.nodes.find(
+      (n) => n.type === 'builtin:add',
+    )!;
     expect(state().nodeStates[state().activeTabId!]![inner.id]!.outputs).toEqual({ result: 15 });
-    expect(state().nodeStates[workflowTab]![instanceId]).toMatchObject({ status: 'ok', outputs: { result: 15 } });
+    expect(state().nodeStates[workflowTab]![instanceId]).toMatchObject({
+      status: 'ok',
+      outputs: { result: 15 },
+    });
   });
 
   it('значение не того типа отклоняется; смена типа сбрасывает значение по умолчанию', () => {
     const { actions, state, compositeId } = withComposite();
     act(() => actions.openComposite(compositeId));
-    const input = state().composites[compositeId]!.graph.nodes.find((n) => n.type === 'builtin:input')!;
-    const bad = actions.editIoPorts(input.id, [{ name: 'a', type: 'number', required: true, default: 'пять' }]);
+    const input = state().composites[compositeId]!.graph.nodes.find(
+      (n) => n.type === 'builtin:input',
+    )!;
+    const bad = actions.editIoPorts(input.id, [
+      { name: 'a', type: 'number', required: true, default: 'пять' },
+    ]);
     expect(bad.ok).toBe(false);
     actions.editIoPorts(input.id, [{ name: 'a', type: 'number', required: true, default: 5 }]);
     actions.editIoPorts(input.id, [{ name: 'a', type: 'text', required: true, default: 5 }]);
-    const port = state().composites[compositeId]!.graph.nodes.find((n) => n.id === input.id)!.ports![0]!;
+    const port = state().composites[compositeId]!.graph.nodes.find((n) => n.id === input.id)!
+      .ports![0]!;
     expect(port.default).toBeUndefined();
   });
 });

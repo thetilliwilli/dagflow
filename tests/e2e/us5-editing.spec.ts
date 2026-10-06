@@ -1,21 +1,21 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect } from './helpers';
+import { addNode, connect, paletteItem, setInput, valueOf } from './helpers';
 
 test('US5: большой граф, выделение рамкой, удаление, отмена и повтор, масштаб и мини-карта', async ({ page }) => {
   await page.setViewportSize({ width: 1500, height: 900 });
   await page.goto('/');
-  // 20 нодов двойным щелчком по палитре
-  const item = page.getByTestId('palette').locator('.palette__item-title').getByText('Число', { exact: true });
-  for (let i = 0; i < 20; i++) await item.dblclick();
+  // 20 нодов щелчком по палитре (фича 002: одиночный щелчок)
+  const item = await paletteItem(page, 'Число');
+  for (let i = 0; i < 20; i++) await item.click();
   await expect(page.locator('.react-flow__node')).toHaveCount(20);
 
   // Отдельная пара нодов внизу холста
   const sum = await addNode(page, 'Сложить', 40, 560);
   const show = await addNode(page, 'Показать', 320, 560);
-  await sum.getByLabel('a').fill('2');
-  await sum.getByLabel('b').fill('5');
+  await setInput(page, sum, 'a', '2');
+  await setInput(page, sum, 'b', '5');
   await connect(page, sum, 'result', show, 'value');
-  await expect(show.getByTestId('show-value')).toHaveText('7');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('7');
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);
 
   // Выделение рамкой (Shift + перетаскивание) вокруг пары
@@ -37,7 +37,7 @@ test('US5: большой граф, выделение рамкой, удале�
   await page.keyboard.press('Control+z');
   await expect(page.locator('.react-flow__node')).toHaveCount(22);
   await expect(page.locator('.react-flow__edge')).toHaveCount(1);
-  await expect(page.locator('.react-flow__node').filter({ hasText: 'Показать' }).getByTestId('show-value')).toHaveText('7');
+  await expect(await valueOf(page, page.locator('.react-flow__node').filter({ hasText: 'Показать' }), 'in', 'value')).toHaveText('7');
   await page.keyboard.press('Control+Shift+z');
   await expect(page.locator('.react-flow__node')).toHaveCount(20);
   await page.getByRole('button', { name: 'Отменить' }).click();

@@ -4,16 +4,19 @@ import { createActions } from '../../src/store/actions';
 import { startEvaluation } from '../../src/store/evaluation';
 import { AppProvider } from '../../src/store/react';
 import { Editor } from '../../src/ui/Editor';
-import { manualScheduler, testStore } from './helpers';
+import type { UiActions } from '../../src/store/ui';
+import { manualScheduler, testStore, UiProbe } from './helpers';
 
 function setup() {
   const app = testStore();
   const actions = createActions(app);
   const frames = manualScheduler();
   startEvaluation(app, frames.schedule);
+  let ui!: UiActions;
   const view = render(
     <AppProvider app={app}>
       <Editor />
+      <UiProbe onReady={(u) => (ui = u)} />
     </AppProvider>,
   );
   const add = (type: string, values: Record<string, number> = {}) => {
@@ -23,12 +26,20 @@ function setup() {
     return r.id;
   };
   const flush = () => act(() => frames.flushFrames());
-  const nodeEl = (id: string) => within(view.container.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`)!);
-  return { actions, add, flush, nodeEl };
+  const nodeEl = (id: string) =>
+    within(view.container.querySelector<HTMLElement>(`.react-flow__node[data-id="${id}"]`)!);
+  /** Значение входа нода — в окне свойств (фича 002: на карточке значений нет). */
+  const inputValue = (id: string, port: string) => {
+    act(() => ui.setSelection([id]));
+    return view.container.querySelector(
+      `.prop-grid li.prop-row[data-side="in"][data-port="${port}"] .value-view`,
+    );
+  };
+  return { actions, add, flush, nodeEl, inputValue };
 }
 
 describe('статусы нодов', () => {
-  it('пустой обязательный вход: «ожидает входов» и подсветка входа (US2 #3)', () => {
+  it('пустой обязательный вход: «ожидает входов» и какой вход заполнить (US2 #3)', () => {
     const { add, flush, nodeEl } = setup();
     let s = '';
     act(() => {
@@ -38,8 +49,6 @@ describe('статусы нодов', () => {
     const el = nodeEl(s);
     expect(el.getByTestId('node-status')).toHaveTextContent('ожидает входов');
     expect(el.getByTestId('node-message')).toHaveTextContent('Заполните вход «b»');
-    expect(el.getByTestId('port-in-b')).toHaveClass('port-row--missing');
-    expect(el.getByTestId('port-in-a')).not.toHaveClass('port-row--missing');
   });
 
   it('ошибка: текст без трассировки; потомки — «проблема выше по графу» (US2 #4, #6)', () => {
@@ -53,9 +62,13 @@ describe('статусы нодов', () => {
     });
     flush();
     expect(nodeEl(div).getByTestId('node-status')).toHaveTextContent('ошибка');
-    expect(nodeEl(div).getByTestId('node-message')).toHaveTextContent('Деление на ноль: задайте ненулевой делитель');
+    expect(nodeEl(div).getByTestId('node-message')).toHaveTextContent(
+      'Деление на ноль: задайте ненулевой делитель',
+    );
     expect(nodeEl(div).getByTestId('node-message').textContent).not.toMatch(/at |Error/);
-    expect(nodeEl(show).getByTestId('node-status')).toHaveTextContent('не вычислен: проблема выше по графу');
+    expect(nodeEl(show).getByTestId('node-status')).toHaveTextContent(
+      'не вычислен: проблема выше по графу',
+    );
     expect(nodeEl(show).getByTestId('node-message')).toHaveTextContent('Разделить');
   });
 
@@ -69,12 +82,14 @@ describe('статусы нодов', () => {
       actions.connect({ node: sum, port: 'result' }, { node: show, port: 'value' });
     });
     flush();
-    expect(nodeEl(show).getByTestId('node-status')).toHaveTextContent('не вычислен: проблема выше по графу');
+    expect(nodeEl(show).getByTestId('node-status')).toHaveTextContent(
+      'не вычислен: проблема выше по графу',
+    );
     expect(nodeEl(show).getByTestId('node-message')).toHaveTextContent('ожидает входов');
   });
 
   it('после исправления статусы возвращаются к «вычислен» (US2 #5)', () => {
-    const { actions, add, flush, nodeEl } = setup();
+    const { actions, add, flush, nodeEl, inputValue } = setup();
     let div = '';
     let show = '';
     act(() => {
@@ -89,6 +104,6 @@ describe('статусы нодов', () => {
     flush();
     expect(nodeEl(div).getByTestId('node-status')).toHaveTextContent('вычислен');
     expect(nodeEl(div).queryByTestId('node-message')).toBeNull();
-    expect(nodeEl(show).getByTestId('show-value')).toHaveTextContent('0.25');
+    expect(inputValue(show, 'value')).toHaveTextContent('0.25');
   });
 });

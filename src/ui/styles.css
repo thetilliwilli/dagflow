@@ -28,8 +28,6 @@ body,
 }
 
 .editor {
-  display: grid;
-  grid-template-columns: 240px 1fr;
   height: 100%;
 }
 
@@ -37,28 +35,46 @@ body,
   height: 100%;
 }
 
-/* Палитра */
+/* Палитра — горизонтальная полоса внизу по центру, между кнопками масштаба и мини-картой
+   (фича 002, FR-005, research R11) */
 .palette {
-  overflow-y: auto;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  padding: 12px;
+  width: max(480px, min(1200px, calc(100vw - 480px)));
   font-size: 13px;
 }
-.palette__title {
-  margin: 0 0 4px;
-  font-size: 16px;
+.palette .floating__body {
+  max-height: 30vh;
+}
+.palette__group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px;
+}
+.palette__group .palette__item {
+  margin-bottom: 0;
 }
 .palette__hint {
-  margin: 0 0 12px;
+  margin: 0 0 8px;
   color: var(--muted);
   font-size: 12px;
 }
-.palette__group h3 {
-  margin: 12px 0 4px;
+.palette__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.palette__tab {
   font-size: 12px;
-  text-transform: uppercase;
+  padding: 2px 8px;
+}
+.palette__tab[aria-selected='true'] {
+  border-color: var(--t-number);
+  color: var(--t-number);
+  font-weight: 600;
+}
+.palette__empty {
   color: var(--muted);
+  font-size: 12px;
 }
 .palette__item {
   display: flex;
@@ -81,58 +97,100 @@ body,
   font-size: 11px;
 }
 
-/* Нод */
+/* Карточка нода (фича 002, US2: FR-007, FR-007a, FR-008, FR-011; research R9) */
+:root {
+  --selected: #0969da;
+  --node-border: #1f2328;
+  /* строка типа + 3 строки имени + строка проблемы */
+  --node-height: 108px;
+}
 .flow-node {
-  min-width: 180px;
-  background: var(--panel);
-  border: 2px solid var(--computing);
-  border-radius: 8px;
-  font-size: 12px;
-  box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
-}
-.flow-node.status-ok {
-  border-color: var(--ok);
-}
-.flow-node.status-waiting {
-  border-color: var(--waiting);
-}
-.flow-node.status-error {
-  border-color: var(--error);
-}
-.flow-node.status-blocked {
-  border-color: var(--blocked);
-}
-.flow-node__title {
-  padding: 6px 10px;
-  font-weight: 600;
-  border-bottom: 1px solid var(--border);
-}
-.port-row {
   position: relative;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  flex-direction: column;
+  box-sizing: border-box;
+  width: fit-content;
+  min-width: 20ch;
+  max-width: 40ch;
+  height: var(--node-height);
+  padding: 2px 8px 4px;
+  background: var(--panel);
+  /* Состояние рамку не красит — его показывают значок и строка проблемы (FR-011) */
+  border: 2px solid var(--node-border);
+  border-radius: 0;
+  font-family: ui-monospace, 'Cascadia Mono', 'Noto Sans Mono', monospace;
+  font-size: 13px;
 }
-.port-row--out {
-  justify-content: flex-end;
+.flow-node.is-selected {
+  border-color: var(--selected);
 }
-.port-label {
+.flow-node__type {
+  padding-right: 1.6em; /* место под значок состояния */
+  overflow: hidden;
+  color: #8c959f;
+  font-size: 11px;
+  line-height: 16px;
+  text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--muted);
 }
-.port-handle {
-  width: 10px;
-  height: 10px;
+.flow-node__name {
+  /* По центру; не больше 3 строк, дальше — многоточие (FR-007a) */
+  display: -webkit-box;
+  margin: auto 0;
+  overflow: hidden;
+  line-height: 1.3;
+  text-align: center;
+  overflow-wrap: anywhere;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
 }
-.port-number { background: var(--t-number); }
-.port-text { background: var(--t-text); }
-.port-boolean { background: var(--t-boolean); }
-.port-array { background: var(--t-array); }
-.port-object { background: var(--t-object); }
-.port-any { background: var(--t-any); }
+.flow-node__status {
+  position: absolute;
+  top: 1px;
+  right: 6px;
+}
+/* На карточке — только значок; подпись — во всплывающей подсказке */
+.flow-node__status .node-status__label {
+  display: none;
+}
+.flow-node__problem {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 15px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.flow-node.status-waiting .flow-node__problem { color: var(--waiting); }
+.flow-node.status-error .flow-node__problem { color: var(--error); }
+.flow-node.status-blocked .flow-node__problem { color: var(--blocked); }
+/* Служебные «ручки» React Flow: невидимы и не принимают указатель (research R3) */
+.flow-node__anchor.react-flow__handle {
+  width: 1px;
+  min-width: 0;
+  height: 1px;
+  min-height: 0;
+  border: none;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+}
+.node-name-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.node-name-editor input {
+  font: inherit;
+  text-align: center;
+}
+.node-name-editor__error {
+  color: var(--error);
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  text-align: center;
+}
 
-/* Значения */
+/* Статусы и значения */
 .value-view {
   font-family: ui-monospace, monospace;
 }
@@ -157,12 +215,6 @@ body,
   background: var(--bg);
   border-radius: 4px;
 }
-.show-value {
-  display: block;
-  padding: 8px 10px;
-  font-size: 20px;
-  text-align: center;
-}
 .value-editor-wrap {
   display: inline-flex;
   flex-direction: column;
@@ -184,19 +236,6 @@ body,
   font-size: 11px;
 }
 
-/* Статусы нодов (US2) */
-.flow-node__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 10px;
-  border-bottom: 1px solid var(--border);
-}
-.flow-node__header .flow-node__title {
-  padding: 0;
-  border: none;
-}
 .node-status {
   font-size: 10px;
   white-space: nowrap;
@@ -215,16 +254,6 @@ body,
 .node-message--waiting { color: var(--waiting); background: #fff8c5; }
 .node-message--error { color: var(--error); background: #ffebe9; }
 .node-message--blocked { color: var(--blocked); background: #fbefff; }
-.port-row--missing .port-label {
-  color: var(--waiting);
-  font-weight: 600;
-}
-.port-row--missing .port-handle {
-  outline: 2px solid var(--waiting);
-}
-.react-flow__handle.connectingto:not(.valid) {
-  background: var(--error);
-}
 
 /* Уведомления */
 .notifications {
@@ -234,7 +263,8 @@ body,
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 10;
+  /* над плавающими окнами (слой окон — 20) */
+  z-index: 30;
 }
 .notification {
   display: flex;
@@ -266,27 +296,80 @@ body,
   height: 100%;
 }
 
-/* Рабочая область (US3) */
+/* Рабочая область (фича 002, FR-001): полоса сверху, холст на всю остальную высоту */
 .workbench {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
   height: 100%;
+}
+.topbar {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+.menu-button {
+  flex: none;
+  width: 40px;
+  border: none;
+  border-right: 1px solid var(--border);
+  font-size: 18px;
+  cursor: pointer;
+}
+.menu-button[aria-expanded='true'] {
+  color: var(--t-number);
+}
+.topbar > :not(.menu-button) {
+  flex: 1;
+  min-width: 0;
+}
+/* Левая панель — плавающее окно (FR-004) */
+.sidebar-window {
+  width: 280px;
 }
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 12px;
-  overflow-y: auto;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
   font-size: 13px;
 }
+.sidebar__repo {
+  align-self: flex-start;
+  padding-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.sidebar__repo:hover {
+  color: var(--t-number);
+}
 .main {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
+}
+/* Точка на кнопке меню: в левой панели есть сообщение о хранилище (FR-006a) */
+.menu-button {
+  position: relative;
+}
+.menu-button__dot {
+  position: absolute;
+  top: 8px;
+  right: 7px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--waiting);
+}
+/* Сообщения о хранилище в левой панели — в столбик */
+.sidebar .banner {
+  flex-wrap: wrap;
+  border: 1px solid var(--border);
+}
+.sidebar .banner span {
+  flex-basis: 100%;
 }
 .main .editor {
   flex: 1;
@@ -451,7 +534,8 @@ button.link {
   align-items: center;
   justify-content: center;
   background: rgb(0 0 0 / 30%);
-  z-index: 20;
+  /* модальные диалоги — над плавающими окнами и уведомлениями */
+  z-index: 40;
 }
 .modal {
   max-width: 420px;
@@ -502,16 +586,6 @@ button.link {
   border: none;
   background: none;
   color: var(--muted);
-}
-.flow-node__actions {
-  display: flex;
-  gap: 4px;
-  padding: 4px 10px;
-  border-bottom: 1px solid var(--border);
-}
-.flow-node__actions button {
-  font-size: 11px;
-  padding: 1px 6px;
 }
 .io-ports {
   display: flex;
@@ -583,4 +657,254 @@ button.link {
 }
 .io-ports__default .value-editor {
   width: 120px;
+}
+
+/* ── Плавающие окна (фича 002, contracts/ui-contract.md) ── */
+.floating-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+.floating {
+  position: absolute;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 16px);
+  min-width: 220px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+}
+.floating__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+.floating__title {
+  flex: 1;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.floating__close {
+  border: none;
+  background: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.floating__body {
+  overflow: auto;
+  padding: 8px;
+}
+
+/* ── Окно свойств (US3, FR-013, FR-013a) ── */
+:root {
+  --linked: #2da44e;
+}
+.prop-grid {
+  width: 320px;
+  font-size: 13px;
+}
+.prop-grid .floating__body {
+  max-height: calc(100vh - 120px);
+}
+.prop-grid__head {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+.prop-grid__name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.prop-grid__type {
+  color: var(--muted);
+  font-size: 12px;
+}
+.prop-grid__status {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.prop-grid__actions {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.prop-grid__panel h3 {
+  margin: 8px 0 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.prop-grid__panel ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.prop-grid__empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.prop-row {
+  display: grid;
+  grid-template-columns: 14px 32px minmax(48px, auto) 1fr;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--bg);
+}
+/* Маркер: квадрат с рамкой; зелёная заливка — у порта есть связь (FR-013a) */
+.prop-marker {
+  width: 12px;
+  height: 12px;
+  padding: 0;
+  border: 1px solid var(--text);
+  border-radius: 0;
+  background: #d0d7de;
+  cursor: pointer;
+}
+.prop-marker.is-linked {
+  background: var(--linked);
+}
+.prop-type {
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+}
+.prop-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.prop-value {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.prop-source {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ── Связывание (US4, FR-018 – FR-020) ── */
+.prop-name {
+  cursor: grab;
+  user-select: none;
+}
+.prop-row.is-linking {
+  background: #ddf4ff;
+}
+.prop-row.is-linking .prop-marker {
+  outline: 2px solid var(--t-number);
+  outline-offset: 1px;
+}
+/* Недоступная строка: серая, но на месте — состав и размеры строк не меняются (FR-020) */
+.prop-row.is-disabled {
+  opacity: 0.35;
+}
+.prop-grid--peek {
+  border-color: var(--t-number);
+}
+.prop-grid--peek .prop-name {
+  cursor: default;
+}
+.prop-row.is-target:not(.is-disabled) {
+  cursor: pointer;
+}
+.prop-row.is-target:not(.is-disabled):hover {
+  background: #ddf4ff;
+}
+.prop-grid__hint {
+  margin: 0 0 8px;
+  padding: 4px 6px;
+  background: #ddf4ff;
+  font-size: 12px;
+}
+.link-ghost {
+  position: fixed;
+  z-index: 200;
+  pointer-events: none;
+  padding: 2px 6px;
+  background: var(--text);
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.react-flow__node.is-link-target {
+  outline: 2px dashed var(--t-number);
+  outline-offset: 2px;
+}
+
+/* ── Линии связей (US5, FR-023 – FR-025) ── */
+.react-flow__edge .react-flow__edge-path {
+  stroke: #1f2328;
+  stroke-width: 1.5;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: var(--selected);
+  stroke-width: 2;
+}
+.bundle-label {
+  position: absolute;
+  padding: 1px 4px;
+  background: rgb(255 255 255 / 85%);
+  color: #57606a;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: right;
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: all;
+}
+.edge-list {
+  min-width: 200px;
+  font-size: 13px;
+}
+.edge-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.edge-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+.edge-list__label {
+  overflow: hidden;
+  max-width: 40ch;
+  font-family: ui-monospace, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Длинные имена портов в подписи обрезаются; полный текст — в подсказке */
+.bundle-label__line {
+  overflow: hidden;
+  max-width: 32ch;
+  text-overflow: ellipsis;
+}
+.edge-list li button {
+  border: none;
+  background: none;
+  color: var(--error);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
 }

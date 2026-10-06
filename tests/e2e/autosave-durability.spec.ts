@@ -1,14 +1,14 @@
 // SC-008: изменения, сделанные больше чем за 1 с до закрытия, сохраняются — в папке и в браузере
 import type { Page } from '@playwright/test';
-import { addNode } from './helpers';
+import { addNode, openSidebar, setInput, inputField } from './helpers';
 import { expect, test } from './persistent';
 
 async function changeWaitReload(page: Page) {
   const n = await addNode(page, 'Число', 60, 60);
-  await n.getByLabel('value').fill('4242');
+  await setInput(page, n, 'value', '4242');
   await page.waitForTimeout(1000);
   await page.reload();
-  await expect(page.locator('.react-flow__node').getByLabel('value')).toHaveValue('4242');
+  await expect(await inputField(page, page.locator('.react-flow__node').first(), 'value')).toHaveValue('4242');
 }
 
 test('SC-008: режим рабочей папки', async ({ page }) => {
@@ -17,11 +17,11 @@ test('SC-008: режим рабочей папки', async ({ page }) => {
       (await navigator.storage.getDirectory()).getDirectoryHandle('picked-folder', { create: true });
   });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
-  await page.getByRole('button', { name: 'Перенести' }).click();
-  await expect(page.getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
+  await (await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Перенести' }).click();
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
   await changeWaitReload(page);
-  await expect(page.getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
 });
 
 test('SC-008: режим хранилища браузера', async ({ page }) => {
@@ -29,6 +29,6 @@ test('SC-008: режим хранилища браузера', async ({ page }) 
     delete (window as unknown as Record<string, unknown>).showDirectoryPicker;
   });
   await page.goto('/');
-  await expect(page.getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
   await changeWaitReload(page);
 });

@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { addNode, connect } from './helpers';
+import { addNode, connect, setInput, valueOf } from './helpers';
 
 test('US2: связь, образующая цикл, отклоняется с объяснением', async ({ page }) => {
   await page.goto('/');
@@ -29,18 +29,18 @@ test('US2: деление на ноль → ошибка на ноде, испр
   const show = await addNode(page, 'Показать', 420, 60);
   const add = await addNode(page, 'Сложить', 60, 340);
   const show2 = await addNode(page, 'Показать', 420, 340);
-  await div.getByLabel('a').fill('1');
-  await div.getByLabel('b').fill('0');
-  await add.getByLabel('a').fill('2');
-  await add.getByLabel('b').fill('3');
+  await setInput(page, div, 'a', '1');
+  await setInput(page, div, 'b', '0');
+  await setInput(page, add, 'a', '2');
+  await setInput(page, add, 'b', '3');
   await connect(page, div, 'result', show, 'value');
   await connect(page, add, 'result', show2, 'value');
 
   await expect(div.getByTestId('node-message')).toHaveText('Деление на ноль: задайте ненулевой делитель');
   await expect(show.getByTestId('node-status')).toContainText('не вычислен: проблема выше по графу');
-  await expect(show2.getByTestId('show-value')).toHaveText('5');
+  await expect(await valueOf(page, show2, 'in', 'value')).toHaveText('5');
 
-  await div.getByLabel('b').fill('4');
+  await setInput(page, div, 'b', '4');
   await expect(div.getByTestId('node-message')).toHaveCount(0);
-  await expect(show.getByTestId('show-value')).toHaveText('0.25');
+  await expect(await valueOf(page, show, 'in', 'value')).toHaveText('0.25');
 });

@@ -133,7 +133,8 @@ describe('Evaluator', () => {
   it('E4: незаполненный обязательный вход → waiting с именем входа; потомки → blocked', () => {
     const { registry } = testRegistry();
     const ev = createEvaluator(registry);
-    ev.setGraph(graph([node('S', 'test:sum', { a: 1 }), node('I', 'test:inc')], [edge('S', 'r', 'I', 'x')]), []);
+    // Сообщение потомка называет нод по имени экземпляра (E15, фича 002)
+    ev.setGraph(graph([node('S', 'test:sum', { a: 1 }, 'Сумма'), node('I', 'test:inc')], [edge('S', 'r', 'I', 'x')]), []);
     ev.flush();
     expect(ev.state('S').status).toBe('waiting');
     expect(ev.state('S').message).toContain('b');

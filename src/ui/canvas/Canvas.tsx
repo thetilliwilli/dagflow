@@ -5,31 +5,31 @@ import {
   applyNodeChanges,
   Background,
   Controls,
+  MarkerType,
   MiniMap,
   ReactFlow,
   useReactFlow,
-  type Connection,
-  type FinalConnectionState,
-  type IsValidConnection,
   type Edge as RfEdge,
   type EdgeChange,
   type Node as RfNode,
   type NodeChange,
 } from '@xyflow/react';
-import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';
-import { canConnect } from '../../engine';
 import { useActions, useApp, useAppState } from '../../store/react';
-import { tryConnect } from './connection';
+import { useUi, useUiActions, useUiStore } from '../../store/ui';
 import { CompositeNameDialog } from '../dialogs/CompositeNameDialog';
 import { compositeMessages, historyMessages } from '../messages';
 import { useShortcuts } from './useShortcuts';
 import { FlowNode } from './FlowNode';
-import { inHandle, outHandle, portOfHandle } from './PortHandle';
+import { BundleEdge, type BundleRfEdge } from './BundleEdge';
+import { bundleEdges } from './bundles';
 
 export const NODE_DRAG_TYPE = 'application/dagflow-node';
 
 const nodeTypes = { flow: FlowNode };
+const edgeTypes = { bundle: BundleEdge };
+/** Стрелка у нода-получателя (FR-023). */
+const ARROW = { type: MarkerType.ArrowClosed, color: '#1f2328', width: 18, height: 18 };
 
 export function Canvas() {
   const actions = useActions();
@@ -45,6 +45,17 @@ export function Canvas() {
   });
   const { screenToFlowPosition } = useReactFlow();
   const [rfNodes, setRfNodes] = useState<RfNode[]>([]);
+  const ui = useUiActions();
+  const uiStore = useUiStore();
+  const app = useApp();
+  // Выделение живёт в сторе интерфейса (research R4): React Flow лишь показывает его
+  const selection = useUi((s) => s.selection);
+  // Во время связывания ноды нельзя двигать и выделять (US4, research R5)
+  const linkingKind = useUi((s) => s.linking.kind);
+  const linking = linkingKind !== 'idle';
+  const peek = useUi((s) =>
+    s.linking.kind === 'dragging' || s.linking.kind === 'picking' ? s.linking.peek : null,
+  );
   const [selectedEdges, setSelectedEdges] = useState<Set<string>>(new Set());
 
   // Синхронизация нодов React Flow с графом, с сохранением размеров и выделения
@@ -60,15 +71,17 @@ export function Canvas() {
     });
   }, [graphNodes]);
 
-  const rfEdges = useMemo<RfEdge[]>(
+  // Одно ребро React Flow на пучок — все связи от нода A к ноду B (FR-023, research R2)
+  const rfEdges = useMemo<BundleRfEdge[]>(
     () =>
-      (graph?.edges ?? []).map((e) => ({
-        id: e.id,
-        source: e.source.node,
-        sourceHandle: outHandle(e.source.port),
-        target: e.target.node,
-        targetHandle: inHandle(e.target.port),
-        selected: selectedEdges.has(e.id),
+      bundleEdges(graph?.edges ?? []).map((bundle) => ({
+        id: bundle.id,
+        type: 'bundle',
+        source: bundle.source,
+        target: bundle.target,
+        data: { bundle },
+        markerEnd: ARROW,
+        selected: selectedEdges.has(bundle.id),
       })),
     [graph?.edges, selectedEdges],
   );
@@ -78,27 +91,51 @@ export function Canvas() {
   const canRedo = useAppState((s) => (s.history[s.activeTabId ?? '']?.future.length ?? 0) > 0);
 
   // Удаление нодов и связей приходит одним вызовом onDelete — один шаг истории
+  const nodes = useMemo(() => {
+    const selected = new Set(selection);
+    return rfNodes.map((n) => {
+      const className = n.id === peek ? 'is-link-target' : undefined;
+      return !!n.selected === selected.has(n.id) && n.className === className
+        ? n
+        : { ...n, selected: selected.has(n.id), className };
+    });
+  }, [rfNodes, selection, peek]);
+
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
       setRfNodes((nodes) =>
         applyNodeChanges(
-          changes.filter((c) => c.type !== 'remove'),
+          changes.filter((c) => c.type !== 'remove' && c.type !== 'select'),
           nodes,
         ),
       );
+      const select = changes.filter((c) => c.type === 'select');
+      if (select.length > 0) {
+        // Текущее выделение — из стора (не из замыкания) и только ноды графа этой вкладки:
+        // React Flow прежней вкладки может прислать изменение уже после сброса выделения
+        const state = app.store.getState();
+        const ids = new Set(tabGraph(state, activeTab(state))?.nodes.map((n) => n.id));
+        const next = new Set(uiStore.getState().selection.filter((id) => ids.has(id)));
+        for (const c of select) {
+          if (c.selected && ids.has(c.id)) next.add(c.id);
+          else next.delete(c.id);
+        }
+        ui.setSelection([...next]);
+      }
       for (const c of changes) {
         if (c.type === 'position' && c.position)
           actions.moveNode(c.id, { x: c.position.x, y: c.position.y });
       }
     },
-    [actions],
+    [actions, app, ui, uiStore],
   );
 
   const onDelete = useCallback(
     ({ nodes, edges }: { nodes: RfNode[]; edges: RfEdge[] }) => {
+      // Выделенная линия — это пучок: удаляются все его связи одним шагом
       actions.deleteElements(
         nodes.map((n) => n.id),
-        edges.map((e) => e.id),
+        (edges as BundleRfEdge[]).flatMap((e) => e.data?.bundle.edges.map((x) => x.id) ?? []),
       );
     },
     [actions],
@@ -117,50 +154,6 @@ export function Canvas() {
     [rfEdges],
   );
 
-  const app = useApp();
-  const toRefs = (c: {
-    source: string;
-    sourceHandle?: string | null;
-    target: string;
-    targetHandle?: string | null;
-  }) => ({
-    source: { node: c.source, port: portOfHandle(c.sourceHandle) },
-    target: { node: c.target, port: portOfHandle(c.targetHandle) },
-  });
-
-  // Подсветка недопустимого порта во время перетаскивания связи
-  const isValidConnection = useCallback<IsValidConnection>(
-    (c) => {
-      const state = app.store.getState();
-      const g = tabGraph(state, activeTab(state));
-      return !!g && canConnect(g, toRefs(c), registryOf(state)).ok;
-    },
-    [app],
-  );
-
-  const onConnect = useCallback(
-    (c: Connection) => {
-      const { source, target } = toRefs(c);
-      tryConnect(actions, source, target);
-    },
-    [actions],
-  );
-
-  // Связь отпущена на недопустимый порт: React Flow не вызывает onConnect — объясняем причину
-  const onConnectEnd = useCallback(
-    (_e: MouseEvent | TouchEvent, s: FinalConnectionState) => {
-      if (s.isValid || !s.fromHandle || !s.toHandle) return;
-      const from = s.fromHandle.type === 'source' ? s.fromHandle : s.toHandle;
-      const to = s.fromHandle.type === 'source' ? s.toHandle : s.fromHandle;
-      tryConnect(
-        actions,
-        { node: from.nodeId, port: portOfHandle(from.id) },
-        { node: to.nodeId, port: portOfHandle(to.id) },
-      );
-    },
-    [actions],
-  );
-
   const onDragOver = useCallback((e: DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
@@ -177,8 +170,27 @@ export function Canvas() {
     [actions, screenToFlowPosition],
   );
 
+  // Режим привязки: щелчок по ноду показывает его временное окно, по пустому холсту — отмена.
+  // Стабильные обработчики: новые функции на каждую перерисовку перерисовывали бы все ноды.
+  const onNodeClick = useCallback(
+    (_e: unknown, n: RfNode) => {
+      if (linkingKind === 'picking') ui.setPeek(n.id);
+    },
+    [linkingKind, ui],
+  );
+  // Щелчок по линии открывает окно связей рядом с точкой щелчка (FR-025)
+  const onEdgeClick = useCallback(
+    (e: { clientX: number; clientY: number }, edge: RfEdge) =>
+      ui.openEdgeWindow(edge.source, edge.target, { x: e.clientX, y: e.clientY }),
+    [ui],
+  );
+  const onPaneClick = useCallback(() => {
+    ui.closeWindow('edges');
+    if (linkingKind === 'picking') ui.cancelLinking();
+  }, [linkingKind, ui]);
+
   const [collapsing, setCollapsing] = useState<string[] | null>(null);
-  const selected = rfNodes.filter((n) => n.selected).map((n) => n.id);
+  const selected = selection;
 
   return (
     <div className="canvas" data-testid="canvas">
@@ -204,22 +216,31 @@ export function Canvas() {
         <CompositeNameDialog nodeIds={collapsing} onClose={() => setCollapsing(null)} />
       )}
       <ReactFlow
-        nodes={rfNodes}
+        nodes={nodes}
         edges={rfEdges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        onEdgeClick={onEdgeClick}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onDelete={onDelete}
         deleteKeyCode={['Delete', 'Backspace']}
         selectionKeyCode="Shift"
         multiSelectionKeyCode={['Shift', 'Meta', 'Control']}
-        onConnect={onConnect}
-        onConnectEnd={onConnectEnd}
-        isValidConnection={isValidConnection}
+        // Порты на карточке убраны: связи создаются в окнах свойств (US4)
+        nodesConnectable={false}
         defaultViewport={initialViewport}
         fitView={fitOnOpen}
         fitViewOptions={{ maxZoom: 1 }}
+        // Ниже 50% подписи линий скрываются (FR-024) — значит, уменьшать холст можно и сильнее
+        minZoom={0.1}
+        // Пробел открывает палитру (FR-005), поэтому не панорамирует холст (research R7)
+        panActivationKeyCode={null}
         onMoveEnd={(_e, vp) => tab && actions.setViewport(tab.id, vp)}
+        nodesDraggable={!linking}
+        elementsSelectable={!linking}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         onDragOver={onDragOver}
         onDrop={onDrop}
       >

@@ -23,6 +23,8 @@ export const GraphSchema = v.object({
     v.object({
       id: v.pipe(v.string(), v.minLength(1)),
       type: v.pipe(v.string(), v.minLength(1)),
+      // Имя экземпляра обязательно (фича 002, contracts/file-formats.md): файлы без имён некорректны
+      name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
       position: PositionSchema,
       values: v.record(v.string(), JsonValueSchema),
       ports: v.optional(v.array(PortDefSchema)),

@@ -21,14 +21,14 @@ export const typeLabels: Record<PortType, string> = {
 export const messages = {
   appTitle: 'DAG Flow',
   palette: 'Палитра',
-  paletteHint: 'Перетащите нод на холст или дважды щёлкните по нему',
+  paletteHint: 'Щёлкните по ноду или перетащите его на холст',
   showMore: 'показать',
   showLess: 'свернуть',
   invalidJson: (reason: string) => `Некорректный JSON: ${reason}`,
   valueTypeMismatch: (type: PortType) => `Значение не подходит к типу порта «${typeLabels[type]}»`,
-  connected: 'подключено',
   noValue: '—',
   closeNotification: 'Закрыть уведомление',
+  nodeNotFound: (id: string) => `Нод «${id}» не найден.`,
   invalidName: 'Имя должно содержать от 1 до 100 символов',
   renderFailed: 'Не удалось отобразить вкладку. Ваши данные не потеряны — попробуйте перезагрузить вкладку.',
   reloadTab: 'Перезагрузить вкладку',
@@ -102,6 +102,8 @@ export const compositeMessages = {
   renameTitle: 'Переименовать составной нод',
   renameButton: 'Переименовать',
   open: (name: string) => `Открыть составной нод «${name}»`,
+  openButton: 'Открыть',
+  expandButton: 'Развернуть',
   expand: (name: string) => `Развернуть «${name}»`,
   rename: (name: string) => `Переименовать составной нод «${name}»`,
   remove: (name: string) => `Удалить составной нод «${name}»`,
@@ -130,4 +132,55 @@ export const historyMessages = {
   undo: 'Отменить',
   redo: 'Повторить',
   minimap: 'Мини-карта графа',
+};
+
+/** Плавающие окна (фича 002, contracts/ui-contract.md). */
+export const windowMessages = {
+  close: 'Закрыть',
+  menu: 'Меню',
+  sidebar: 'Workflow и хранилище',
+  sidebarAttention: 'Workflow и хранилище: есть сообщение о хранении данных',
+  /** Ссылка на репозиторий проекта внизу левой панели (FR-004). */
+  repoLink: 'github',
+  repoUrl: 'https://github.com/thetilliwilli/dagflow',
+  paletteCategories: 'Категории',
+  noComposites: 'Составных нодов пока нет: выделите ноды на холсте и сверните их в составной нод.',
+};
+
+/** Окно свойств выделенного нода (US3, contracts/ui-contract.md). */
+export const propertiesMessages = {
+  title: 'Свойства',
+  inputs: 'Входы',
+  outputs: 'Выходы',
+  noInputs: 'Нет входов',
+  noOutputs: 'Нет выходов',
+  link: (port: string) => `Связать «${port}»`,
+  /** Откуда приходит значение подключённого входа. */
+  source: (node: string, port: string) => `← ${node}.${port}`,
+  /** Режим привязки по маркеру (FR-018a). */
+  linkHint: 'Выберите нод и параметр для связи',
+  /** Временное окно нода при связывании (FR-018). */
+  peekTitle: (node: string) => `Свойства: ${node}`,
+  /** Метка за курсором при перетаскивании параметра. */
+  ghost: (port: string, type: string) => `${port} (${type})`,
+  /** Поле переименования нода (FR-009). */
+  nodeNameLabel: 'Имя нода',
+};
+
+/** Краткие обозначения типов портов в окне свойств (FR-013b). */
+export const typeAbbr: Record<PortType, string> = {
+  number: 'num',
+  text: 'str',
+  boolean: 'bool',
+  array: 'arr',
+  object: 'obj',
+  any: 'any',
+};
+
+/** Линии связей и окно связей (US5, FR-023 – FR-025). */
+export const edgeMessages = {
+  more: (n: number) => `ещё ${n}`,
+  windowTitle: (source: string, target: string) => `Связи: ${source} → ${target}`,
+  link: (out: string, input: string) => `${out}→${input}`,
+  remove: (link: string) => `Удалить связь «${link}»`,
 };

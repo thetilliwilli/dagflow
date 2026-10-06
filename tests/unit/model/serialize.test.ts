@@ -36,6 +36,54 @@ describe('сериализация workflow', () => {
   it('имя длиннее 100 символов отклоняется', () => {
     const file = { ...workflowToFile(sampleWorkflow()), name: 'x'.repeat(101) };
     expect(() => fileToWorkflow(file)).toThrow(FormatError);
+  });});
+
+describe('имя нода в файле (FR-009, FR-010, contracts/file-formats.md 002)', () => {
+  type NodeObj = Record<string, unknown>;
+  const nodesOf = (file: unknown) => (file as { graph: { nodes: NodeObj[] } }).graph.nodes;
+
+  it('ключи нода идут в порядке id, type, name, position, values, ports', () => {
+    const wf = sampleWorkflow();
+    // Нод собран в «неудобном» порядке ключей — в файле порядок всё равно по контракту
+    wf.graph.nodes[0] = { values: { value: 2 }, position: { x: 0, y: 0 }, name: 'Число', type: 'builtin:number', id: 'n1' };
+    const text = toJsonText(workflowToFile(wf));
+    const keys = Object.keys(nodesOf(JSON.parse(text))[0]!);
+    expect(keys).toEqual(['id', 'type', 'name', 'position', 'values']);
+    const io = toJsonText(
+      workflowToFile({
+        ...wf,
+        graph: { nodes: [{ ports: [], values: {}, position: { x: 0, y: 0 }, name: 'Вход', type: 'builtin:input', id: 'i' }], edges: [] },
+      }),
+    );
+    expect(Object.keys(nodesOf(JSON.parse(io))[0]!)).toEqual(['id', 'type', 'name', 'position', 'values', 'ports']);
+  });
+
+  it('имена нодов переживают запись и чтение (SC-007)', () => {
+    const wf = sampleWorkflow();
+    expect(fileToWorkflow(JSON.parse(toJsonText(workflowToFile(wf)))).graph.nodes.map((n) => n.name)).toEqual(
+      wf.graph.nodes.map((n) => n.name),
+    );
+  });
+
+  it('нод без имени, с пустым или слишком длинным именем — FormatError с путём к полю', () => {
+    const cases: Array<(n: NodeObj) => void> = [
+      (n) => delete n.name,
+      (n) => (n.name = ''),
+      (n) => (n.name = '   '),
+      (n) => (n.name = 'я'.repeat(101)),
+    ];
+    for (const mutate of cases) {
+      const file = JSON.parse(toJsonText(workflowToFile(sampleWorkflow())));
+      mutate(nodesOf(file)[0]!);
+      expect(() => fileToWorkflow(file)).toThrow(FormatError);
+      expect(() => fileToWorkflow(file)).toThrow(/graph\.nodes\.0\.name/);
+    }
+  });
+
+  it('имя обрезается по краям', () => {
+    const file = JSON.parse(toJsonText(workflowToFile(sampleWorkflow())));
+    nodesOf(file)[0]!.name = '  Число  ';
+    expect(fileToWorkflow(file).graph.nodes[0]!.name).toBe('Число');
   });
 });
 

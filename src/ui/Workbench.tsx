@@ -1,29 +1,35 @@
-// Рабочая область: список workflow и хранилище слева, вкладки и редактор справа
+// Рабочая область (фича 002, FR-001): сверху кнопка меню и вкладки, ниже холст на всю высоту;
+// левая панель, палитра и другие окна — плавающие поверх холста
 import { useAppState } from '../store/react';
 import { Editor } from './Editor';
-import { ExportImport } from './layout/ExportImport';
-import { FolderBanner } from './layout/FolderBanner';
+import { FloatingLayer } from './floating/FloatingLayer';
+import { useGlobalKeys } from './floating/useGlobalKeys';
+import { MenuButton } from './layout/MenuButton';
 import { Notifications } from './layout/Notifications';
-import { StorageIndicator } from './layout/StorageIndicator';
+import { SidebarWindow } from './layout/SidebarWindow';
 import { TabBar } from './layout/TabBar';
-import { WorkflowList } from './layout/WorkflowList';
 import { workflowMessages } from './messages';
 
 export function Workbench() {
   const activeTabId = useAppState((s) => s.activeTabId);
+  useGlobalKeys();
   return (
-    <div className="workbench">
-      <aside className="sidebar">
-        <StorageIndicator />
-        <WorkflowList />
-        <ExportImport />
-      </aside>
-      <main className="main">
-        <FolderBanner />
-        <TabBar />
-        {activeTabId ? <Editor key={activeTabId} /> : <div className="empty-state">{workflowMessages.noTabs}</div>}
-      </main>
-      <Notifications />
-    </div>
+    <FloatingLayer>
+      <div className="workbench">
+        <header className="topbar">
+          <MenuButton />
+          <TabBar />
+        </header>
+        <main className="main">
+          {activeTabId ? (
+            <Editor key={activeTabId} />
+          ) : (
+            <div className="empty-state">{workflowMessages.noTabs}</div>
+          )}
+        </main>
+        <SidebarWindow />
+        <Notifications />
+      </div>
+    </FloatingLayer>
   );
 }

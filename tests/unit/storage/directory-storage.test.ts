@@ -63,6 +63,20 @@ describe('DirectoryStorage', () => {
     expect(data.unavailable).toEqual([{ id: 'bad', kind: 'workflow', reason: expect.stringContaining('повреждён') }]);
   });
 
+  it('workflow с нодом без имени (файл до фичи 002) — «недоступен» с причиной, остальные загружаются', async () => {
+    const dir = new FakeDirectory();
+    const s = new DirectoryStorage(dir.asHandle());
+    await s.saveWorkflow(sampleWorkflow('wf1'));
+    const old = JSON.parse(toJsonText(workflowToFile(sampleWorkflow('old'))));
+    for (const n of old.graph.nodes) delete n.name;
+    dir.put('workflows/old.workflow.json', toJsonText(old));
+    const data = await s.loadAll();
+    expect(data.workflows.map((w) => w.id)).toEqual(['wf1']);
+    expect(data.unavailable).toEqual([
+      { id: 'old', kind: 'workflow', reason: expect.stringContaining('graph.nodes.0.name') },
+    ]);
+  });
+
   it('пустое хранилище: loadAll и hasData', async () => {
     const s = new DirectoryStorage(new FakeDirectory().asHandle());
     expect(await s.hasData()).toBe(false);

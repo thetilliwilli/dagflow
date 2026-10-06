@@ -1,6 +1,6 @@
 // Проверка правок графа: связи, добавление нодов, целостность (FR-004, FR-005a, data-model «Edge»)
-import { rejections, type Rejection } from './errors';
-import type { CompositeDef, Edge, Graph, NodeInstance, NodeRegistry, PortDef } from './types';
+import { MAX_NODE_NAME, rejections, type Rejection } from './errors';
+import type { CompositeDef, Edge, Graph, LinkEnd, NodeInstance, NodeRegistry, PortDef } from './types';
 import { isCompatible } from './values';
 
 import { IO_INPUT, IO_OUTPUT, PASSTHROUGH } from './builtins/io';
@@ -22,6 +22,14 @@ export function nodePorts(node: NodeInstance, registry: NodeRegistry): NodePorts
   if (node.type === IO_OUTPUT) return { inputs: ports, outputs: [] };
   if (node.type === PASSTHROUGH) return { inputs: ports, outputs: asOutputs() };
   return { inputs: def.inputs, outputs: def.outputs };
+}
+
+/** Проверка и нормализация имени экземпляра нода (FR-009, E13). */
+export function normalizeNodeName(name: string): { ok: true; name: string } | Rejection {
+  const trimmed = name.trim();
+  if (trimmed.length === 0) return rejections.emptyName();
+  if (trimmed.length > MAX_NODE_NAME) return rejections.nameTooLong();
+  return { ok: true, name: trimmed };
 }
 
 /** Достижим ли `to` из `from` по связям графа. */
@@ -64,6 +72,43 @@ export function canConnect(
     (e) => e.target.node === edge.target.node && e.target.port === edge.target.port,
   );
   return occupied ? { ok: true, replaces: occupied.id } : { ok: true };
+}
+
+/** Можно ли связать порт с параметром, с которого начато связывание; replaces — id заменяемой связи. */
+export type LinkCandidate = { ok: true; replaces?: string } | Rejection;
+
+export interface LinkCandidates {
+  inputs: Record<string, LinkCandidate>;
+  outputs: Record<string, LinkCandidate>;
+}
+
+/**
+ * Доступность каждого порта нода targetNode для связи с from (фича 002: FR-019, FR-020, E10–E12).
+ * Записи есть для всех портов в их порядке — окно не меняет состав строк при затенении.
+ */
+export function linkCandidates(
+  graph: Graph,
+  from: LinkEnd,
+  targetNode: string,
+  registry: NodeRegistry,
+): LinkCandidates | Rejection {
+  const target = graph.nodes.find((n) => n.id === targetNode);
+  const ports = target && nodePorts(target, registry);
+  if (!target || !ports) return rejections.unknownType(target?.type ?? targetNode);
+  const check = (side: 'in' | 'out', port: string): LinkCandidate => {
+    if (targetNode === from.node) return rejections.sameNode();
+    if (side === from.side) return rejections.sameSide(from.side);
+    // Связь всегда идёт от выхода ко входу
+    const edge =
+      from.side === 'out'
+        ? { source: { node: from.node, port: from.port }, target: { node: targetNode, port } }
+        : { source: { node: targetNode, port }, target: { node: from.node, port: from.port } };
+    return canConnect(graph, edge, registry);
+  };
+  return {
+    inputs: Object.fromEntries(ports.inputs.map((p) => [p.name, check('in', p.name)])),
+    outputs: Object.fromEntries(ports.outputs.map((p) => [p.name, check('out', p.name)])),
+  };
 }
 
 export function canAddNode(
