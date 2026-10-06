@@ -9,7 +9,7 @@
 - Кнопки и заголовки — sentence case без точки: «Add port», «Delete link».
 - Сообщения — полные предложения с точкой; ошибка называет причину и действие
   (принцип IV).
-- Числа в тексте: `1 item` / `3 items` (две формы, FR-005).
+- Числа в тексте — после двоеточия, без склонения: `Links removed: 3`, `[items: 3]` (FR-005).
 - Термины: node, workflow, composite node, port, input, output, link, palette,
   properties, working folder, browser storage.
 
@@ -67,7 +67,7 @@ interface. Описание составного нода по умолчани�
 | blocked | not computed: upstream problem |
 
 Виды значений (`describeKind`): array, number, text, boolean, object, null.
-Компактный вид: `[3 items]`, `{2 fields}`. Раскрытие: «show», «hide».
+Компактный вид: `[items: 3]`, `{fields: 2}`. Раскрытие: «show», «hide».
 
 ## Сообщения вычисления (errors.ts)
 
@@ -83,7 +83,7 @@ interface. Описание составного нода по умолчани�
 | переполнение | The result is too large. |
 | не массив / не объект | Expected an array, got: <kind>. / Expected an object, got: <kind>. |
 | индекс не целый | The index must be an integer, got: <index>. |
-| индекс вне диапазона | Index <i> is out of range: the array has <n> item(s) («1 item», «3 items»). |
+| индекс вне диапазона | Index <i> is out of range: array length is <n>. |
 | нет поля | Field “<key>” not found. |
 | не число | “<text>” is not a number. |
 
@@ -167,7 +167,7 @@ interface. Описание составного нода по умолчани�
 | export/import | Export to file / Import from file / Could not load the file / Close |
 | default names | New workflow / <name> (copy) / Composite node: <name> |
 | composite | Collapse into composite node / Composite node name / Collapse / Rename composite node / Rename / Open composite node “<name>” / Open / Expand / Expand “<name>” / Rename composite node “<name>” / Delete composite node “<name>” / Delete composite node? |
-| composite remove text | Used in <n> place(s) («1 place», «3 places»). All instances of “<name>” will be removed with their links. / “<name>” will be removed from the palette. |
+| composite remove text | Instances in use: <n>. All instances of “<name>” will be removed with their links. / “<name>” will be removed from the palette. |
 | composite misc | Name “<name>” is already taken by another composite node / Composite node ports changed. Links removed: <n> / Ports / Add port / Port name / Port type / Remove port “<name>” / Default: <port> |
 | defaultHint | Default value: used when an instance input is not connected or filled; inside the composite node tab — for debugging |
 | defaultTypeMismatch | The default value of port “<port>” does not match its type |

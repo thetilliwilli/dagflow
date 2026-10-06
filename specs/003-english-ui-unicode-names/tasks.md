@@ -234,3 +234,11 @@ MVP фичи — US1 (английский интерфейс, основная 
 - Тексты для пользователя — только в `src/ui/messages.ts`, `src/engine/errors.ts`,
   определениях встроенных нодов и сообщениях `src/model`/`src/storage` (R2).
 - Коммит — после каждой фазы, по команде пользователя.
+
+---
+
+## Phase 6: Уточнение — числа без склонения
+
+Вместо задачи convergence о тесте форм «place/places» (FR-005 уточнён: склонения нет).
+
+- [X] T043 Убрать склонение по числу per FR-005: удалить `plural` из `src/engine/errors.ts` и `src/engine/index.ts`; тексты с числом — в нейтральной форме по контракту (`[items: 3]`, `{fields: 2}`, `Index <i> is out of range: array length is <n>.`, `Instances in use: <n>. …` в `src/ui/messages.ts`); удалить тесты на формы числа в `tests/unit/engine/values.test.ts`, `tests/unit/engine/builtins.test.ts`, обновить ожидания в `tests/component/property-grid.test.tsx`, `tests/component/composite-actions.test.tsx`

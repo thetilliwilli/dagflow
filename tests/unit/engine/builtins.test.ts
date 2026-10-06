@@ -214,8 +214,7 @@ describe('массивы и объекты', () => {
   });
   it('ошибки', () => {
     expect(errorOf('builtin:array-get', { array: 'abc', index: 0 })).toBe('Expected an array, got: text.');
-    expect(errorOf('builtin:array-get', { array: [1], index: 5 })).toBe('Index 5 is out of range: the array has 1 item.');
-    expect(errorOf('builtin:array-get', { array: [1, 2, 3], index: -1 })).toBe('Index -1 is out of range: the array has 3 items.');
+    expect(errorOf('builtin:array-get', { array: [1], index: 5 })).toBe('Index 5 is out of range: array length is 1.');
     expect(errorOf('builtin:array-get', { array: [1], index: 0.5 })).toBe('The index must be an integer, got: 0.5.');
     expect(errorOf('builtin:object-get', { object: [1], key: 'a' })).toBe('Expected an object, got: array.');
     expect(errorOf('builtin:object-get', { object: { a: 1 }, key: 'b' })).toBe('Field “b” not found.');

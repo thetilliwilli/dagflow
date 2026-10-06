@@ -1,5 +1,5 @@
 // Тексты интерфейса (принцип IV: все сообщения понятные; язык — английский, фича 003)
-import { plural, typeNames, type NodeStatus, type PortType } from '../engine';
+import { typeNames, type NodeStatus, type PortType } from '../engine';
 
 export const statusLabels: Record<NodeStatus, string> = {
   ok: 'computed',
@@ -111,7 +111,7 @@ export const compositeMessages = {
   removeTitle: 'Delete composite node?',
   removeText: (name: string, usage: number) =>
     usage > 0
-      ? `Used in ${usage} ${plural(usage, 'place', 'places')}. All instances of “${name}” will be removed with their links.`
+      ? `Instances in use: ${usage}. All instances of “${name}” will be removed with their links.`
       : `“${name}” will be removed from the palette.`,
   tabTitle: (name: string) => `Composite node: ${name}`,
   nameTaken: (name: string) => `Name “${name}” is already taken by another composite node`,

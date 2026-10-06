@@ -170,7 +170,7 @@ describe('составные ноды: действия', () => {
     );
     openPalette('My composite nodes');
     await user.click(screen.getByRole('button', { name: 'Delete composite node “Удвоенная сумма”' }));
-    expect(screen.getByRole('dialog', { name: 'Delete composite node?' })).toHaveTextContent('Used in 1 place.');
+    expect(screen.getByRole('dialog', { name: 'Delete composite node?' })).toHaveTextContent('Instances in use: 1.');
     await user.click(within(screen.getByRole('dialog', { name: 'Delete composite node?' })).getByRole('button', { name: 'Delete' }));
     expect(state().composites[ids.compositeId]).toBeUndefined();
     expect(Object.values(state().workflows)[0]!.graph.nodes.some((n) => n.id === ids.inst)).toBe(false);

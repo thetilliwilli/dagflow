@@ -78,11 +78,6 @@ export const stateMessages = {
   internalError: (title: string) => `Internal error in node “${title}”.`,
 };
 
-/** Склонение по числу (английский): plural(1, 'item', 'items'). */
-export function plural(n: number, one: string, other: string): string {
-  return n === 1 ? one : other;
-}
-
 /** Виды значений для сообщений «got: <вид>». */
 export const kindNames = {
   null: 'null',
@@ -93,10 +88,10 @@ export const kindNames = {
   object: 'object',
 };
 
-/** Компактный вид массива и объекта на ноде: «[3 items]», «{2 fields}». */
+/** Компактный вид массива и объекта на ноде: «[items: 3]», «{fields: 2}» (без склонения, FR-005). */
 export const compactFormats = {
-  array: (n: number) => `[${n} ${plural(n, 'item', 'items')}]`,
-  object: (n: number) => `{${n} ${plural(n, 'field', 'fields')}}`,
+  array: (n: number) => `[items: ${n}]`,
+  object: (n: number) => `{fields: ${n}}`,
 };
 
 /** Ошибки вычисления встроенных нодов. */
@@ -106,8 +101,7 @@ export const nodeErrors = {
   expectedArray: (kind: string) => `Expected an array, got: ${kind}.`,
   expectedObject: (kind: string) => `Expected an object, got: ${kind}.`,
   indexNotInteger: (index: number) => `The index must be an integer, got: ${index}.`,
-  indexOutOfRange: (index: number, n: number) =>
-    `Index ${index} is out of range: the array has ${n} ${plural(n, 'item', 'items')}.`,
+  indexOutOfRange: (index: number, n: number) => `Index ${index} is out of range: array length is ${n}.`,
   fieldNotFound: (key: string) => `Field “${key}” not found.`,
   notANumber: (text: string) => `“${text}” is not a number.`,
 };

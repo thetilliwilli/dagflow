@@ -154,7 +154,7 @@ describe('окно свойств (US3)', () => {
     h.flush();
     h.select(j);
     const out = row('out', 'value').querySelector<HTMLElement>('.value-view')!;
-    expect(out).toHaveTextContent('[50 items]');
+    expect(out).toHaveTextContent('[items: 50]');
     fireEvent.click(within(out).getByRole('button', { name: 'show' }));
     expect(out.querySelector('pre')).toHaveTextContent('49');
   });

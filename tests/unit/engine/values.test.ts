@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { plural } from '../../../src/engine/errors';
 import { deepEqual, describeKind, formatCompact, isCompatible, matchesType } from '../../../src/engine/values';
 import type { PortType } from '../../../src/engine/types';
 
@@ -75,22 +74,14 @@ describe('describeKind', () => {
   });
 });
 
-describe('formatCompact (FR-005: две формы числа)', () => {
+describe('formatCompact', () => {
   it('короткие значения — как JSON', () => {
     expect(formatCompact([1, 2])).toBe('[1,2]');
     expect(formatCompact({ a: 1 })).toBe('{"a":1}');
   });
 
-  it('длинные массивы и объекты — «[N items]», «{N fields}»', () => {
-    expect(formatCompact([], 0)).toBe('[0 items]');
-    expect(formatCompact([1], 0)).toBe('[1 item]');
-    expect(formatCompact([1, 2, 3], 0)).toBe('[3 items]');
-    expect(formatCompact({ a: 1 }, 0)).toBe('{1 field}');
-    expect(formatCompact({ a: 1, b: 2 }, 0)).toBe('{2 fields}');
-  });
-
-  it('plural — две формы: одна для 1, другая для остальных', () => {
-    expect(plural(1, 'item', 'items')).toBe('item');
-    for (const n of [0, 2, 5, 11, 21, 101]) expect(plural(n, 'item', 'items')).toBe('items');
+  it('длинные массивы и объекты — «[items: N]», «{fields: N}»', () => {
+    expect(formatCompact([1, 2, 3], 0)).toBe('[items: 3]');
+    expect(formatCompact({ a: 1, b: 2 }, 0)).toBe('{fields: 2}');
   });
 });

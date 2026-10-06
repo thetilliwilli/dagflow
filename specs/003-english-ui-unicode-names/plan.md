@@ -79,7 +79,7 @@ specs/003-english-ui-unicode-names/
 index.html                         # ~ lang="en"
 src/
 ├── engine/
-│   ├── ~ errors.ts                # английские тексты; plural(n, one, other); stateMessages, nodeErrors, kindNames;
+│   ├── ~ errors.ts                # английские тексты без склонения по числу; stateMessages, nodeErrors, kindNames;
 │   │                              #   без name-too-long и MAX_NODE_NAME; отказы портов и сворачивания
 │   ├── ~ values.ts                # describeKind/formatCompact — тексты из errors.ts
 │   ├── ~ evaluator.ts             # сообщения состояний — из errors.ts
