@@ -1,4 +1,5 @@
-// Левая панель — плавающее окно: хранилище, список workflow, выгрузка и загрузка (FR-004)
+// Левая панель — плавающее окно: хранилище, список workflow, выгрузка и загрузка,
+// внизу — ссылка на репозиторий проекта (FR-004)
 import { useUi } from '../../store/ui';
 import { ManagedWindow } from '../floating/ManagedWindow';
 import { windowMessages } from '../messages';
@@ -23,6 +24,15 @@ export function SidebarWindow() {
         <StorageIndicator />
         <WorkflowList />
         <ExportImport />
+        {/* Переход по ссылке — действие пользователя, приложение само в сеть не ходит (принцип III) */}
+        <a
+          className="sidebar__repo"
+          href={windowMessages.repoUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {windowMessages.repoLink}
+        </a>
       </div>
     </ManagedWindow>
   );

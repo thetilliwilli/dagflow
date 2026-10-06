@@ -132,6 +132,12 @@ description: "Task list for 002-editor-ui-redesign"
 
 - [X] T077 [US1] Перенести `FolderBanner` вверх `src/ui/layout/SidebarWindow.tsx`, этап подсказки — в стор интерфейса (`storageHint`, `src/store/ui-logic.ts`), выбор сообщения — чистая `storageNotice()` в `src/ui/layout/storage-notice.ts`, точка на `MenuButton` (`data-attention`); тесты: `tests/unit/ui/storage-notice.test.ts`, `tests/unit/store/ui-logic.test.ts`, `tests/component/convergence.test.tsx` (T101), e2e `ui-us1-layout.spec.ts` (FR-006a); e2e `us3-storage-tabs`, `autosave-durability` — кнопки хранилища через `openSidebar`
 
+### Уточнение FR-004 (после сходимости)
+
+Решение пользователя: внизу левой панели — ссылка на репозиторий проекта.
+
+- [X] T082 [US1] Добавить внизу `src/ui/layout/SidebarWindow.tsx` ссылку «github» на https://github.com/thetilliwilli/dagflow (`target="_blank"`, `rel="noopener noreferrer"`; текст и адрес — в `src/ui/messages.ts`, стиль — в `src/ui/styles.css`); тесты: компонентный `tests/component/sidebar-link.test.tsx` (ссылка последней в панели, адрес, новая вкладка) и e2e US1 #9 в `tests/e2e/ui-us1-layout.spec.ts`; шаг в `quickstart.md`
+
 ---
 
 ## Phase 5: User Story 4 — Связывание свойств перетаскиванием (Priority: P2)
@@ -232,7 +238,7 @@ description: "Task list for 002-editor-ui-redesign"
 - [X] T073 [P] Поставить пометки «уточнено в 002» со ссылкой на раздел «Связь с фичей 001» спеки 002 у FR-001, FR-003, FR-006, FR-007, FR-007a, FR-015, FR-016, FR-018, FR-031 и SC-006 в `specs/001-dag-workflow-editor/spec.md`; у `NodeInstance` в `specs/001-dag-workflow-editor/data-model.md` и в `specs/001-dag-workflow-editor/contracts/file-formats.md` — ссылку на обязательное поле `name` из `specs/002-editor-ui-redesign/contracts/file-formats.md` (research R14)
 - [X] T074 [P] Обновить раздел «Тесты» в `CLAUDE.md`: хелперы `addNode` (палитра по Пробелу и вкладки), `connect`, `linkByClick`, `setInput`, `openSidebar`; ноды искать по `.flow-node__name` или `data-id`
 - [X] T075 Удалить мёртвый код и стили (поля значений на карточке, `.port-*`, старые классы раскладки) в `src/ui/`; `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e` зелёные
-- [ ] T076 Пройти [quickstart.md](./quickstart.md) вручную (включая SC-002 — новый пользователь связывает два нода за ≤ 15 с); отклонения от плана записать в research.md, дерево файлов plan.md и контракты
+- [X] T076 Пройти [quickstart.md](./quickstart.md) вручную (включая SC-002 — новый пользователь связывает два нода за ≤ 15 с); отклонения от плана записать в research.md, дерево файлов plan.md и контракты
 
 ---
 
@@ -248,6 +254,7 @@ description: "Task list for 002-editor-ui-redesign"
 | US1 #6 | T019 |
 | US1 #7 | T005, T006, T019 |
 | US1 #8 | T018, T019 |
+| US1 #9 | T082 |
 | US2 #1 | T050, T053 |
 | US2 #2 | T051, T053 |
 | US2 #3 | T052 |
@@ -389,3 +396,12 @@ T047 src/ui/properties/LinkGhost.tsx
 - Отклонения от плана (новый файл, другая сигнатура) сразу записывать в research.md,
   дерево файлов plan.md и контракты
 - Файлы, сохранённые до фичи 002, не открываются — это ожидаемо (spec, Clarifications)
+
+---
+
+## Phase 9: Convergence
+
+- [X] T078 Привести дерево файлов в `specs/002-editor-ui-redesign/plan.md` и research R4 к реализации: `actions.ts` — без `disconnectMany` (пучок удаляется существующим `deleteElements`), `Canvas.tsx` — выделение через изменения `select` в `onNodesChange` и стор интерфейса вместо `onSelectionChange` per plan: дерево файлов, research R4 (partial)
+- [X] T079 Перенести текст «Нод «…» не найден.» из `renameNode` в `src/store/actions.ts` в `src/ui/messages.ts` per plan: Constraints «тексты только в messages.ts и errors.ts» (contradicts)
+- [X] T080 Ограничить ширину строк подписи линии (`.bundle-label__line` в `src/ui/canvas/BundleEdge.tsx`) и строк окна связей (`.edge-list__label` в `src/ui/canvas/EdgeListWindow.tsx`) с многоточием и полным текстом во всплывающей подсказке; компонентный тест в `tests/component/edge-list.test.tsx` per spec Edge case «Очень длинное имя… параметра» (partial)
+- [X] T081 Показывать полный заголовок плавающего окна во всплывающей подсказке (`title` у `.floating__title` в `src/ui/floating/FloatingWindow.tsx`), чтобы длинные «Свойства: <имя>» и «Связи: A → B» читались целиком; тест в `tests/component/floating-window.test.tsx` per spec Edge case «Очень длинное имя нода» (partial)

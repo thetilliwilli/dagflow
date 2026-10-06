@@ -65,7 +65,7 @@ export function BundleEdge({
             onClick={(e) => ui.openEdgeWindow(source, target, { x: e.clientX, y: e.clientY })}
           >
             {bundleLabel(data.bundle).map((line, i) => (
-              <div key={i} className="bundle-label__line">
+              <div key={i} className="bundle-label__line" title={line}>
                 {line}
               </div>
             ))}

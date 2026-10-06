@@ -35,6 +35,8 @@ test('US5 #1, #2, SC-004: одна прямая линия со стрелкой
   await expect(path).toHaveAttribute('d', /^M[^CQ]*L[^CQ]*$/);
   await expect(path).toHaveAttribute('marker-end', /url\(/);
   await expect(lines(page)).toHaveText(['value→a', 'value→b']);
+  // Длинные имена обрезаются многоточием — полный текст во всплывающей подсказке
+  await expect(lines(page).first()).toHaveAttribute('title', 'value→a');
 });
 
 test('US5 #3: при перемещении нода линия остаётся прямой, подпись едет с ней', async ({ page }) => {

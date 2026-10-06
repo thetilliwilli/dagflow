@@ -563,7 +563,7 @@ export function createActions({ store, deps }: AppStore) {
     renameNode(nodeId: string, name: string): Result {
       const { graph } = current();
       if (!graph?.nodes.some((n) => n.id === nodeId)) {
-        return { ok: false, code: 'unknown-port', message: `Нод «${nodeId}» не найден.` };
+        return { ok: false, code: 'unknown-port', message: messages.nodeNotFound(nodeId) };
       }
       const check = normalizeNodeName(name);
       if (!check.ok) return check;

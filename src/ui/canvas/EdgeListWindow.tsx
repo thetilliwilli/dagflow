@@ -42,7 +42,9 @@ export function EdgeListWindow() {
           const link = m.link(e.source.port, e.target.port);
           return (
             <li key={e.id}>
-              <span className="edge-list__label">{link}</span>
+              <span className="edge-list__label" title={link}>
+                {link}
+              </span>
               <button
                 type="button"
                 aria-label={m.remove(link)}

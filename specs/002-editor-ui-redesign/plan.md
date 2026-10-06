@@ -120,7 +120,7 @@ src/
 ├── model/
 │   └── ~ schemas.ts         # name: обязательное, trim, 1..100
 ├── store/
-│   ├── ~ actions.ts         # renameNode, disconnectMany (удаление пучка одним шагом); addNode ставит name
+│   ├── ~ actions.ts         # renameNode; addNode ставит name (пучок удаляется существующим deleteElements одним шагом)
 │   ├── ~ react.ts           # AppProvider оборачивает UiProvider: стор интерфейса есть везде, где есть основной (и в компонентных тестах)
 │   ├── + ui.ts              # стор интерфейса (Zustand vanilla) + UiProvider, useUi/useUiActions, bindUiToApp
 │   └── + ui-logic.ts        # чистые редьюсеры: окна, z-порядок, Escape, выделение, связывание
@@ -136,7 +136,7 @@ src/
 │   │   ├── + geometry.ts         # clampToViewport, defaultPosition, peekPosition
 │   │   └── + useGlobalKeys.ts    # Пробел (палитра), Escape (приоритет)
 │   ├── canvas/
-│   │   ├── ~ Canvas.tsx          # пучки, nodesConnectable=false, panActivationKeyCode=null, onSelectionChange, onEdgeClick
+│   │   ├── ~ Canvas.tsx          # пучки, nodesConnectable=false, panActivationKeyCode=null, minZoom=0.1, выделение через изменения select в onNodesChange ↔ стор интерфейса, onEdgeClick
 │   │   ├── ~ FlowNode.tsx        # тип, имя (переименование), значок, строка проблемы, скрытые ручки
 │   │   ├── + BundleEdge.tsx      # прямая линия со стрелкой и подписью
 │   │   ├── + bundles.ts          # bundleEdges, bundleLabel

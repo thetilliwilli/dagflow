@@ -122,7 +122,10 @@ export function FloatingWindow({
         onPointerUp={onHeaderPointerUp}
         onPointerCancel={onHeaderPointerUp}
       >
-        <span className="floating__title">{title}</span>
+        {/* Длинный заголовок обрезается многоточием — полный текст в подсказке */}
+        <span className="floating__title" title={typeof title === 'string' ? title : label}>
+          {title}
+        </span>
         <button
           type="button"
           className="floating__close"

@@ -130,6 +130,24 @@ test('US1 #8: Пробел в поле ввода вводит пробел, п�
   await expect(page.getByTestId('palette')).toHaveCount(0);
 });
 
+test('US1 #9: внизу левой панели — ссылка на репозиторий в новой вкладке', async ({ page }) => {
+  await page.goto('/');
+  const panel = await openSidebar(page);
+  const link = panel.getByRole('link', { name: 'github' });
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute('href', 'https://github.com/thetilliwilli/dagflow');
+  // Ссылка — ниже кнопок выгрузки и загрузки
+  const linkBox = (await link.boundingBox())!;
+  const exportBox = (await panel.getByRole('button', { name: 'Выгрузить в файл' }).boundingBox())!;
+  expect(linkBox.y).toBeGreaterThan(exportBox.y);
+  // Новая вкладка, редактор остаётся открытым (сеть в тесте не нужна — перехватываем запрос)
+  await page.context().route('https://github.com/**', (r) => r.fulfill({ body: 'ok' }));
+  const popup = page.waitForEvent('popup');
+  await link.click();
+  expect((await popup).url()).toBe('https://github.com/thetilliwilli/dagflow');
+  await expect(page.getByTestId('canvas')).toBeVisible();
+});
+
 test('FR-006a: сообщение о хранилище — вверху левой панели, на кнопке меню точка', async ({
   page,
 }) => {

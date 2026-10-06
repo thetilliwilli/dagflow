@@ -46,6 +46,12 @@ describe('окно связей', () => {
     ]);
   });
 
+  it('длинная связь: строка с многоточием, полный текст — во всплывающей подсказке', () => {
+    const h = setup();
+    const label = within(h.win()!).getAllByRole('listitem')[0]!.querySelector('.edge-list__label')!;
+    expect(label).toHaveAttribute('title', 'value→a');
+  });
+
   it('#5: крестик удаляет только свою связь', () => {
     const h = setup();
     fireEvent.click(within(h.win()!).getByRole('button', { name: 'Удалить связь «value→b»' }));

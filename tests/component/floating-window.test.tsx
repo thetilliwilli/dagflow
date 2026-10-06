@@ -41,6 +41,15 @@ describe('FloatingWindow', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  it('полный заголовок — во всплывающей подсказке (длинные имена обрезаются)', () => {
+    setViewport(1000, 800);
+    const { win } = renderWindow({ title: 'Свойства: очень длинное имя нода' });
+    expect(win.querySelector('.floating__title')).toHaveAttribute(
+      'title',
+      'Свойства: очень длинное имя нода',
+    );
+  });
+
   it('стоит в переданном положении', () => {
     setViewport(1000, 800);
     const { win } = renderWindow({ position: { x: 120, y: 80 } });

@@ -28,6 +28,7 @@ export const messages = {
   valueTypeMismatch: (type: PortType) => `Значение не подходит к типу порта «${typeLabels[type]}»`,
   noValue: '—',
   closeNotification: 'Закрыть уведомление',
+  nodeNotFound: (id: string) => `Нод «${id}» не найден.`,
   invalidName: 'Имя должно содержать от 1 до 100 символов',
   renderFailed: 'Не удалось отобразить вкладку. Ваши данные не потеряны — попробуйте перезагрузить вкладку.',
   reloadTab: 'Перезагрузить вкладку',
@@ -139,6 +140,9 @@ export const windowMessages = {
   menu: 'Меню',
   sidebar: 'Workflow и хранилище',
   sidebarAttention: 'Workflow и хранилище: есть сообщение о хранении данных',
+  /** Ссылка на репозиторий проекта внизу левой панели (FR-004). */
+  repoLink: 'github',
+  repoUrl: 'https://github.com/thetilliwilli/dagflow',
   paletteCategories: 'Категории',
   noComposites: 'Составных нодов пока нет: выделите ноды на холсте и сверните их в составной нод.',
 };

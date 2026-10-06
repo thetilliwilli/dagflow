@@ -334,6 +334,15 @@ body,
   gap: 12px;
   font-size: 13px;
 }
+.sidebar__repo {
+  align-self: flex-start;
+  padding-top: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.sidebar__repo:hover {
+  color: var(--t-number);
+}
 .main {
   position: relative;
   display: flex;
@@ -879,7 +888,17 @@ button.link {
   padding: 2px 0;
 }
 .edge-list__label {
+  overflow: hidden;
+  max-width: 40ch;
   font-family: ui-monospace, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Длинные имена портов в подписи обрезаются; полный текст — в подсказке */
+.bundle-label__line {
+  overflow: hidden;
+  max-width: 32ch;
+  text-overflow: ellipsis;
 }
 .edge-list li button {
   border: none;
