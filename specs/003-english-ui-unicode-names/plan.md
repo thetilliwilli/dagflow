@@ -106,10 +106,9 @@ src/
 
 tests/                             # ~ ожидаемые строки — на английском во всех unit, component, e2e
 ├── unit/engine/~ naming.test.ts, builtins.test.ts, validate.test.ts …
-├── unit/model/~ serialize.test.ts, import.test.ts (длинные имена принимаются)
-├── unit/ui/+ texts.test.ts        # нет кириллицы во встроенных нодах, категориях, messages, errors (SC-002)
+├── unit/model/~ serialize.test.ts, import.test.ts (тесты ограничений длины удаляются)
 ├── component/~ helpers.tsx (Menu, Palette … → английские имена)
-└── e2e/~ helpers.ts; + ui-us1-english.spec.ts (SC-001), + names.spec.ts (US2, SC-003/004), + legacy.spec.ts (US3, SC-005)
+└── e2e/~ helpers.ts; + ui-us1-english.spec.ts (SC-001), + names.spec.ts (US2, FR-008, SC-004), + legacy.spec.ts (US3, SC-005)
 ```
 
 Кроме кода: `CLAUDE.md` (правило о языке, подсказка «Text»), пометки «уточнено в 003»
@@ -120,11 +119,11 @@ tests/                             # ~ ожидаемые строки — на 
 
 ## Порядок реализации (ориентир для /speckit-tasks)
 
-1. **Фундамент**: тест «нет кириллицы» (`texts.test.ts`, пока красный), английская
-   `plural`, хелперы тестов на английских именах.
+1. **Фундамент**: отдельного нет; SC-002 проверяет `builtins.test.ts` по таблице
+   контракта, SC-001 — e2e-обход (тест по исходникам не нужен).
 2. **US2 (P2, но первым — маленький)**: снять ограничения длины (схемы, движок,
-   действия, поля ввода), многоточие в вкладках/списке/палитре; тесты длинных имён и
-   имён на разных языках.
+   действия, поля ввода), многоточие в вкладках/списке/палитре; старые тесты ограничений
+   длины удаляются; тесты отображения длинных имён и имён на разных языках.
 3. **US1 (P1)**: перевод `errors.ts` + движок + builtins → `model`/`storage` →
    `messages.ts` + UI → `index.html`; перевод ожидаемых строк в тестах слоями (unit →
    component → e2e); e2e обхода без кириллицы.
