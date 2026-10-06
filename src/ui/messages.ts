@@ -1,170 +1,171 @@
-// Тексты интерфейса (принцип IV: все сообщения — на русском и понятные)
-import type { NodeStatus, PortType } from '../engine';
+// Тексты интерфейса (принцип IV: все сообщения понятные; язык — английский, фича 003)
+import { plural, typeNames, type NodeStatus, type PortType } from '../engine';
 
 export const statusLabels: Record<NodeStatus, string> = {
-  ok: 'вычислен',
-  computing: 'вычисляется',
-  waiting: 'ожидает входов',
-  error: 'ошибка',
-  blocked: 'не вычислен: проблема выше по графу',
+  ok: 'computed',
+  computing: 'computing',
+  waiting: 'waiting for inputs',
+  error: 'error',
+  blocked: 'not computed: upstream problem',
 };
 
-export const typeLabels: Record<PortType, string> = {
-  number: 'число',
-  text: 'текст',
-  boolean: 'логическое',
-  array: 'массив',
-  object: 'объект',
-  any: 'любое',
-};
+/** Полные названия типов портов — те же, что в сообщениях движка. */
+export const typeLabels: Record<PortType, string> = typeNames;
 
 export const messages = {
   appTitle: 'DAG Flow',
-  palette: 'Палитра',
-  paletteHint: 'Щёлкните по ноду или перетащите его на холст',
-  showMore: 'показать',
-  showLess: 'свернуть',
-  invalidJson: (reason: string) => `Некорректный JSON: ${reason}`,
-  valueTypeMismatch: (type: PortType) => `Значение не подходит к типу порта «${typeLabels[type]}»`,
+  palette: 'Palette',
+  paletteHint: 'Click a node or drag it onto the canvas.',
+  showMore: 'show',
+  showLess: 'hide',
+  invalidJson: (reason: string) => `Invalid JSON: ${reason}`,
+  valueTypeMismatch: (type: PortType) => `The value does not match the port type “${typeLabels[type]}”.`,
   noValue: '—',
-  closeNotification: 'Закрыть уведомление',
-  nodeNotFound: (id: string) => `Нод «${id}» не найден.`,
+  closeNotification: 'Close notification',
+  nodeNotFound: (id: string) => `Node “${id}” not found.`,
   invalidName: 'The name cannot be empty.',
-  renderFailed: 'Не удалось отобразить вкладку. Ваши данные не потеряны — попробуйте перезагрузить вкладку.',
-  reloadTab: 'Перезагрузить вкладку',
+  renderFailed: 'Could not display the tab. Your data is safe — try reloading the tab.',
+  reloadTab: 'Reload tab',
+  noOpenTab: 'No open tab.',
+  compositeNotFound: 'Composite node not found.',
+  ioNodeNotFound: 'Input/Output node not found.',
+  portNotFound: (port: string) => `Port “${port}” not found.`,
+  defaultWorkflowName: 'New workflow',
+  copyName: (name: string) => `${name} (copy)`,
+  /** Подсказка элемента палитры: порты с полными названиями типов. */
+  portsSummary: (inputs: string, outputs: string) => `Inputs: ${inputs}. Outputs: ${outputs}.`,
 };
 
 export const storageMessages = {
-  folder: (name: string) => `Папка: ${name}`,
-  browser: 'Данные хранятся в браузере',
-  loading: 'Загрузка…',
-  chooseFolder: 'Выбрать рабочую папку',
-  changeFolder: 'Сменить папку',
-  firstRunHint: 'Выберите рабочую папку на диске — вся работа будет сохраняться в неё автоматически.',
-  browserReminder: 'Данные хранятся в браузере. Чтобы перенести работу на другой компьютер, выгрузите workflow в файл.',
-  copyToEmpty: (folder: string) => `Папка «${folder}» пуста. Перенести в неё текущие данные?`,
+  region: 'Storage',
+  folder: (name: string) => `Folder: ${name}`,
+  browser: 'Data is stored in the browser',
+  loading: 'Loading…',
+  chooseFolder: 'Choose working folder',
+  changeFolder: 'Change folder',
+  firstRunHint: 'Choose a working folder on your disk — all your work will be saved there automatically.',
+  browserReminder: 'Data is stored in the browser. To move your work to another computer, export workflows to a file.',
+  copyToEmpty: (folder: string) => `Folder “${folder}” is empty. Move your current data there?`,
   addFromBrowser: (folder: string, add: number, copies: number) =>
-    `В папке «${folder}» уже есть данные. ` +
-    (add > 0 ? `Workflow из прежнего хранилища, которых нет в папке: ${add}. ` : '') +
-    (copies > 0 ? `Отличающихся версий (будут добавлены копиями «(из браузера)»): ${copies}. ` : '') +
-    'Добавить их в папку?',
-  move: 'Перенести',
-  dontMove: 'Не переносить',
-  add: 'Добавить',
-  dontAdd: 'Не добавлять',
-  later: 'Позже',
-  accessTitle: 'Восстановите доступ к рабочей папке',
-  accessText: (folder: string) => `Браузер просит заново подтвердить доступ к папке «${folder}».`,
-  restoreAccess: 'Восстановить доступ',
-  workInBrowser: 'Работать в браузере',
-  workInBrowserNote: 'В браузере хранится отдельный набор данных; данные папки останутся нетронутыми',
-  folderLost: (folder: string) => `Рабочая папка «${folder}» недоступна. Работа продолжается и сохраняется в браузере.`,
-  saveFailed: (reason: string) => `Не удалось сохранить изменения: ${reason}`,
-  copyName: (name: string) => `${name} (из браузера)`,
-  none: 'Сохранение недоступно',
+    `Folder “${folder}” already has data. ` +
+    (add > 0 ? `Workflows from the previous storage that are not in the folder: ${add}. ` : '') +
+    (copies > 0 ? `Different versions (will be added as “(from browser)” copies): ${copies}. ` : '') +
+    'Add them to the folder?',
+  move: 'Move',
+  dontMove: 'Don’t move',
+  add: 'Add',
+  dontAdd: 'Don’t add',
+  later: 'Later',
+  accessTitle: 'Restore access to the working folder',
+  accessText: (folder: string) => `The browser asks you to confirm access to folder “${folder}” again.`,
+  restoreAccess: 'Restore access',
+  workInBrowser: 'Work in the browser',
+  workInBrowserNote: 'The browser keeps a separate set of data; the folder data stays untouched.',
+  folderLost: (folder: string) => `Working folder “${folder}” is unavailable. Work continues and is saved in the browser.`,
+  saveFailed: (reason: string) => `Could not save changes: ${reason}`,
+  copyName: (name: string) => `${name} (from browser)`,
+  none: 'Saving unavailable',
   unavailable: (reason: string) =>
-    `Сохранение недоступно: браузер не дал доступ к хранилищу (${reason}). Редактор работает, но изменения не сохранятся после закрытия — выгружайте workflow в файл.`,
+    `Saving unavailable: the browser denied access to storage (${reason}). The editor works, but changes will be lost when you close it — export workflows to a file.`,
   unavailableBanner:
-    'Сохранение недоступно: изменения не сохранятся после закрытия страницы. Чтобы не потерять работу, выгрузите workflow в файл.',
-  operationFailed: (reason: string) => `Не удалось выполнить операцию с хранилищем: ${reason}`,
-  accessDenied: (folder: string) => `Доступ не предоставлен: браузер не разрешил работать с папкой «${folder}». Попробуйте ещё раз или работайте в браузере.`,
-  gotIt: 'Понятно',
+    'Saving unavailable: changes will be lost when you close the page. Export workflows to a file to keep your work.',
+  operationFailed: (reason: string) => `Storage operation failed: ${reason}`,
+  accessDenied: (folder: string) => `Access not granted: the browser did not allow working with folder “${folder}”. Try again or work in the browser.`,
+  gotIt: 'Got it',
 };
 
 export const workflowMessages = {
-  list: 'Workflow',
-  create: 'Создать workflow',
-  open: (name: string) => `Открыть «${name}»`,
-  rename: (name: string) => `Переименовать «${name}»`,
-  duplicate: (name: string) => `Дублировать «${name}»`,
-  remove: (name: string) => `Удалить «${name}»`,
-  nameInput: 'Имя workflow',
-  confirmDeleteTitle: 'Удалить workflow?',
-  confirmDelete: (name: string) => `Workflow «${name}» будет удалён без возможности восстановления.`,
-  deleteButton: 'Удалить',
-  cancel: 'Отмена',
-  unavailable: (id: string) => `Недоступен: ${id}`,
-  closeTab: (name: string) => `Закрыть вкладку «${name}»`,
-  noTabs: 'Откройте workflow из списка или создайте новый',
-  exportButton: 'Выгрузить в файл',
-  importLabel: 'Загрузить из файла',
-  importErrorTitle: 'Не удалось загрузить файл',
-  close: 'Закрыть',
+  list: 'Workflows',
+  create: 'Create workflow',
+  open: (name: string) => `Open “${name}”`,
+  rename: (name: string) => `Rename “${name}”`,
+  duplicate: (name: string) => `Duplicate “${name}”`,
+  remove: (name: string) => `Delete “${name}”`,
+  nameInput: 'Workflow name',
+  confirmDeleteTitle: 'Delete workflow?',
+  confirmDelete: (name: string) => `Workflow “${name}” will be deleted permanently.`,
+  deleteButton: 'Delete',
+  cancel: 'Cancel',
+  unavailable: (id: string) => `Unavailable: ${id}`,
+  closeTab: (name: string) => `Close tab “${name}”`,
+  noTabs: 'Open a workflow from the list or create a new one',
+  exportButton: 'Export to file',
+  importLabel: 'Import from file',
+  importErrorTitle: 'Could not load the file',
+  close: 'Close',
 };
 
 export const compositeMessages = {
-  category: 'Мои составные ноды',
-  interface: 'Интерфейс составного нода',
-  collapse: 'Свернуть в составной нод',
-  collapseTitle: 'Свернуть в составной нод',
-  nameLabel: 'Имя составного нода',
-  collapseButton: 'Свернуть',
-  renameTitle: 'Переименовать составной нод',
-  renameButton: 'Переименовать',
-  open: (name: string) => `Открыть составной нод «${name}»`,
-  openButton: 'Открыть',
-  expandButton: 'Развернуть',
-  expand: (name: string) => `Развернуть «${name}»`,
-  rename: (name: string) => `Переименовать составной нод «${name}»`,
-  remove: (name: string) => `Удалить составной нод «${name}»`,
-  removeTitle: 'Удалить составной нод?',
+  collapse: 'Collapse into composite node',
+  collapseTitle: 'Collapse into composite node',
+  nameLabel: 'Composite node name',
+  collapseButton: 'Collapse',
+  renameTitle: 'Rename composite node',
+  renameButton: 'Rename',
+  open: (name: string) => `Open composite node “${name}”`,
+  openButton: 'Open',
+  expandButton: 'Expand',
+  expand: (name: string) => `Expand “${name}”`,
+  rename: (name: string) => `Rename composite node “${name}”`,
+  remove: (name: string) => `Delete composite node “${name}”`,
+  removeTitle: 'Delete composite node?',
   removeText: (name: string, usage: number) =>
     usage > 0
-      ? `Используется в ${usage} ${usage === 1 ? 'месте' : 'местах'}. Все экземпляры «${name}» будут удалены вместе со связями.`
-      : `«${name}» будет удалён из палитры.`,
-  tabTitle: (name: string) => `Составной нод: ${name}`,
-  nameTaken: (name: string) => `Имя «${name}» уже занято другим составным нодом`,
-  edgesRemoved: (n: number) => `Порты составного нода изменились. Удалено связей: ${n}`,
-  ports: 'Порты',
-  addPort: 'Добавить порт',
-  portName: 'Имя порта',
-  portType: 'Тип порта',
-  removePort: (name: string) => `Удалить порт «${name}»`,
-  defaultLabel: (port: string) => `По умолчанию: ${port}`,
-  defaultHint: 'Значение по умолчанию: используется, если вход экземпляра не подключён и не заполнен; внутри вкладки составного нода — для отладки',
-  defaultTypeMismatch: (port: string) => `Значение по умолчанию порта «${port}» не подходит к его типу`,
-  unknownNode: 'Неизвестный нод',
+      ? `Used in ${usage} ${plural(usage, 'place', 'places')}. All instances of “${name}” will be removed with their links.`
+      : `“${name}” will be removed from the palette.`,
+  tabTitle: (name: string) => `Composite node: ${name}`,
+  nameTaken: (name: string) => `Name “${name}” is already taken by another composite node`,
+  edgesRemoved: (n: number) => `Composite node ports changed. Links removed: ${n}`,
+  ports: 'Ports',
+  addPort: 'Add port',
+  portName: 'Port name',
+  portType: 'Port type',
+  removePort: (name: string) => `Remove port “${name}”`,
+  defaultLabel: (port: string) => `Default: ${port}`,
+  defaultHint: 'Default value: used when an instance input is not connected or filled; inside the composite node tab — for debugging',
+  defaultTypeMismatch: (port: string) => `The default value of port “${port}” does not match its type`,
+  unknownNode: 'Unknown node',
   unknownType: (type: string) =>
-    `Тип «${type}» не найден: составной нод удалён или его файл повреждён. Удалите нод или загрузите определение из файла.`,
+    `Type “${type}” not found: the composite node was deleted or its file is damaged. Delete the node or import the definition from a file.`,
 };
 
 export const historyMessages = {
-  undo: 'Отменить',
-  redo: 'Повторить',
-  minimap: 'Мини-карта графа',
+  undo: 'Undo',
+  redo: 'Redo',
+  minimap: 'Graph minimap',
 };
 
 /** Плавающие окна (фича 002, contracts/ui-contract.md). */
 export const windowMessages = {
-  close: 'Закрыть',
-  menu: 'Меню',
-  sidebar: 'Workflow и хранилище',
-  sidebarAttention: 'Workflow и хранилище: есть сообщение о хранении данных',
+  close: 'Close',
+  menu: 'Menu',
+  sidebar: 'Workflows & storage',
+  sidebarAttention: 'Workflows & storage: there is a message about data storage',
   /** Ссылка на репозиторий проекта внизу левой панели (FR-004). */
   repoLink: 'github',
   repoUrl: 'https://github.com/thetilliwilli/dagflow',
-  paletteCategories: 'Категории',
-  noComposites: 'Составных нодов пока нет: выделите ноды на холсте и сверните их в составной нод.',
+  paletteCategories: 'Categories',
+  noComposites: 'No composite nodes yet: select nodes on the canvas and collapse them into a composite node.',
 };
 
 /** Окно свойств выделенного нода (US3, contracts/ui-contract.md). */
 export const propertiesMessages = {
-  title: 'Свойства',
-  inputs: 'Входы',
-  outputs: 'Выходы',
-  noInputs: 'Нет входов',
-  noOutputs: 'Нет выходов',
-  link: (port: string) => `Связать «${port}»`,
+  title: 'Properties',
+  inputs: 'Inputs',
+  outputs: 'Outputs',
+  noInputs: 'No inputs',
+  noOutputs: 'No outputs',
+  link: (port: string) => `Link “${port}”`,
   /** Откуда приходит значение подключённого входа. */
   source: (node: string, port: string) => `← ${node}.${port}`,
   /** Режим привязки по маркеру (FR-018a). */
-  linkHint: 'Выберите нод и параметр для связи',
+  linkHint: 'Pick a node and a property to link',
   /** Временное окно нода при связывании (FR-018). */
-  peekTitle: (node: string) => `Свойства: ${node}`,
+  peekTitle: (node: string) => `Properties: ${node}`,
   /** Метка за курсором при перетаскивании параметра. */
   ghost: (port: string, type: string) => `${port} (${type})`,
   /** Поле переименования нода (FR-009). */
-  nodeNameLabel: 'Имя нода',
+  nodeNameLabel: 'Node name',
 };
 
 /** Краткие обозначения типов портов в окне свойств (FR-013b). */
@@ -179,8 +180,8 @@ export const typeAbbr: Record<PortType, string> = {
 
 /** Линии связей и окно связей (US5, FR-023 – FR-025). */
 export const edgeMessages = {
-  more: (n: number) => `ещё ${n}`,
-  windowTitle: (source: string, target: string) => `Связи: ${source} → ${target}`,
+  more: (n: number) => `+${n} more`,
+  windowTitle: (source: string, target: string) => `Links: ${source} → ${target}`,
   link: (out: string, input: string) => `${out}→${input}`,
-  remove: (link: string) => `Удалить связь «${link}»`,
+  remove: (link: string) => `Delete link “${link}”`,
 };

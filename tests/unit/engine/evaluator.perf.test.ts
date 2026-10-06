@@ -29,10 +29,10 @@ const pos = { x: 0, y: 0 };
 
 describe('производительность движка (SC-003)', () => {
   it('цепочка из 100 нодов', () => {
-    const nodes: NodeInstance[] = [{ id: 'src', type: 'builtin:number', name: 'Число', position: pos, values: { value: 1 } }];
+    const nodes: NodeInstance[] = [{ id: 'src', type: 'builtin:number', name: 'Number', position: pos, values: { value: 1 } }];
     const edges: Edge[] = [];
     for (let i = 1; i < 100; i++) {
-      nodes.push({ id: `n${i}`, type: 'builtin:add', name: `Сложить ${i}`, position: pos, values: { b: 1 } });
+      nodes.push({ id: `n${i}`, type: 'builtin:add', name: `Add ${i}`, position: pos, values: { b: 1 } });
       edges.push({ id: `e${i}`, source: { node: i === 1 ? 'src' : `n${i - 1}`, port: i === 1 ? 'value' : 'result' }, target: { node: `n${i}`, port: 'a' } });
     }
     const ms = measure(nodes, edges);
@@ -40,10 +40,10 @@ describe('производительность движка (SC-003)', () => {
   });
 
   it('«широкий» граф: один источник и 99 потребителей', () => {
-    const nodes: NodeInstance[] = [{ id: 'src', type: 'builtin:number', name: 'Число', position: pos, values: { value: 1 } }];
+    const nodes: NodeInstance[] = [{ id: 'src', type: 'builtin:number', name: 'Number', position: pos, values: { value: 1 } }];
     const edges: Edge[] = [];
     for (let i = 1; i < 100; i++) {
-      nodes.push({ id: `n${i}`, type: 'builtin:multiply', name: `Умножить ${i}`, position: pos, values: { b: i } });
+      nodes.push({ id: `n${i}`, type: 'builtin:multiply', name: `Multiply ${i}`, position: pos, values: { b: i } });
       edges.push({ id: `e${i}`, source: { node: 'src', port: 'value' }, target: { node: `n${i}`, port: 'a' } });
     }
     const ms = measure(nodes, edges);

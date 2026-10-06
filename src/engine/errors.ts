@@ -25,12 +25,12 @@ export type RejectCode =
 export type Rejection = { ok: false; code: RejectCode; message: string };
 
 export const typeNames: Record<PortType, string> = {
-  number: 'число',
-  text: 'текст',
-  boolean: 'логическое',
-  array: 'массив',
-  object: 'объект',
-  any: 'любое',
+  number: 'number',
+  text: 'text',
+  boolean: 'boolean',
+  array: 'array',
+  object: 'object',
+  any: 'any',
 };
 
 function reject(code: RejectCode, message: string): Rejection {
@@ -38,38 +38,76 @@ function reject(code: RejectCode, message: string): Rejection {
 }
 
 export const rejections = {
-  cycle: () => reject('cycle', 'Нельзя соединить: связь образует цикл, а граф должен оставаться без циклов.'),
-  sameNode: () => reject('same-node', 'Нельзя соединить нод с самим собой.'),
+  cycle: () => reject('cycle', 'Cannot link: this connection would create a cycle, and the graph must stay acyclic.'),
+  sameNode: () => reject('same-node', 'Cannot link a node to itself.'),
   typeMismatch: (from: PortType, to: PortType) =>
     reject(
       'type-mismatch',
-      `Несовместимые типы: ${typeNames[from]} → ${typeNames[to]}. Соедините порты одного типа или используйте порт типа «любое».`,
+      `Incompatible types: ${typeNames[from]} → ${typeNames[to]}. Link ports of the same type or use a port of type “any”.`,
     ),
-  unknownPort: (port: string) => reject('unknown-port', `Порт «${port}» не найден.`),
-  unknownType: (typeId: string) => reject('unknown-type', `Неизвестный тип нода: ${typeId}.`),
-  inputOccupied: (port: string) => reject('input-occupied', `К входу «${port}» подключено больше одной связи.`),
+  unknownPort: (port: string) => reject('unknown-port', `Port “${port}” not found.`),
+  unknownType: (typeId: string) => reject('unknown-type', `Unknown node type: ${typeId}.`),
+  inputOccupied: (port: string) => reject('input-occupied', `Input “${port}” has more than one link.`),
   compositeRecursion: (title: string) =>
-    reject('composite-recursion', `Нельзя поместить составной нод «${title}» внутрь самого себя (напрямую или через другие составные ноды).`),
+    reject('composite-recursion', `Cannot put composite node “${title}” inside itself (directly or through other composite nodes).`),
   ioOutsideComposite: () =>
-    reject('io-node-outside-composite', 'Ноды «Вход» и «Выход» можно добавлять только внутри составного нода.'),
+    reject('io-node-outside-composite', 'Input and Output nodes can only be added inside a composite node.'),
   sameSide: (side: 'in' | 'out') =>
     reject(
       'same-side',
-      `${side === 'in' ? 'Нельзя соединить вход со входом' : 'Нельзя соединить выход с выходом'}: связь идёт от выхода одного нода ко входу другого.`,
+      `${side === 'in' ? 'Cannot link an input to an input' : 'Cannot link an output to an output'}: a link goes from an output of one node to an input of another.`,
     ),
-  emptyName: () => reject('empty-name', 'Имя нода не может быть пустым. Введите хотя бы один символ.'),
+  emptyName: () => reject('empty-name', 'The node name cannot be empty. Enter at least one character.'),
   emptyPortName: () => reject('duplicate-port-name', 'The port name cannot be empty.'),
+  duplicatePort: (name: string, kind: 'input' | 'output') =>
+    reject(
+      'duplicate-port-name',
+      `Port “${name}” already exists on another ${kind === 'input' ? 'Input' : 'Output'} node. Port names must be unique.`,
+    ),
+  emptySelection: () => reject('unknown-port', 'Select at least one node.'),
+  collapseIo: () => reject('io-node-outside-composite', 'Input and Output nodes cannot be collapsed into a composite node.'),
 };
 
-export function internalErrorMessage(title: string): string {
-  return `Внутренняя ошибка нода "${title}"`;
+/** Сообщения о состоянии нода при вычислении (FR-032 001). */
+export const stateMessages = {
+  fillInput: (port: string) => `Fill in input “${port}”.`,
+  upstreamWaiting: (name: string) => `Node “${name}” upstream is waiting for inputs.`,
+  upstreamFailed: (name: string) => `Node “${name}” upstream failed.`,
+  noOutputValue: (port: string, name: string) => `No value on output “${port}” of node “${name}”.`,
+  unknownType: (typeId: string) => `Unknown node type: ${typeId}.`,
+  internalError: (title: string) => `Internal error in node “${title}”.`,
+};
+
+/** Склонение по числу (английский): plural(1, 'item', 'items'). */
+export function plural(n: number, one: string, other: string): string {
+  return n === 1 ? one : other;
 }
 
-/** Склонение по числу: plural(1, 'элемент', 'элемента', 'элементов'). */
-export function plural(n: number, one: string, few: string, many: string): string {
-  const mod10 = n % 10;
-  const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
-  return many;
-}
+/** Виды значений для сообщений «got: <вид>». */
+export const kindNames = {
+  null: 'null',
+  array: 'array',
+  number: 'number',
+  text: 'text',
+  boolean: 'boolean',
+  object: 'object',
+};
+
+/** Компактный вид массива и объекта на ноде: «[3 items]», «{2 fields}». */
+export const compactFormats = {
+  array: (n: number) => `[${n} ${plural(n, 'item', 'items')}]`,
+  object: (n: number) => `{${n} ${plural(n, 'field', 'fields')}}`,
+};
+
+/** Ошибки вычисления встроенных нодов. */
+export const nodeErrors = {
+  divisionByZero: 'Division by zero: set a non-zero divisor.',
+  tooLarge: 'The result is too large.',
+  expectedArray: (kind: string) => `Expected an array, got: ${kind}.`,
+  expectedObject: (kind: string) => `Expected an object, got: ${kind}.`,
+  indexNotInteger: (index: number) => `The index must be an integer, got: ${index}.`,
+  indexOutOfRange: (index: number, n: number) =>
+    `Index ${index} is out of range: the array has ${n} ${plural(n, 'item', 'items')}.`,
+  fieldNotFound: (key: string) => `Field “${key}” not found.`,
+  notANumber: (text: string) => `“${text}” is not a number.`,
+};

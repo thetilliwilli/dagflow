@@ -38,8 +38,8 @@ function setup(state: Partial<AppState> = {}) {
 describe('недоступные данные (T100)', () => {
   it('повреждённый составной нод показан в палитре с причиной', () => {
     setup({ unavailable: [{ id: 'broken', kind: 'composite', reason: 'Файл повреждён: некорректный JSON' }] });
-    const palette = within(openPalette('Мои составные ноды'));
-    expect(palette.getByText(/Недоступен: broken/)).toBeInTheDocument();
+    const palette = within(openPalette('My composite nodes'));
+    expect(palette.getByText(/Unavailable: broken/)).toBeInTheDocument();
     expect(palette.getByText(/Файл повреждён/)).toBeInTheDocument();
   });
 
@@ -53,7 +53,7 @@ describe('недоступные данные (T100)', () => {
     });
     act(() => frames.flushFrames());
     const node = document.querySelector<HTMLElement>('.react-flow__node[data-id="ghost"]')!;
-    expect(within(node).getByText('Неизвестный нод')).toBeInTheDocument();
+    expect(within(node).getByText('Unknown node')).toBeInTheDocument();
     expect(within(node).getByText(/composite:missing/)).toBeInTheDocument();
   });
 });
@@ -63,26 +63,26 @@ describe('напоминание о выгрузке (T101, US3 #2)', () => {
     const user = userEvent.setup();
     setup({ storageLocation: { kind: 'browser' }, folderSupported: true });
     // Фича 002 (FR-006a): сообщение — вверху левой панели, на кнопке меню точка
-    const menu = screen.getByRole('button', { name: 'Меню' });
+    const menu = screen.getByRole('button', { name: 'Menu' });
     expect(menu).toHaveAttribute('data-attention', 'true');
-    expect(screen.queryByText(/Выберите рабочую папку/)).toBeNull();
+    expect(screen.queryByText(/Choose a working folder/)).toBeNull();
     openSidebar();
-    expect(screen.getByText(/Выберите рабочую папку/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Позже' }));
-    expect(screen.getByText(/выгрузите workflow в файл/)).toBeInTheDocument();
+    expect(screen.getByText(/Choose a working folder/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Later' }));
+    expect(screen.getByText(/export workflows to a file/)).toBeInTheDocument();
     // Закрыть и открыть панель — этап подсказки не сбрасывается
     await user.click(menu);
     openSidebar();
-    expect(screen.getByText(/выгрузите workflow в файл/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Понятно' }));
-    expect(screen.queryByText(/выгрузите workflow в файл/)).toBeNull();
+    expect(screen.getByText(/export workflows to a file/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Got it' }));
+    expect(screen.queryByText(/export workflows to a file/)).toBeNull();
     expect(menu).not.toHaveAttribute('data-attention');
   });
 
   it('сохранение недоступно — баннер с объяснением', () => {
     setup({ storageLocation: { kind: 'none', reason: 'SecurityError' }, folderSupported: false });
     openSidebar();
-    expect(screen.getByTestId('storage-indicator')).toHaveTextContent('Сохранение недоступно');
-    expect(screen.getByRole('region', { name: 'Хранилище' })).toHaveTextContent(/выгрузите/);
+    expect(screen.getByTestId('storage-indicator')).toHaveTextContent('Saving unavailable');
+    expect(screen.getByRole('region', { name: 'Storage' })).toHaveTextContent(/Export workflows/);
   });
 });

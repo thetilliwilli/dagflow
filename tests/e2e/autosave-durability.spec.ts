@@ -4,7 +4,7 @@ import { addNode, openSidebar, setInput, inputField } from './helpers';
 import { expect, test } from './persistent';
 
 async function changeWaitReload(page: Page) {
-  const n = await addNode(page, 'Число', 60, 60);
+  const n = await addNode(page, 'Number', 60, 60);
   await setInput(page, n, 'value', '4242');
   await page.waitForTimeout(1000);
   await page.reload();
@@ -17,11 +17,11 @@ test('SC-008: режим рабочей папки', async ({ page }) => {
       (await navigator.storage.getDirectory()).getDirectoryHandle('picked-folder', { create: true });
   });
   await page.goto('/');
-  await (await openSidebar(page)).getByRole('button', { name: 'Выбрать рабочую папку' }).first().click();
-  await (await openSidebar(page)).getByRole('button', { name: 'Перенести' }).click();
-  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
+  await (await openSidebar(page)).getByRole('button', { name: 'Choose working folder' }).first().click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Move', exact: true }).click();
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Folder: picked-folder');
   await changeWaitReload(page);
-  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Папка: picked-folder');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Folder: picked-folder');
 });
 
 test('SC-008: режим хранилища браузера', async ({ page }) => {
@@ -29,6 +29,6 @@ test('SC-008: режим хранилища браузера', async ({ page }) 
     delete (window as unknown as Record<string, unknown>).showDirectoryPicker;
   });
   await page.goto('/');
-  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Данные хранятся в браузере');
+  await expect((await openSidebar(page)).getByTestId('storage-indicator')).toContainText('Data is stored in the browser');
   await changeWaitReload(page);
 });

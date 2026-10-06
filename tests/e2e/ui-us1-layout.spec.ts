@@ -2,7 +2,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { addNode, openPalette, openSidebar, paletteItem } from './helpers';
 
-const sidebar = (page: Page) => page.getByRole('dialog', { name: 'Workflow и хранилище' });
+const sidebar = (page: Page) => page.getByRole('dialog', { name: 'Workflows & storage' });
 const transform = (page: Page) =>
   page.locator('.react-flow__viewport').evaluate((el) => (el as HTMLElement).style.transform);
 
@@ -11,7 +11,7 @@ test('US1 #1, SC-001: вкладки и холст занимают всё ок�
 }) => {
   await page.goto('/');
   const vp = page.viewportSize()!;
-  const menu = (await page.getByRole('button', { name: 'Меню' }).boundingBox())!;
+  const menu = (await page.getByRole('button', { name: 'Menu' }).boundingBox())!;
   expect(menu.x).toBeLessThan(16);
   expect(menu.y).toBeLessThan(16);
   const bar = (await page.locator('.topbar').boundingBox())!;
@@ -28,7 +28,7 @@ test('US1 #2: ☰ показывает и скрывает левую панел
   page,
 }) => {
   await page.goto('/');
-  const menu = page.getByRole('button', { name: 'Меню' });
+  const menu = page.getByRole('button', { name: 'Menu' });
   await expect(menu).toHaveAttribute('aria-expanded', 'false');
   await menu.click();
   await expect(sidebar(page)).toBeVisible();
@@ -38,7 +38,7 @@ test('US1 #2: ☰ показывает и скрывает левую панел
   await menu.click();
   await expect(sidebar(page)).toHaveCount(0);
   await menu.click();
-  await sidebar(page).getByRole('button', { name: 'Закрыть' }).click();
+  await sidebar(page).getByRole('button', { name: 'Close' }).click();
   await expect(sidebar(page)).toHaveCount(0);
   await openSidebar(page);
   await page.keyboard.press('Escape');
@@ -48,7 +48,7 @@ test('US1 #2: ☰ показывает и скрывает левую панел
 test('US1 #6: при открытой панели холст двигается, нод вне окна выделяется', async ({ page }) => {
   await page.goto('/');
   const vp = page.viewportSize()!;
-  const node = await addNode(page, 'Число', vp.width / 2, 200);
+  const node = await addNode(page, 'Number', vp.width / 2, 200);
   await openSidebar(page);
   const before = await transform(page);
   await page.mouse.move(vp.width - 300, vp.height - 150);
@@ -67,21 +67,21 @@ test('US1 #3–#5: Пробел открывает палитру с вклад�
   await page.goto('/');
   await expect(page.getByTestId('palette')).toHaveCount(0);
   const palette = await openPalette(page);
-  await palette.getByRole('tab', { name: 'Арифметика' }).click();
+  await palette.getByRole('tab', { name: 'Math' }).click();
   await expect(
-    palette.locator('.palette__item-title').getByText('Сложить', { exact: true }),
+    palette.locator('.palette__item-title').getByText('Add', { exact: true }),
   ).toBeVisible();
   await expect(
-    palette.locator('.palette__item-title').getByText('Число', { exact: true }),
+    palette.locator('.palette__item-title').getByText('Number', { exact: true }),
   ).toHaveCount(0);
 
-  await palette.locator('.palette__item-title').getByText('Сложить', { exact: true }).click();
+  await palette.locator('.palette__item-title').getByText('Add', { exact: true }).click();
   await expect(page.locator('.react-flow__node')).toHaveCount(1);
   await expect(palette).toBeVisible();
 
   const pane = (await page.locator('.react-flow__pane').boundingBox())!;
   await (
-    await paletteItem(page, 'Число')
+    await paletteItem(page, 'Number')
   ).dragTo(page.locator('.react-flow__pane'), {
     targetPosition: { x: 150, y: 120 },
   });
@@ -120,10 +120,10 @@ test('US1 #8: Пробел в поле ввода вводит пробел, п�
   await page.goto('/');
   const panel = await openSidebar(page);
   await panel
-    .getByRole('button', { name: /^Переименовать/ })
+    .getByRole('button', { name: /^Rename/ })
     .first()
     .click();
-  const input = panel.getByLabel('Имя workflow');
+  const input = panel.getByLabel('Workflow name');
   await input.fill('Отчёт');
   await input.press('Space');
   await expect(input).toHaveValue('Отчёт ');
@@ -138,7 +138,7 @@ test('US1 #9: внизу левой панели — ссылка на репо�
   await expect(link).toHaveAttribute('href', 'https://github.com/thetilliwilli/dagflow');
   // Ссылка — ниже кнопок выгрузки и загрузки
   const linkBox = (await link.boundingBox())!;
-  const exportBox = (await panel.getByRole('button', { name: 'Выгрузить в файл' }).boundingBox())!;
+  const exportBox = (await panel.getByRole('button', { name: 'Export to file' }).boundingBox())!;
   expect(linkBox.y).toBeGreaterThan(exportBox.y);
   // Новая вкладка, редактор остаётся открытым (сеть в тесте не нужна — перехватываем запрос)
   await page.context().route('https://github.com/**', (r) => r.fulfill({ body: 'ok' }));
@@ -152,23 +152,23 @@ test('FR-006a: сообщение о хранилище — вверху лев�
   page,
 }) => {
   await page.goto('/');
-  const menu = page.getByRole('button', { name: 'Меню' });
+  const menu = page.getByRole('button', { name: 'Menu' });
   await expect(menu).toHaveAttribute('data-attention', 'true');
   await expect(menu.locator('.menu-button__dot')).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Хранилище' })).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Storage' })).toHaveCount(0);
   const panel = await openSidebar(page);
-  const notice = panel.getByRole('region', { name: 'Хранилище' });
+  const notice = panel.getByRole('region', { name: 'Storage' });
   // Chromium предлагает выбрать папку; без поддержки папок (Firefox) — сразу напоминание о выгрузке
-  await expect(notice).toContainText(/Выберите рабочую папку|выгрузите workflow в файл/);
+  await expect(notice).toContainText(/Choose a working folder|export workflows to a file/);
   // Сообщение — первым в панели, над индикатором хранилища
   const noticeBox = (await notice.boundingBox())!;
   const indicatorBox = (await panel.getByTestId('storage-indicator').boundingBox())!;
   expect(noticeBox.y).toBeLessThan(indicatorBox.y);
-  const later = notice.getByRole('button', { name: 'Позже' });
+  const later = notice.getByRole('button', { name: 'Later' });
   if (await later.isVisible()) await later.click();
   await panel
-    .getByRole('region', { name: 'Хранилище' })
-    .getByRole('button', { name: 'Понятно' })
+    .getByRole('region', { name: 'Storage' })
+    .getByRole('button', { name: 'Got it' })
     .click();
   await expect(menu).not.toHaveAttribute('data-attention');
 });

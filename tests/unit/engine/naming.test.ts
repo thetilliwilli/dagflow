@@ -21,7 +21,7 @@ describe('normalizeNodeName (E13)', () => {
       expect(normalizeNodeName(name)).toEqual({
         ok: false,
         code: 'empty-name',
-        message: 'Имя нода не может быть пустым. Введите хотя бы один символ.',
+        message: 'The node name cannot be empty. Enter at least one character.',
       });
     }
   });
@@ -100,7 +100,7 @@ describe('сообщения о нодах выше по графу называ
     expect(ev.state('A').status).toBe('waiting');
     expect(ev.state('S')).toMatchObject({
       status: 'blocked',
-      message: 'Нод «Итого» выше по графу ожидает входов',
+      message: 'Node “Итого” upstream is waiting for inputs.',
     });
   });
 
@@ -119,7 +119,7 @@ describe('сообщения о нодах выше по графу называ
     ev.flush();
     expect(ev.state('S')).toMatchObject({
       status: 'blocked',
-      message: 'Нод «Деление на ноль» выше по графу завершился ошибкой',
+      message: 'Node “Деление на ноль” upstream failed.',
     });
   });
 });

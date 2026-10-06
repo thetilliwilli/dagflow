@@ -44,14 +44,14 @@ describe('имя нода в файле (FR-009, FR-010, contracts/file-formats.
   it('ключи нода идут в порядке id, type, name, position, values, ports', () => {
     const wf = sampleWorkflow();
     // Нод собран в «неудобном» порядке ключей — в файле порядок всё равно по контракту
-    wf.graph.nodes[0] = { values: { value: 2 }, position: { x: 0, y: 0 }, name: 'Число', type: 'builtin:number', id: 'n1' };
+    wf.graph.nodes[0] = { values: { value: 2 }, position: { x: 0, y: 0 }, name: 'Number', type: 'builtin:number', id: 'n1' };
     const text = toJsonText(workflowToFile(wf));
     const keys = Object.keys(nodesOf(JSON.parse(text))[0]!);
     expect(keys).toEqual(['id', 'type', 'name', 'position', 'values']);
     const io = toJsonText(
       workflowToFile({
         ...wf,
-        graph: { nodes: [{ ports: [], values: {}, position: { x: 0, y: 0 }, name: 'Вход', type: 'builtin:input', id: 'i' }], edges: [] },
+        graph: { nodes: [{ ports: [], values: {}, position: { x: 0, y: 0 }, name: 'Input', type: 'builtin:input', id: 'i' }], edges: [] },
       }),
     );
     expect(Object.keys(nodesOf(JSON.parse(io))[0]!)).toEqual(['id', 'type', 'name', 'position', 'values', 'ports']);
@@ -80,8 +80,8 @@ describe('имя нода в файле (FR-009, FR-010, contracts/file-formats.
 
   it('имя обрезается по краям', () => {
     const file = JSON.parse(toJsonText(workflowToFile(sampleWorkflow())));
-    nodesOf(file)[0]!.name = '  Число  ';
-    expect(fileToWorkflow(file).graph.nodes[0]!.name).toBe('Число');
+    nodesOf(file)[0]!.name = '  Number  ';
+    expect(fileToWorkflow(file).graph.nodes[0]!.name).toBe('Number');
   });
 });
 

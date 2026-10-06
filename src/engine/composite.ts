@@ -40,8 +40,7 @@ export function validateIoPorts(graph: Graph): Rejection | null {
         const name = p.name.trim();
         if (name.length === 0) return rejections.emptyPortName();
         if (seen.has(name)) {
-          const what = kind === IO_INPUT ? 'Вход' : 'Выход';
-          return { ok: false, code: 'duplicate-port-name', message: `Порт «${name}» уже есть у другого нода «${what}». Имена портов должны быть уникальны.` };
+          return rejections.duplicatePort(name, kind === IO_INPUT ? 'input' : 'output');
         }
         seen.add(name);
       }
@@ -88,10 +87,8 @@ export function collapse(
 ): { graph: Graph; composite: CompositeDef; instanceId: string } | Rejection {
   const group = new Set(nodeIds);
   const inner = graph.nodes.filter((n) => group.has(n.id));
-  if (inner.length === 0) return { ok: false, code: 'unknown-port', message: 'Выделите хотя бы один нод.' };
-  if (inner.some(isIo)) {
-    return { ok: false, code: 'io-node-outside-composite', message: 'Ноды «Вход» и «Выход» нельзя сворачивать в составной нод.' };
-  }
+  if (inner.length === 0) return rejections.emptySelection();
+  if (inner.some(isIo)) return rejections.collapseIo();
   const xs = inner.map((n) => n.position.x);
   const ys = inner.map((n) => n.position.y);
   const minX = Math.min(...xs);

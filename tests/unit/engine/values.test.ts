@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { deepEqual, describeKind, isCompatible, matchesType } from '../../../src/engine/values';
+import { plural } from '../../../src/engine/errors';
+import { deepEqual, describeKind, formatCompact, isCompatible, matchesType } from '../../../src/engine/values';
 import type { PortType } from '../../../src/engine/types';
 
 describe('matchesType', () => {
@@ -64,12 +65,32 @@ describe('deepEqual', () => {
 });
 
 describe('describeKind', () => {
-  it('называет вид значения по-русски', () => {
-    expect(describeKind(1)).toBe('число');
-    expect(describeKind('a')).toBe('текст');
-    expect(describeKind(true)).toBe('логическое значение');
-    expect(describeKind([])).toBe('массив');
-    expect(describeKind({})).toBe('объект');
+  it('называет вид значения (contracts/ui-texts.md)', () => {
+    expect(describeKind(1)).toBe('number');
+    expect(describeKind('a')).toBe('text');
+    expect(describeKind(true)).toBe('boolean');
+    expect(describeKind([])).toBe('array');
+    expect(describeKind({})).toBe('object');
     expect(describeKind(null)).toBe('null');
+  });
+});
+
+describe('formatCompact (FR-005: две формы числа)', () => {
+  it('короткие значения — как JSON', () => {
+    expect(formatCompact([1, 2])).toBe('[1,2]');
+    expect(formatCompact({ a: 1 })).toBe('{"a":1}');
+  });
+
+  it('длинные массивы и объекты — «[N items]», «{N fields}»', () => {
+    expect(formatCompact([], 0)).toBe('[0 items]');
+    expect(formatCompact([1], 0)).toBe('[1 item]');
+    expect(formatCompact([1, 2, 3], 0)).toBe('[3 items]');
+    expect(formatCompact({ a: 1 }, 0)).toBe('{1 field}');
+    expect(formatCompact({ a: 1, b: 2 }, 0)).toBe('{2 fields}');
+  });
+
+  it('plural — две формы: одна для 1, другая для остальных', () => {
+    expect(plural(1, 'item', 'items')).toBe('item');
+    for (const n of [0, 2, 5, 11, 21, 101]) expect(plural(n, 'item', 'items')).toBe('items');
   });
 });

@@ -19,7 +19,7 @@ describe('canConnect', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.code).toBe('cycle');
-      expect(r.message).toMatch(/цикл/);
+      expect(r.message).toBe('Cannot link: this connection would create a cycle, and the graph must stay acyclic.');
     }
   });
 
@@ -35,8 +35,9 @@ describe('canConnect', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) {
       expect(r.code).toBe('type-mismatch');
-      expect(r.message).toContain('текст');
-      expect(r.message).toContain('число');
+      expect(r.message).toBe(
+        'Incompatible types: text → number. Link ports of the same type or use a port of type “any”.',
+      );
     }
   });
 
@@ -138,8 +139,8 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
     return { inputs: pick(r.inputs), outputs: pick(r.outputs) };
   };
   const SAME_OUT =
-    'Нельзя соединить выход с выходом: связь идёт от выхода одного нода ко входу другого.';
-  const SAME_IN = 'Нельзя соединить вход со входом: связь идёт от выхода одного нода ко входу другого.';
+    'Cannot link an output to an output: a link goes from an output of one node to an input of another.';
+  const SAME_IN = 'Cannot link an input to an input: a link goes from an output of one node to an input of another.';
 
   it('E10: запись для каждого порта цели в порядке портов, независимо от from', () => {
     const fromOut = linkCandidates(g(), { node: 'N', port: 'value', side: 'out' }, 'B', registry);
@@ -165,14 +166,14 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
     expect(codes(fromText).inputs).toEqual({ a: 'type-mismatch', b: 'type-mismatch' });
     if ('inputs' in fromText) {
       expect(fromText.inputs.b).toMatchObject({
-        message: 'Несовместимые типы: текст → число. Соедините порты одного типа или используйте порт типа «любое».',
+        message: 'Incompatible types: text → number. Link ports of the same type or use a port of type “any”.',
       });
     }
     const cycle = linkCandidates(g(), { node: 'B', port: 'result', side: 'out' }, 'A', registry);
     expect(codes(cycle).inputs).toEqual({ a: 'cycle', b: 'cycle' });
     if ('inputs' in cycle) {
       expect(cycle.inputs.b).toMatchObject({
-        message: 'Нельзя соединить: связь образует цикл, а граф должен оставаться без циклов.',
+        message: 'Cannot link: this connection would create a cycle, and the graph must stay acyclic.',
       });
     }
   });
@@ -193,7 +194,7 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
       outputs: { result: 'same-node' },
     });
     if ('inputs' in r) {
-      expect(r.inputs.a).toMatchObject({ message: 'Нельзя соединить нод с самим собой.' });
+      expect(r.inputs.a).toMatchObject({ message: 'Cannot link a node to itself.' });
     }
   });
 
@@ -201,7 +202,7 @@ describe('linkCandidates (фича 002, FR-019, FR-020, E10–E12)', () => {
     expect(linkCandidates(g(), { node: 'N', port: 'value', side: 'out' }, 'X', registry)).toEqual({
       ok: false,
       code: 'unknown-type',
-      message: 'Неизвестный тип нода: composite:missing.',
+      message: 'Unknown node type: composite:missing.',
     });
   });
 

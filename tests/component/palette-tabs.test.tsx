@@ -9,7 +9,7 @@ import { NODE_DRAG_TYPE } from '../../src/ui/canvas/Canvas';
 import { Workbench } from '../../src/ui/Workbench';
 import { testStore } from './helpers';
 
-const IO_CATEGORY = 'Интерфейс составного нода';
+const IO_CATEGORY = 'Composite interface';
 
 function setup() {
   const app = testStore();
@@ -24,8 +24,8 @@ function setup() {
 }
 
 const space = () => fireEvent.keyDown(document.body, { key: ' ', code: 'Space' });
-const palette = () => screen.getByRole('dialog', { name: 'Палитра' });
-const tabs = () => within(palette()).getByRole('tablist', { name: 'Категории' });
+const palette = () => screen.getByRole('dialog', { name: 'Palette' });
+const tabs = () => within(palette()).getByRole('tablist', { name: 'Categories' });
 const tabNames = () =>
   within(tabs())
     .getAllByRole('tab')
@@ -36,7 +36,7 @@ const titles = () =>
 describe('палитра (US1)', () => {
   it('по умолчанию закрыта; Пробел открывает её плавающим окном (US1 #3)', () => {
     setup();
-    expect(screen.queryByRole('dialog', { name: 'Палитра' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Palette' })).toBeNull();
     space();
     expect(palette()).toHaveAttribute('data-testid', 'palette');
   });
@@ -51,13 +51,13 @@ describe('палитра (US1)', () => {
   it('вкладка показывает только свои ноды с описанием и строкой портов (US1 #4)', () => {
     setup();
     space();
-    fireEvent.click(within(tabs()).getByRole('tab', { name: 'Арифметика' }));
-    expect(within(tabs()).getByRole('tab', { name: 'Арифметика' })).toHaveAttribute(
+    fireEvent.click(within(tabs()).getByRole('tab', { name: 'Math' }));
+    expect(within(tabs()).getByRole('tab', { name: 'Math' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
-    expect(titles()).toEqual(['Сложить', 'Вычесть', 'Умножить', 'Разделить']);
-    const add = within(palette()).getByText('Сложить').closest('.palette__item') as HTMLElement;
+    expect(titles()).toEqual(['Add', 'Subtract', 'Multiply', 'Divide']);
+    const add = within(palette()).getByText('Add').closest('.palette__item') as HTMLElement;
     expect(within(add).getByText('a, b → result')).toBeInTheDocument();
     expect(add.querySelector('.palette__item-desc')!.textContent).not.toBe('');
   });
@@ -65,10 +65,10 @@ describe('палитра (US1)', () => {
   it('щелчок по ноду добавляет его, палитра остаётся открытой (US1 #5, FR-006)', () => {
     const { graph } = setup();
     space();
-    fireEvent.click(within(tabs()).getByRole('tab', { name: 'Арифметика' }));
-    fireEvent.click(within(palette()).getByText('Сложить'));
+    fireEvent.click(within(tabs()).getByRole('tab', { name: 'Math' }));
+    fireEvent.click(within(palette()).getByText('Add'));
     expect(graph().nodes.map((n) => n.type)).toEqual(['builtin:add']);
-    expect(graph().nodes[0]!.name).toBe('Сложить');
+    expect(graph().nodes[0]!.name).toBe('Add');
     expect(palette()).toBeInTheDocument();
   });
 
@@ -77,7 +77,7 @@ describe('палитра (US1)', () => {
     space();
     const data: Record<string, string> = {};
     const dataTransfer = { setData: (k: string, v: string) => (data[k] = v), effectAllowed: '' };
-    fireEvent.dragStart(within(palette()).getByText('Число').closest('.palette__item')!, {
+    fireEvent.dragStart(within(palette()).getByText('Number').closest('.palette__item')!, {
       dataTransfer,
     });
     expect(data[NODE_DRAG_TYPE]).toBe('builtin:number');
@@ -86,11 +86,11 @@ describe('палитра (US1)', () => {
   it('выбранная вкладка запоминается после закрытия и открытия', () => {
     setup();
     space();
-    fireEvent.click(within(tabs()).getByRole('tab', { name: 'Текст' }));
+    fireEvent.click(within(tabs()).getByRole('tab', { name: 'Text' }));
     space();
-    expect(screen.queryByRole('dialog', { name: 'Палитра' })).toBeNull();
+    expect(screen.queryByRole('dialog', { name: 'Palette' })).toBeNull();
     space();
-    expect(within(tabs()).getByRole('tab', { name: 'Текст' })).toHaveAttribute(
+    expect(within(tabs()).getByRole('tab', { name: 'Text' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -136,7 +136,7 @@ describe('палитра (US1)', () => {
   it('кнопка «Закрыть» закрывает палитру', () => {
     setup();
     space();
-    fireEvent.click(within(palette()).getByRole('button', { name: 'Закрыть' }));
-    expect(screen.queryByRole('dialog', { name: 'Палитра' })).toBeNull();
+    fireEvent.click(within(palette()).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Palette' })).toBeNull();
   });
 });

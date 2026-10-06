@@ -37,7 +37,7 @@ import {
 } from './store';
 
 
-/** «Новый workflow», «Новый workflow 2», … — первое свободное имя. */
+/** «New workflow», «New workflow 2», … — первое свободное имя. */
 export function uniqueName(base: string, taken: Iterable<string>): string {
   const set = new Set(taken);
   if (!set.has(base)) return base;
@@ -249,7 +249,7 @@ export function createActions({ store, deps }: AppStore) {
       const copyId = deps.newId();
       const ts = deps.now();
       store.setState((draft: AppState) => {
-        const name = `${source.name} (копия)`;
+        const name = messages.copyName(source.name);
         draft.workflows[copyId] = {
           id: copyId,
           name,
@@ -319,7 +319,7 @@ export function createActions({ store, deps }: AppStore) {
 
     addNode(type: string, position: Position): Result<{ id: string }> {
       const { state, graph, insideComposite } = current();
-      if (!graph) return { ok: false, code: 'unknown-type', message: 'Нет открытой вкладки' };
+      if (!graph) return { ok: false, code: 'unknown-type', message: messages.noOpenTab };
       const check = canAddNode(
         graph,
         type,
@@ -360,7 +360,7 @@ export function createActions({ store, deps }: AppStore) {
       const bad = checkCompositeName(name);
       if (bad) return bad;
       const { state, graph } = current();
-      if (!graph) return { ok: false, code: 'unknown-port', message: 'Нет открытой вкладки' };
+      if (!graph) return { ok: false, code: 'unknown-port', message: messages.noOpenTab };
       const r = collapse(graph, nodeIds, name.trim(), registryOf(state), deps.newId);
       if ('code' in r) return r;
       const ts = deps.now();
@@ -393,7 +393,7 @@ export function createActions({ store, deps }: AppStore) {
       const defId = node ? compositeIdOf(node.type) : null;
       const def = defId ? state.composites[defId] : undefined;
       if (!graph || !def)
-        return { ok: false, code: 'unknown-type', message: 'Составной нод не найден' };
+        return { ok: false, code: 'unknown-type', message: messages.compositeNotFound };
       const next = expand(graph, nodeId, def, deps.newId);
       editGraph((g) => {
         g.nodes = next.nodes;
@@ -441,7 +441,7 @@ export function createActions({ store, deps }: AppStore) {
       const { graph } = current();
       const node = graph?.nodes.find((n) => n.id === nodeId);
       if (!graph || !node || (node.type !== IO_INPUT && node.type !== IO_OUTPUT)) {
-        return { ok: false, code: 'unknown-port', message: 'Нод «Вход»/«Выход» не найден' };
+        return { ok: false, code: 'unknown-port', message: messages.ioNodeNotFound };
       }
       const previous = new Map((node.ports ?? []).map((p) => [p.name, p]));
       const cleaned: PortDef[] = [];
@@ -525,7 +525,7 @@ export function createActions({ store, deps }: AppStore) {
 
     connect(source: PortRef, target: PortRef): Result {
       const { state, graph } = current();
-      if (!graph) return { ok: false, code: 'unknown-port', message: 'Нет открытой вкладки' };
+      if (!graph) return { ok: false, code: 'unknown-port', message: messages.noOpenTab };
       const check = canConnect(graph, { source, target }, registryOf(state));
       if (!check.ok) return check;
       const id = deps.newId();
@@ -546,7 +546,7 @@ export function createActions({ store, deps }: AppStore) {
       const node = graph?.nodes.find((n) => n.id === nodeId);
       const def = node && nodePorts(node, registryOf(state))?.inputs.find((p) => p.name === port);
       if (!node || !def)
-        return { ok: false, code: 'unknown-port', message: `Порт «${port}» не найден.` };
+        return { ok: false, code: 'unknown-port', message: messages.portNotFound(port) };
       if (value !== undefined && !matchesType(value, def.type)) {
         return { ok: false, code: 'type-mismatch', message: messages.valueTypeMismatch(def.type) };
       }

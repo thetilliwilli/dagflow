@@ -25,7 +25,7 @@ export function FolderBanner() {
 
   if (notice === 'copy-to-empty' && prompt?.kind === 'copy-to-empty') {
     return (
-      <div className="banner" role="region" aria-label="Хранилище">
+      <div className="banner" role="region" aria-label={m.region}>
         <span>{m.copyToEmpty(prompt.folderName)}</span>
         <button type="button" className="primary" onClick={() => void persistence.confirmPrompt()}>
           {m.move}
@@ -38,7 +38,7 @@ export function FolderBanner() {
   }
   if (notice === 'add-from-browser' && prompt?.kind === 'add-from-browser') {
     return (
-      <div className="banner" role="region" aria-label="Хранилище">
+      <div className="banner" role="region" aria-label={m.region}>
         <span>{m.addFromBrowser(prompt.folderName, prompt.add.length, prompt.copies.length)}</span>
         <button type="button" className="primary" onClick={() => void persistence.confirmPrompt()}>
           {m.add}
@@ -54,7 +54,7 @@ export function FolderBanner() {
   }
   if (notice === 'hint') {
     return (
-      <div className="banner banner--muted" role="region" aria-label="Хранилище">
+      <div className="banner banner--muted" role="region" aria-label={m.region}>
         <span>{m.firstRunHint}</span>
         <button type="button" className="primary" onClick={() => void persistence.chooseFolder()}>
           {m.chooseFolder}
@@ -66,7 +66,7 @@ export function FolderBanner() {
     );
   }
   return (
-    <div className="banner banner--muted" role="region" aria-label="Хранилище">
+    <div className="banner banner--muted" role="region" aria-label={m.region}>
       <span>{m.browserReminder}</span>
       <button type="button" onClick={() => ui.setStorageHint('hidden')}>
         {m.gotIt}
@@ -79,7 +79,7 @@ function UnavailableBanner() {
   const persistence = usePersistence();
   const supported = useAppState((s) => s.folderSupported);
   return (
-    <div className="banner banner--warning" role="region" aria-label="Хранилище">
+    <div className="banner banner--warning" role="region" aria-label={m.region}>
       <span>{m.unavailableBanner}</span>
       {supported && persistence && (
         <button type="button" className="primary" onClick={() => void persistence.chooseFolder()}>

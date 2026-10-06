@@ -29,12 +29,12 @@ function setup() {
 describe('T103: входы и выходы на карточке палитры (FR-001)', () => {
   it('у каждого нода видна строка портов', () => {
     setup();
-    const add = within(openPalette('Арифметика'))
-      .getByText('Сложить')
+    const add = within(openPalette('Math'))
+      .getByText('Add')
       .closest('.palette__item') as HTMLElement;
     expect(within(add).getByText('a, b → result')).toBeVisible();
-    const show = within(openPalette('Отображение'))
-      .getByText('Показать')
+    const show = within(openPalette('Display'))
+      .getByText('Show')
       .closest('.palette__item') as HTMLElement;
     expect(within(show).getByText('value → —')).toBeInTheDocument();
   });
@@ -84,7 +84,7 @@ describe('T104: значения по умолчанию у портов «Вх�
       (n) => n.type === 'builtin:input',
     )!;
     select([io.id]);
-    await user.type(screen.getByLabelText('По умолчанию: a'), '5');
+    await user.type(screen.getByLabelText('Default: a'), '5');
     flush();
     const def = state().composites[compositeId]!;
     const input = def.graph.nodes.find((n) => n.type === 'builtin:input')!;

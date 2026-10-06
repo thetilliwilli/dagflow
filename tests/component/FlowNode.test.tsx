@@ -43,8 +43,8 @@ describe('карточка нода (US2)', () => {
       h.actions.renameNode(id, 'Итого');
     });
     const el = h.card(id);
-    expect(el.querySelector('.flow-node__type')).toHaveTextContent('Сложить');
-    expect(el.querySelector('.flow-node__type')).toHaveAttribute('title', 'Сложить');
+    expect(el.querySelector('.flow-node__type')).toHaveTextContent('Add');
+    expect(el.querySelector('.flow-node__type')).toHaveAttribute('title', 'Add');
     expect(el.querySelector('.flow-node__name')).toHaveTextContent('Итого');
     expect(el.querySelector('.flow-node__name')).toHaveAttribute('title', 'Итого');
   });
@@ -58,7 +58,7 @@ describe('карточка нода (US2)', () => {
     h.flush();
     const el = h.card(id);
     expect(within(el).queryByRole('textbox')).toBeNull();
-    expect(within(el).queryByText('a: число')).toBeNull();
+    expect(within(el).queryByText('a: number')).toBeNull();
     expect(within(el).queryByText('5')).toBeNull();
     expect(el.querySelectorAll('.port-row')).toHaveLength(0);
     // Две служебные невидимые «ручки» — только чтобы React Flow мог нарисовать линию (research R3)
@@ -82,12 +82,12 @@ describe('карточка нода (US2)', () => {
     });
     h.flush();
     const problem = (id: string) => h.card(id).querySelector('.flow-node__problem');
-    expect(within(h.card(ok)).getByTestId('node-status')).toHaveTextContent('вычислен');
+    expect(within(h.card(ok)).getByTestId('node-status')).toHaveTextContent('computed');
     expect(problem(ok)).toBeNull();
-    expect(problem(waiting)).toHaveTextContent('Заполните вход «b»');
-    expect(problem(waiting)).toHaveAttribute('title', 'Заполните вход «b»');
-    expect(problem(error)).toHaveTextContent('Деление на ноль: задайте ненулевой делитель');
-    expect(problem(blocked)).toHaveTextContent('выше по графу');
+    expect(problem(waiting)).toHaveTextContent('Fill in input “b”.');
+    expect(problem(waiting)).toHaveAttribute('title', 'Fill in input “b”.');
+    expect(problem(error)).toHaveTextContent('Division by zero: set a non-zero divisor.');
+    expect(problem(blocked)).toHaveTextContent('upstream');
     for (const id of [waiting, error, blocked]) {
       expect(within(h.card(id)).getByTestId('node-status')).toBeInTheDocument();
     }
@@ -125,7 +125,7 @@ describe('карточка нода (US2)', () => {
     });
     h.flush();
     const el = h.card('ghost');
-    expect(el.querySelector('.flow-node__type')).toHaveTextContent('Неизвестный нод');
+    expect(el.querySelector('.flow-node__type')).toHaveTextContent('Unknown node');
     expect(el.querySelector('.flow-node__name')).toHaveTextContent('Призрак');
     expect(el.querySelector('.flow-node__problem')).toHaveTextContent('composite:missing');
   });

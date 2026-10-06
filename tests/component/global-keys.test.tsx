@@ -17,8 +17,8 @@ function setup() {
 
 const key = (target: Element, k: ' ' | 'Escape') =>
   fireEvent.keyDown(target, { key: k, code: k === ' ' ? 'Space' : 'Escape' });
-const paletteOpen = () => screen.queryByRole('dialog', { name: 'Палитра' }) !== null;
-const sidebarOpen = () => screen.queryByRole('dialog', { name: 'Workflow и хранилище' }) !== null;
+const paletteOpen = () => screen.queryByRole('dialog', { name: 'Palette' }) !== null;
+const sidebarOpen = () => screen.queryByRole('dialog', { name: 'Workflows & storage' }) !== null;
 
 describe('Пробел — палитра (FR-005)', () => {
   it('на body переключает палитру', () => {
@@ -58,7 +58,7 @@ describe('Пробел — палитра (FR-005)', () => {
 describe('Escape (FR-003)', () => {
   it('закрывает верхнее окно — последнее открытое или поднятое щелчком', () => {
     setup();
-    fireEvent.click(screen.getByRole('button', { name: 'Меню' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Menu' }));
     key(document.body, ' ');
     expect(sidebarOpen() && paletteOpen()).toBe(true);
     key(document.body, 'Escape');
@@ -66,7 +66,7 @@ describe('Escape (FR-003)', () => {
     expect(sidebarOpen()).toBe(true);
     key(document.body, ' ');
     // Щелчок по левой панели поднимает её наверх — Escape закрывает её, а не палитру
-    fireEvent.pointerDown(screen.getByRole('dialog', { name: 'Workflow и хранилище' }));
+    fireEvent.pointerDown(screen.getByRole('dialog', { name: 'Workflows & storage' }));
     key(document.body, 'Escape');
     expect(sidebarOpen()).toBe(false);
     expect(paletteOpen()).toBe(true);
@@ -101,9 +101,9 @@ describe('Пробел во время связывания (граничный 
     });
     act(() => ui.setSelection([id]));
     const out = screen
-      .getByRole('dialog', { name: 'Свойства' })
+      .getByRole('dialog', { name: 'Properties' })
       .querySelector<HTMLElement>('li.prop-row[data-side="out"][data-port="value"]')!;
-    const marker = within(out).getByRole('button', { name: 'Связать «value»' });
+    const marker = within(out).getByRole('button', { name: 'Link “value”' });
     fireEvent.pointerDown(marker, { button: 0, clientX: 0, clientY: 0, pointerId: 1 });
     fireEvent.pointerUp(document, { button: 0, clientX: 0, clientY: 0, pointerId: 1 });
     expect(marker).toHaveAttribute('aria-pressed', 'true');

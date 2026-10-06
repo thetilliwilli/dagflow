@@ -13,7 +13,7 @@ export function createOpfsWorkerWriter(): FallbackWrite {
         const w = waiting.get(e.data.id);
         waiting.delete(e.data.id);
         if (e.data.ok) w?.resolve();
-        else w?.reject(new Error(e.data.error ?? 'Не удалось записать файл'));
+        else w?.reject(new Error(e.data.error ?? 'Could not write the file.'));
       };
     }
     return worker;
@@ -22,7 +22,7 @@ export function createOpfsWorkerWriter(): FallbackWrite {
   return async (dir, name, text) => {
     const root = await navigator.storage.getDirectory();
     const path = await root.resolve(dir);
-    if (!path) throw new Error('Папка вне хранилища браузера');
+    if (!path) throw new Error('The folder is outside browser storage.');
     const id = ++seq;
     await new Promise<void>((resolve, reject) => {
       waiting.set(id, { resolve, reject });

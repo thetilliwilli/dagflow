@@ -72,7 +72,7 @@ describe('история отмены (FR-009)', () => {
     expect(actions.renameNode(n, 'Итого').ok).toBe(true);
     expect(graph().nodes[0]!.name).toBe('Итого');
     actions.undo();
-    expect(graph().nodes[0]!.name).toBe('Сложить');
+    expect(graph().nodes[0]!.name).toBe('Add');
     actions.redo();
     expect(graph().nodes[0]!.name).toBe('Итого');
   });
@@ -88,7 +88,7 @@ describe('история отмены (FR-009)', () => {
     expect(actions.renameNode(n, '  ').ok).toBe(false);
     expect(state().history[state().activeTabId!]!.past.length).toBe(before);
     actions.undo();
-    expect(graph().nodes[0]!.name).toBe('Сложить');
+    expect(graph().nodes[0]!.name).toBe('Add');
   });
 
   it('перемещение нода (много событий подряд) — один шаг', () => {

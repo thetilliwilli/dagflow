@@ -127,6 +127,7 @@ interface. Описание составного нода по умолчани�
 | нет записи | The browser does not support writing files. |
 | хранилище не пусто | The target storage is not empty. |
 | не удалось записать | Could not write the file. |
+| папка вне хранилища браузера | The folder is outside browser storage. |
 
 ## Интерфейс (messages.ts)
 
@@ -137,6 +138,7 @@ interface. Описание составного нода по умолчани�
 | valueTypeMismatch | The value does not match the port type “<type>”. |
 | closeNotification | Close notification |
 | nodeNotFound | Node “<id>” not found. |
+| compositeNotFound / ioNodeNotFound / portNotFound | Composite node not found. / Input/Output node not found. / Port “<port>” not found. |
 | invalidName | The name cannot be empty. |
 | noOpenTab | No open tab. |
 | renderFailed / reloadTab | Could not display the tab. Your data is safe — try reloading the tab. / Reload tab |

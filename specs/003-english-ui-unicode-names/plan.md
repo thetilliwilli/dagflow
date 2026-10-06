@@ -109,6 +109,7 @@ tests/                             # ~ ожидаемые строки — на 
 ├── unit/model/~ serialize.test.ts, import.test.ts (тесты ограничений длины удаляются)
 ├── component/~ helpers.tsx (Menu, Palette … → английские имена)
 └── e2e/~ helpers.ts; + ui-us1-english.spec.ts (SC-001), + names.spec.ts (US2, FR-008, SC-004), + legacy.spec.ts (US3, SC-005)
+    └── + fixtures/legacy-002-export.json   # выгрузка формата 002 с русскими именами (US3; отклонение от плана, T034)
 ```
 
 Кроме кода: `CLAUDE.md` (правило о языке, подсказка «Text»), пометки «уточнено в 003»

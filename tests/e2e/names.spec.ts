@@ -15,15 +15,15 @@ const card = (node: Locator) => node.locator('.flow-node');
 
 async function rename(page: Page, node: Locator, name: string) {
   await node.locator('.flow-node__name').dblclick();
-  const input = node.getByRole('textbox', { name: 'Имя нода' });
+  const input = node.getByRole('textbox', { name: 'Node name' });
   await input.fill(name);
   await input.press('Enter');
 }
 
 async function renameWorkflow(page: Page, from: string, to: string) {
   const sidebar = await openSidebar(page);
-  await sidebar.getByRole('button', { name: `Переименовать «${from}»` }).click();
-  const input = sidebar.getByRole('textbox', { name: 'Имя workflow' });
+  await sidebar.getByRole('button', { name: `Rename “${from}”` }).click();
+  const input = sidebar.getByRole('textbox', { name: 'Workflow name' });
   await input.fill(to);
   await input.press('Enter');
 }
@@ -35,8 +35,8 @@ test('US2 #1, #5: имя нода из 300 символов — принято, 
   page,
 }) => {
   await page.goto('/');
-  const short = await addNode(page, 'Число', 60, 60);
-  const long = await addNode(page, 'Число', 60, 300);
+  const short = await addNode(page, 'Number', 60, 60);
+  const long = await addNode(page, 'Number', 60, 300);
   await rename(page, long, 'x'.repeat(40)); // предел ширины карточки (FR-007a 002)
   const limit = (await card(long).boundingBox())!.width;
   const name = phrase(300);
@@ -49,7 +49,7 @@ test('US2 #1, #5: имя нода из 300 символов — принято, 
   );
   await selectNode(long);
   await expect(
-    page.getByRole('dialog', { name: 'Свойства' }).getByTestId('prop-grid-name'),
+    page.getByRole('dialog', { name: 'Properties' }).getByTestId('prop-grid-name'),
   ).toHaveText(name);
 });
 
@@ -58,9 +58,9 @@ test('US2 #1, #2: workflow — 200 символов, составной нод �
 }) => {
   await page.goto('/');
   const wfName = phrase(200, 'workflow с длинным именем ');
-  await renameWorkflow(page, 'Новый workflow', wfName);
+  await renameWorkflow(page, 'New workflow', wfName);
   const sidebar = await openSidebar(page);
-  await expect(sidebar.getByRole('button', { name: `Открыть «${wfName}»` })).toHaveAttribute(
+  await expect(sidebar.getByRole('button', { name: `Open “${wfName}”` })).toHaveAttribute(
     'title',
     wfName,
   );
@@ -69,32 +69,32 @@ test('US2 #1, #2: workflow — 200 символов, составной нод �
 
   const compName = phrase(150, 'составной нод ');
   // Внешняя связь — при сворачивании появится нод «Вход» с портом
-  const num = await addNode(page, 'Число', 20, 120);
-  const add = await addNode(page, 'Сложить', 300, 120);
+  const num = await addNode(page, 'Number', 20, 120);
+  const add = await addNode(page, 'Add', 300, 120);
   await connect(page, num, 'value', add, 'a');
   await selectNode(add);
-  await page.getByRole('button', { name: 'Свернуть в составной нод' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Свернуть в составной нод' });
-  await dialog.getByLabel('Имя составного нода').fill(compName);
-  await dialog.getByRole('button', { name: 'Свернуть' }).click();
+  await page.getByRole('button', { name: 'Collapse into composite node' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Collapse into composite node' });
+  await dialog.getByLabel('Composite node name').fill(compName);
+  await dialog.getByRole('button', { name: 'Collapse' }).click();
   await expect(await paletteItem(page, compName)).toHaveAttribute('title', compName);
 
   await page
-    .getByRole('button', { name: `Открыть составной нод «${compName}»` })
+    .getByRole('button', { name: `Open composite node “${compName}”` })
     .first()
     .click();
   await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveAttribute(
     'title',
-    `Составной нод: ${compName}`,
+    `Composite node: ${compName}`,
   );
   const input = page
     .locator('.react-flow__node')
-    .filter({ has: page.locator('.flow-node__type', { hasText: 'Вход' }) })
+    .filter({ has: page.locator('.flow-node__type', { hasText: 'Input' }) })
     .first();
   await selectNode(input);
   const portName = page
-    .getByRole('dialog', { name: 'Свойства' })
-    .getByRole('textbox', { name: 'Имя порта' })
+    .getByRole('dialog', { name: 'Properties' })
+    .getByRole('textbox', { name: 'Port name' })
     .first();
   const longPort = phrase(80, 'порт ');
   await portName.fill(longPort);
@@ -106,9 +106,9 @@ test('US2 #1, #2: workflow — 200 символов, составной нод �
 test('US2 #4: пустое имя workflow и одни пробелы отклоняются', async ({ page }) => {
   await page.goto('/');
   for (const empty of ['', '   ']) {
-    await renameWorkflow(page, 'Новый workflow', empty);
+    await renameWorkflow(page, 'New workflow', empty);
     await expect(page.getByRole('alert').last()).toContainText('The name cannot be empty.');
-    await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('Новый workflow');
+    await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText('New workflow');
   }
 });
 
@@ -118,14 +118,14 @@ test('US2 #3, SC-004: имена на разных языках пережива
   await page.goto('/');
   const names = ['Итого', '合計', 'مجموع', 'Résumé 📈'];
   for (const [i, name] of names.entries()) {
-    const node = await addNode(page, 'Число', 60, 40 + i * 150);
+    const node = await addNode(page, 'Number', 60, 40 + i * 150);
     await rename(page, node, name);
   }
   const wfName = '計算 · Расчёт · حساب 🧮';
-  await renameWorkflow(page, 'Новый workflow', wfName);
+  await renameWorkflow(page, 'New workflow', wfName);
 
   const download = page.waitForEvent('download');
-  await (await openSidebar(page)).getByRole('button', { name: 'Выгрузить в файл' }).click();
+  await (await openSidebar(page)).getByRole('button', { name: 'Export to file' }).click();
   const path = info.outputPath('names.dagflow.json');
   await (await download).saveAs(path);
   const file = JSON.parse(readFileSync(path, 'utf8'));
@@ -133,12 +133,12 @@ test('US2 #3, SC-004: имена на разных языках пережива
   expect(file.workflow.graph.nodes.map((n: { name: string }) => n.name)).toEqual(names);
 
   const sidebar = await openSidebar(page);
-  await sidebar.getByRole('button', { name: `Удалить «${wfName}»` }).click();
+  await sidebar.getByRole('button', { name: `Delete “${wfName}”` }).click();
   await page
-    .getByRole('dialog', { name: 'Удалить workflow?' })
-    .getByRole('button', { name: 'Удалить' })
+    .getByRole('dialog', { name: 'Delete workflow?' })
+    .getByRole('button', { name: 'Delete' })
     .click();
-  await (await openSidebar(page)).getByLabel('Загрузить из файла').setInputFiles(path);
+  await (await openSidebar(page)).getByLabel('Import from file').setInputFiles(path);
   await expect(tabBar(page).getByRole('tab', { selected: true })).toHaveText(wfName);
 
   await page.waitForTimeout(1000); // автосохранение — через 300 мс

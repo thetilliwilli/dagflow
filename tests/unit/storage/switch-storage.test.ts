@@ -126,7 +126,7 @@ describe('смена хранилища (FR-028c)', () => {
     expect(state().workflowOrder).toHaveLength(4);
     const copyId = state().workflowOrder[3]!;
     expect(copyId).not.toBe('A');
-    expect(state().workflows[copyId]!.name).toBe('Общий изменённый (из браузера)');
+    expect(state().workflows[copyId]!.name).toBe('Общий изменённый (from browser)');
     expect(folder.file('workflows/A.workflow.json')!.writes).toBe(writesA);
     expect(folder.file('workflows/C.workflow.json')!.writes).toBe(0);
     expect(folder.file('workflows/B.workflow.json')).toBeDefined();
@@ -176,7 +176,7 @@ describe('ошибки хранилища видны пользователю (C
     await f.p.start();
     expect(f.state().storageLocation).toMatchObject({ kind: 'none' });
     expect(f.state().notifications.at(-1)).toMatchObject({ kind: 'error' });
-    expect(f.state().notifications.at(-1)!.text).toMatch(/Сохранение недоступно/);
+    expect(f.state().notifications.at(-1)!.text).toMatch(/^Saving unavailable: the browser denied access to storage \(/);
     expect(f.state().workflowOrder).toHaveLength(1); // редактор работает
   });
 
@@ -199,7 +199,7 @@ describe('ошибки хранилища видны пользователю (C
     folder.permission = 'denied';
     await f.p.restoreAccess();
     expect(f.state().storageLocation).toEqual({ kind: 'folder-pending', name: 'my-flows' });
-    expect(f.state().notifications.at(-1)!.text).toMatch(/Доступ не предоставлен/);
+    expect(f.state().notifications.at(-1)!.text).toMatch(/^Access not granted: the browser did not allow working with folder “/);
   });
 
   it('сбой при переносе в папку — уведомление, данные остаются в прежнем хранилище', async () => {

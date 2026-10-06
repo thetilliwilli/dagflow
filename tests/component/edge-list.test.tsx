@@ -32,7 +32,7 @@ function setup() {
     actions.connect({ node: num, port: 'value' }, { node: sum, port: 'b' });
   });
   act(() => ui.openEdgeWindow(num, sum, { x: 200, y: 200 }));
-  const win = () => screen.queryByRole('dialog', { name: 'Связи: Источник → Сложить' });
+  const win = () => screen.queryByRole('dialog', { name: 'Links: Источник → Add' });
   return { actions, graph, win, ui: () => ui };
 }
 
@@ -54,7 +54,7 @@ describe('окно связей', () => {
 
   it('#5: крестик удаляет только свою связь', () => {
     const h = setup();
-    fireEvent.click(within(h.win()!).getByRole('button', { name: 'Удалить связь «value→b»' }));
+    fireEvent.click(within(h.win()!).getByRole('button', { name: 'Delete link “value→b”' }));
     expect(h.graph().edges.map((e) => e.target.port)).toEqual(['a']);
     expect(within(h.win()!).getAllByRole('listitem')).toHaveLength(1);
   });
@@ -63,13 +63,13 @@ describe('окно связей', () => {
     const h = setup();
     act(() => h.actions.deleteElements([], [h.graph().edges[0]!.id]));
     expect(within(h.win()!).getAllByRole('listitem')).toHaveLength(1);
-    fireEvent.click(within(h.win()!).getByRole('button', { name: 'Удалить связь «value→b»' }));
+    fireEvent.click(within(h.win()!).getByRole('button', { name: 'Delete link “value→b”' }));
     expect(h.win()).toBeNull();
   });
 
   it('#7: «Закрыть» и Escape закрывают окно', () => {
     const h = setup();
-    fireEvent.click(within(h.win()!).getByRole('button', { name: 'Закрыть' }));
+    fireEvent.click(within(h.win()!).getByRole('button', { name: 'Close' }));
     expect(h.win()).toBeNull();
     const [e] = h.graph().edges;
     act(() => h.ui().openEdgeWindow(e!.source.node, e!.target.node, { x: 0, y: 0 }));

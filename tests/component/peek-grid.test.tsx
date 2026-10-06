@@ -34,7 +34,7 @@ const rowsOf = (win: HTMLElement) =>
   [...win.querySelectorAll('li.prop-row')].map(
     (li) => `${li.getAttribute('data-side')}:${li.getAttribute('data-port')}`,
   );
-const peek = (name: string) => screen.getByRole('dialog', { name: `Свойства: ${name}` });
+const peek = (name: string) => screen.getByRole('dialog', { name: `Properties: ${name}` });
 const peekRow = (name: string, side: string, port: string) =>
   peek(name).querySelector<HTMLElement>(`li.prop-row[data-side="${side}"][data-port="${port}"]`)!;
 
@@ -54,10 +54,10 @@ describe('временное окно (PeekGrid)', () => {
     const sum = h.add('builtin:add');
     const text = h.add('builtin:text');
     act(() => h.ui().setSelection([sum]));
-    const own = rowsOf(screen.getByRole('dialog', { name: 'Свойства' }));
+    const own = rowsOf(screen.getByRole('dialog', { name: 'Properties' }));
     dragTo(h.ui(), text, 'value', sum);
-    expect(peek('Сложить')).toHaveAttribute('data-peek-node', sum);
-    expect(rowsOf(peek('Сложить'))).toEqual(own);
+    expect(peek('Add')).toHaveAttribute('data-peek-node', sum);
+    expect(rowsOf(peek('Add'))).toEqual(own);
   });
 
   it('недоступные строки затенены, но на месте; причина — во всплывающей подсказке (US4 #2)', () => {
@@ -66,19 +66,19 @@ describe('временное окно (PeekGrid)', () => {
     const text = h.add('builtin:text');
     dragTo(h.ui(), text, 'value', sum);
     for (const port of ['a', 'b']) {
-      const r = peekRow('Сложить', 'in', port);
+      const r = peekRow('Add', 'in', port);
       expect(r).toHaveClass('is-disabled');
       expect(r).toHaveAttribute('aria-disabled', 'true');
       expect(r).toHaveAttribute(
         'title',
-        expect.stringContaining('Несовместимые типы: текст → число'),
+        expect.stringContaining('Incompatible types: text → number'),
       );
     }
-    expect(peekRow('Сложить', 'out', 'result')).toHaveAttribute(
+    expect(peekRow('Add', 'out', 'result')).toHaveAttribute(
       'title',
-      'Нельзя соединить выход с выходом: связь идёт от выхода одного нода ко входу другого.',
+      'Cannot link an output to an output: a link goes from an output of one node to an input of another.',
     );
-    expect(rowsOf(peek('Сложить'))).toEqual(['in:a', 'in:b', 'out:result']);
+    expect(rowsOf(peek('Add'))).toEqual(['in:a', 'in:b', 'out:result']);
   });
 
   it('совместимые входы доступны', () => {
@@ -86,9 +86,9 @@ describe('временное окно (PeekGrid)', () => {
     const sum = h.add('builtin:add');
     const num = h.add('builtin:number');
     dragTo(h.ui(), num, 'value', sum);
-    expect(peekRow('Сложить', 'in', 'a')).not.toHaveClass('is-disabled');
-    expect(peekRow('Сложить', 'in', 'a')).toHaveAttribute('aria-disabled', 'false');
-    expect(peekRow('Сложить', 'out', 'result')).toHaveClass('is-disabled');
+    expect(peekRow('Add', 'in', 'a')).not.toHaveClass('is-disabled');
+    expect(peekRow('Add', 'in', 'a')).toHaveAttribute('aria-disabled', 'false');
+    expect(peekRow('Add', 'out', 'result')).toHaveClass('is-disabled');
   });
 
   it('режим привязки: маркер нажат, строка выделена, подсказка видна (US4 #9)', () => {
@@ -100,16 +100,16 @@ describe('временное окно (PeekGrid)', () => {
       h.ui().pressLink({ node: num, port: 'value', side: 'out' }, { x: 0, y: 0 }, true);
       h.ui().releasePointer();
     });
-    const grid = screen.getByRole('dialog', { name: 'Свойства' });
+    const grid = screen.getByRole('dialog', { name: 'Properties' });
     const out = grid.querySelector<HTMLElement>('li.prop-row[data-side="out"][data-port="value"]')!;
-    expect(within(out).getByRole('button', { name: 'Связать «value»' })).toHaveAttribute(
+    expect(within(out).getByRole('button', { name: 'Link “value”' })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(out).toHaveClass('is-linking');
-    expect(grid).toHaveTextContent('Выберите нод и параметр для связи');
+    expect(grid).toHaveTextContent('Pick a node and a property to link');
     act(() => h.ui().setPeek(sum));
-    expect(peek('Сложить')).toHaveTextContent('Выберите нод и параметр для связи');
+    expect(peek('Add')).toHaveTextContent('Pick a node and a property to link');
   });
 
   it('нод неизвестного типа: вместо строк — причина (граничный случай)', () => {
@@ -128,6 +128,6 @@ describe('временное окно (PeekGrid)', () => {
     });
     dragTo(h.ui(), num, 'value', 'ghost');
     expect(peek('Призрак').querySelectorAll('li.prop-row')).toHaveLength(0);
-    expect(peek('Призрак')).toHaveTextContent('Неизвестный тип нода: composite:missing.');
+    expect(peek('Призрак')).toHaveTextContent('Unknown node type: composite:missing.');
   });
 });

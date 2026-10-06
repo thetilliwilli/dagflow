@@ -52,15 +52,15 @@ export async function addNode(page: Page, title: string, x: number, y: number): 
 
 /** Открывает левую панель (список workflow, хранилище, выгрузка и загрузка) кнопкой меню. */
 export async function openSidebar(page: Page): Promise<Locator> {
-  const sidebar = page.getByRole('dialog', { name: 'Workflow и хранилище' });
-  if (!(await sidebar.isVisible())) await page.getByRole('button', { name: 'Меню' }).click();
+  const sidebar = page.getByRole('dialog', { name: 'Workflows & storage' });
+  if (!(await sidebar.isVisible())) await page.getByRole('button', { name: 'Menu' }).click();
   await expect(sidebar).toBeVisible();
   return sidebar;
 }
 
 /** Закрывает левую панель, если она открыта. */
 export async function closeSidebar(page: Page) {
-  const menu = page.getByRole('button', { name: 'Меню' });
+  const menu = page.getByRole('button', { name: 'Menu' });
   if ((await menu.getAttribute('aria-expanded')) === 'true') await menu.click();
 }
 
@@ -76,7 +76,7 @@ export async function selectNode(node: Locator) {
 
 const propsRow = (page: Page, side: 'in' | 'out', port: string) =>
   page
-    .getByRole('dialog', { name: 'Свойства' })
+    .getByRole('dialog', { name: 'Properties' })
     .locator(`li.prop-row[data-side="${side}"][data-port="${port}"]`);
 
 const peekRow = async (page: Page, node: Locator, side: 'in' | 'out', port: string) =>

@@ -5,6 +5,7 @@ import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '../engine';
 import type { UnavailableItem } from '../storage/directory-storage';
 import type { TabHistory } from './history';
 import type { StorageLocation } from '../storage/location';
+import { messages } from '../ui/messages';
 
 export type NotificationKind = 'info' | 'warning' | 'error';
 
@@ -84,7 +85,7 @@ export function emptyGraph(): Graph {
   return { nodes: [], edges: [] };
 }
 
-export const DEFAULT_WORKFLOW_NAME = 'Новый workflow';
+export const DEFAULT_WORKFLOW_NAME = messages.defaultWorkflowName;
 
 /** Начальное состояние: один пустой workflow, открытый во вкладке. */
 export function freshWorkspace(deps: StoreDeps): Pick<AppState, 'workflows' | 'workflowOrder' | 'tabs' | 'activeTabId'> {

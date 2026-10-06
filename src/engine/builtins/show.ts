@@ -3,9 +3,9 @@ import { categories, defineNode, req } from './define';
 export const displayNodes = [
   defineNode({
     id: 'builtin:show',
-    title: 'Показать',
+    title: 'Show',
     category: categories.display,
-    description: 'Крупно показывает значение.',
+    description: 'Shows the value in large type.',
     inputs: [req('value', 'any')],
     outputs: [],
     compute: () => ({}),

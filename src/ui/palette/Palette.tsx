@@ -21,7 +21,7 @@ function portsLine(def: NodeTypeDef): string {
 function portsSummary(def: NodeTypeDef): string {
   const fmt = (ps: NodeTypeDef['inputs']) =>
     ps.map((p) => `${p.name}: ${typeLabels[p.type]}`).join(', ') || '—';
-  return `Входы: ${fmt(def.inputs)}. Выходы: ${fmt(def.outputs)}.`;
+  return messages.portsSummary(fmt(def.inputs), fmt(def.outputs));
 }
 
 /** Порядок вкладок: категории движка, затем составные ноды, затем остальные (интерфейс составного нода). */

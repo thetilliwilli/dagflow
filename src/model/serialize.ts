@@ -25,12 +25,12 @@ export function toJsonText(data: unknown): string {
 /** Путь к первому полю с ошибкой, например `workflow.graph.nodes`. */
 export function issuePath(issues: v.BaseIssue<unknown>[]): string {
   const issue = issues[0];
-  return (issue && v.getDotPath(issue)) || '(корень)';
+  return (issue && v.getDotPath(issue)) || '(root)';
 }
 
 function parse<S extends v.GenericSchema>(schema: S, data: unknown, what: string): v.InferOutput<S> {
   const r = v.safeParse(schema, data);
-  if (!r.success) throw new FormatError(`Некорректный файл ${what}: ${issuePath(r.issues)}`);
+  if (!r.success) throw new FormatError(`Invalid ${what} file: ${issuePath(r.issues)}.`);
   return r.output;
 }
 
@@ -61,7 +61,7 @@ export function compositeToFile(def: CompositeDef): CompositeFile {
 }
 
 export function fileToComposite(data: unknown): CompositeDef {
-  return strip(parse(CompositeFileSchema, data, 'составного нода'));
+  return strip(parse(CompositeFileSchema, data, 'composite node'));
 }
 
 export function workspaceToFile(ws: Workspace): WorkspaceFile {
