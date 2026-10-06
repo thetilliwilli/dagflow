@@ -29,7 +29,7 @@ export const messages = {
   noValue: '—',
   closeNotification: 'Закрыть уведомление',
   nodeNotFound: (id: string) => `Нод «${id}» не найден.`,
-  invalidName: 'Имя должно содержать от 1 до 100 символов',
+  invalidName: 'The name cannot be empty.',
   renderFailed: 'Не удалось отобразить вкладку. Ваши данные не потеряны — попробуйте перезагрузить вкладку.',
   reloadTab: 'Перезагрузить вкладку',
 };
@@ -60,7 +60,7 @@ export const storageMessages = {
   workInBrowserNote: 'В браузере хранится отдельный набор данных; данные папки останутся нетронутыми',
   folderLost: (folder: string) => `Рабочая папка «${folder}» недоступна. Работа продолжается и сохраняется в браузере.`,
   saveFailed: (reason: string) => `Не удалось сохранить изменения: ${reason}`,
-  copyName: (name: string) => `${name} (из браузера)`.slice(0, 100),
+  copyName: (name: string) => `${name} (из браузера)`,
   none: 'Сохранение недоступно',
   unavailable: (reason: string) =>
     `Сохранение недоступно: браузер не дал доступ к хранилищу (${reason}). Редактор работает, но изменения не сохранятся после закрытия — выгружайте workflow в файл.`,

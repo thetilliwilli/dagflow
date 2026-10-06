@@ -91,6 +91,11 @@ body,
 }
 .palette__item-title {
   font-weight: 600;
+  /* Длинное имя составного нода — многоточие, полное в подсказке (фича 003, FR-008) */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .palette__item-desc {
   color: var(--muted);
@@ -455,6 +460,7 @@ button.link {
 }
 .workflow-list__name {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -506,6 +512,10 @@ button.link {
   padding: 6px 10px;
   cursor: pointer;
   white-space: nowrap;
+  /* Длинное имя — многоточие, полное в подсказке (фича 003, FR-008) */
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .tab__close {
   border: none;

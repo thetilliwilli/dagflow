@@ -26,15 +26,6 @@ describe('normalizeNodeName (E13)', () => {
     }
   });
 
-  it('100 символов — можно, 101 — отказ name-too-long', () => {
-    expect(normalizeNodeName('я'.repeat(100))).toEqual({ ok: true, name: 'я'.repeat(100) });
-    expect(normalizeNodeName('я'.repeat(101))).toEqual({
-      ok: false,
-      code: 'name-too-long',
-      message: 'Имя нода длиннее 100 символов. Сократите его.',
-    });
-  });
-
   it('имя, совпадающее с названием типа, допустимо', () => {
     expect(normalizeNodeName('Сложить')).toEqual({ ok: true, name: 'Сложить' });
   });

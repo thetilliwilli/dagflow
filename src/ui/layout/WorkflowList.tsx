@@ -42,7 +42,6 @@ export function WorkflowList() {
                   aria-label={m.nameInput}
                   value={draft}
                   autoFocus
-                  maxLength={100}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') commitRename(id);
@@ -51,7 +50,7 @@ export function WorkflowList() {
                   onBlur={() => editing === id && commitRename(id)}
                 />
               ) : (
-                <button type="button" className="workflow-list__name" aria-label={m.open(wf.name)} onClick={() => actions.openTab('workflow', id)}>
+                <button type="button" className="workflow-list__name" aria-label={m.open(wf.name)} title={wf.name} onClick={() => actions.openTab('workflow', id)}>
                   {wf.name}
                 </button>
               )}

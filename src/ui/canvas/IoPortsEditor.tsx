@@ -44,7 +44,6 @@ export function IoPortsEditor({
           <input
             aria-label={m.portName}
             value={names[i] ?? p.name}
-            maxLength={40}
             onChange={(e) => setNames({ ...names, [i]: e.target.value })}
             onBlur={() =>
               names[i] !== undefined &&

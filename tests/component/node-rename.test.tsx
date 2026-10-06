@@ -77,18 +77,6 @@ describe('переименование нода', () => {
     expect(input).toHaveAttribute('aria-invalid', 'true');
   });
 
-  it('имя длиннее 100 символов — отказ name-too-long', async () => {
-    const h = setup();
-    h.startOnCard();
-    const input = within(h.card()).getByRole('textbox', { name: 'Имя нода' });
-    fireEvent.change(input, { target: { value: 'я'.repeat(101) } });
-    fireEvent.keyDown(input, { key: 'Enter' });
-    expect(h.name()).toBe('Сложить');
-    expect(within(h.card()).getByRole('alert')).toHaveTextContent(
-      'Имя нода длиннее 100 символов. Сократите его.',
-    );
-  });
-
   it('FR-009: тот же редактор — в заголовке окна свойств', async () => {
     const h = setup();
     act(() => h.ui().setSelection([h.id]));

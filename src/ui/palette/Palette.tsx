@@ -110,7 +110,9 @@ export function Palette() {
             onDragStart={(e) => onDragStart(e, def.id)}
             onClick={() => addAtCenter(def.id)}
           >
-            <span className="palette__item-title">{def.title}</span>
+            <span className="palette__item-title" title={def.title}>
+              {def.title}
+            </span>
             <span className="palette__item-desc">{def.description}</span>
             {def.paletteScope !== 'composite' && (
               <span className="palette__item-ports">{portsLine(def)}</span>

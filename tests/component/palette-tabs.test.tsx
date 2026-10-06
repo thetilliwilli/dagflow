@@ -114,6 +114,25 @@ describe('палитра (US1)', () => {
     expect(titles()).toContain('Мой составной');
   });
 
+  it('длинное имя составного нода — полное имя в подсказке названия (003: FR-008)', () => {
+    const { actions } = setup();
+    const long = 'Составной нод с очень длинным именем '.repeat(5).slice(0, 150).trim();
+    let id = '';
+    act(() => {
+      const r = actions.addNode('builtin:number', { x: 0, y: 0 });
+      if (r.ok) id = r.id;
+    });
+    act(() => {
+      actions.collapseSelection([id], long);
+    });
+    space();
+    fireEvent.click(within(tabs()).getByRole('tab', { name: COMPOSITE_CATEGORY }));
+    const title = [...palette().querySelectorAll('.palette__item-title')].find(
+      (el) => el.textContent === long,
+    );
+    expect(title).toHaveAttribute('title', long);
+  });
+
   it('кнопка «Закрыть» закрывает палитру', () => {
     setup();
     space();

@@ -50,6 +50,18 @@ describe('список workflow и вкладки', () => {
     expect(state().workflows[id]!.name).toBe('Калькулятор');
   });
 
+  it('длинное имя: у вкладки и строки списка полное имя в подсказке (003: FR-008)', () => {
+    const { actions, state, list, tabs } = setup();
+    const id = state().workflowOrder[0]!;
+    const long = 'Очень длинное имя workflow '.repeat(12).slice(0, 300).trim();
+    act(() => {
+      actions.renameWorkflow(id, long);
+    });
+    expect(state().workflows[id]!.name).toBe(long);
+    expect(tabs().getByRole('tab', { selected: true })).toHaveAttribute('title', long);
+    expect(list().getByRole('button', { name: `Открыть «${long}»` })).toHaveAttribute('title', long);
+  });
+
   it('дублирование создаёт копию с тем же графом', async () => {
     const { app, actions, state, list, user } = setup();
     act(() => {

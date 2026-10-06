@@ -66,6 +66,11 @@ describe('validateIoPorts (FR-021c)', () => {
     const ok = graph([io('i1', 'builtin:input', [{ name: 'a', type: 'number' }]), io('o1', 'builtin:output', [{ name: 'a', type: 'number' }])]);
     expect(validateIoPorts(ok)).toBeNull();
   });
+
+  it('порт с пустым именем отклоняется (003: US2 #4)', () => {
+    const g = graph([io('i1', 'builtin:input', [{ name: '', type: 'number' }])]);
+    expect(validateIoPorts(g)).toEqual({ ok: false, code: 'duplicate-port-name', message: 'The port name cannot be empty.' });
+  });
 });
 
 describe('collapse (FR-021, FR-022)', () => {

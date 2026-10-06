@@ -1,5 +1,5 @@
 // Проверка правок графа: связи, добавление нодов, целостность (FR-004, FR-005a, data-model «Edge»)
-import { MAX_NODE_NAME, rejections, type Rejection } from './errors';
+import { rejections, type Rejection } from './errors';
 import type { CompositeDef, Edge, Graph, LinkEnd, NodeInstance, NodeRegistry, PortDef } from './types';
 import { isCompatible } from './values';
 
@@ -28,7 +28,6 @@ export function nodePorts(node: NodeInstance, registry: NodeRegistry): NodePorts
 export function normalizeNodeName(name: string): { ok: true; name: string } | Rejection {
   const trimmed = name.trim();
   if (trimmed.length === 0) return rejections.emptyName();
-  if (trimmed.length > MAX_NODE_NAME) return rejections.nameTooLong();
   return { ok: true, name: trimmed };
 }
 

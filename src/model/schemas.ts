@@ -9,7 +9,7 @@ export const JsonValueSchema: v.GenericSchema<JsonValue> = v.lazy(() =>
 const PortTypeSchema = v.picklist(['number', 'text', 'boolean', 'array', 'object', 'any']);
 
 export const PortDefSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(1), v.maxLength(40)),
+  name: v.pipe(v.string(), v.minLength(1)),
   type: PortTypeSchema,
   required: v.optional(v.boolean()),
   default: v.optional(JsonValueSchema),
@@ -24,7 +24,7 @@ export const GraphSchema = v.object({
       id: v.pipe(v.string(), v.minLength(1)),
       type: v.pipe(v.string(), v.minLength(1)),
       // Имя экземпляра обязательно (фича 002, contracts/file-formats.md): файлы без имён некорректны
-      name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100)),
+      name: v.pipe(v.string(), v.trim(), v.minLength(1)),
       position: PositionSchema,
       values: v.record(v.string(), JsonValueSchema),
       ports: v.optional(v.array(PortDefSchema)),
@@ -33,7 +33,7 @@ export const GraphSchema = v.object({
   edges: v.array(v.object({ id: v.pipe(v.string(), v.minLength(1)), source: PortRefSchema, target: PortRefSchema })),
 });
 
-const NameSchema = v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(100));
+const NameSchema = v.pipe(v.string(), v.trim(), v.minLength(1));
 const VersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const WorkflowSchema = v.object({

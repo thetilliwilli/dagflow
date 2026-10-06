@@ -36,7 +36,6 @@ import {
   type NotificationKind,
 } from './store';
 
-const MAX_NAME = 100;
 
 /** «Новый workflow», «Новый workflow 2», … — первое свободное имя. */
 export function uniqueName(base: string, taken: Iterable<string>): string {
@@ -173,7 +172,7 @@ export function createActions({ store, deps }: AppStore) {
 
   function checkCompositeName(name: string, exceptId?: string): Rejection | null {
     const trimmed = name.trim();
-    if (trimmed.length < 1 || trimmed.length > MAX_NAME)
+    if (trimmed.length === 0)
       return { ok: false, code: 'unknown-port', message: messages.invalidName };
     const taken = Object.values(store.getState().composites).some(
       (c) => c.id !== exceptId && c.name === trimmed,
@@ -232,7 +231,7 @@ export function createActions({ store, deps }: AppStore) {
 
     renameWorkflow(id: string, name: string): Result {
       const trimmed = name.trim();
-      if (trimmed.length < 1 || trimmed.length > MAX_NAME) {
+      if (trimmed.length === 0) {
         return { ok: false, code: 'unknown-port', message: messages.invalidName };
       }
       store.setState((draft: AppState) => {
@@ -250,7 +249,7 @@ export function createActions({ store, deps }: AppStore) {
       const copyId = deps.newId();
       const ts = deps.now();
       store.setState((draft: AppState) => {
-        const name = `${source.name} (копия)`.slice(0, MAX_NAME);
+        const name = `${source.name} (копия)`;
         draft.workflows[copyId] = {
           id: copyId,
           name,

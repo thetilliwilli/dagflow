@@ -20,8 +20,7 @@ export type RejectCode =
   | 'composite-recursion'
   | 'io-node-outside-composite'
   | 'same-side'
-  | 'empty-name'
-  | 'name-too-long';
+  | 'empty-name';
 
 export type Rejection = { ok: false; code: RejectCode; message: string };
 
@@ -33,9 +32,6 @@ export const typeNames: Record<PortType, string> = {
   object: 'объект',
   any: 'любое',
 };
-
-/** Наибольшая длина имени нода (FR-009). */
-export const MAX_NODE_NAME = 100;
 
 function reject(code: RejectCode, message: string): Rejection {
   return { ok: false, code, message };
@@ -62,7 +58,7 @@ export const rejections = {
       `${side === 'in' ? 'Нельзя соединить вход со входом' : 'Нельзя соединить выход с выходом'}: связь идёт от выхода одного нода ко входу другого.`,
     ),
   emptyName: () => reject('empty-name', 'Имя нода не может быть пустым. Введите хотя бы один символ.'),
-  nameTooLong: () => reject('name-too-long', `Имя нода длиннее ${MAX_NODE_NAME} символов. Сократите его.`),
+  emptyPortName: () => reject('duplicate-port-name', 'The port name cannot be empty.'),
 };
 
 export function internalErrorMessage(title: string): string {
