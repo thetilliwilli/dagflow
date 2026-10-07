@@ -1,4 +1,5 @@
 // Публичный API движка (contracts/engine-api.md)
+export { ENGINE_VERSION } from './version';
 export * from './types';
 export { NodeError, rejections, typeNames, type Rejection, type RejectCode } from './errors';
 export {

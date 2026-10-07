@@ -6,6 +6,7 @@ import type { UnavailableItem } from '../storage/directory-storage';
 import type { TabHistory } from './history';
 import type { StorageLocation } from '../storage/location';
 import { messages } from '../ui/messages';
+import { initialEngine, type EngineSlice } from '../engine-link/types';
 
 export type NotificationKind = 'info' | 'warning' | 'error';
 
@@ -39,6 +40,8 @@ export interface AppState {
   unavailable: UnavailableItem[];
   /** История отмены: tabId → снапшоты графа. Не сохраняется между сессиями. */
   history: Record<string, TabHistory>;
+  /** Цель вычисления и состояние подключения (фича 004). В файлы workflow не попадает. */
+  engine: EngineSlice;
 }
 
 export interface StoreDeps {
@@ -63,6 +66,7 @@ function makeStore(initial?: Partial<AppState>) {
       folderSupported: false,
       unavailable: [],
       history: {},
+      engine: initialEngine(),
       ...initial,
     })),
   );
@@ -133,4 +137,10 @@ export function tabGraph(state: AppState, tab: Tab | undefined): Graph | undefin
   return tab.kind === 'workflow'
     ? state.workflows[tab.targetId]?.graph
     : state.composites[tab.targetId]?.graph;
+}
+
+/** Значения вкладки устарели: связи с целью нет или вкладка не передана из-за лимита (FR-019, FR-024). */
+export function isStale(state: AppState, tabId: string): boolean {
+  const { status, tooLarge } = state.engine;
+  return status.kind !== 'ready' || tooLarge.library || tooLarge.tabs[tabId] === true;
 }

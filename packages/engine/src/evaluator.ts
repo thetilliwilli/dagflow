@@ -211,7 +211,9 @@ export function createEvaluator(source: RegistrySource): Evaluator {
 
   function flatState(id: string): NodeState {
     const s = states.get(id) ?? EMPTY;
-    return pending().has(id) ? { ...s, status: 'computing', message: undefined } : s;
+    if (!pending().has(id)) return s;
+    // Без ключа message: состояние уходит по протоколу как JSON (research R5)
+    return { status: 'computing', inputs: s.inputs, outputs: s.outputs };
   }
 
   /** Сводное состояние экземпляра по внутренним нодам (E9). */

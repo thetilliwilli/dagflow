@@ -119,7 +119,11 @@ interface EngineHost {
   /** Закрыть соединение после этого ответа (version-mismatch). */
   readonly closed: boolean;
 }
-function createEngineHost(): EngineHost;
+interface EngineHostOptions {
+  registry?: (composites: CompositeDef[]) => NodeRegistry; // по умолчанию — встроенные ноды
+  engineVersion?: string; // по умолчанию — ENGINE_VERSION (подмена — для поддельных серверов в e2e)
+}
+function createEngineHost(options?: EngineHostOptions): EngineHost;
 ```
 
 | Вход            | Условие                                    | Ответ                                                                                                        |
@@ -145,53 +149,68 @@ function createEngineHost(): EngineHost;
 
 ## Правила клиента (`createEngineClient`, sans-IO)
 
+Клиент хранит последний снимок редактора и сам готовит строки для отправки: связка со
+стором только передаёт снимок и отправляет `send` в канал (уточнено при реализации,
+T016–T017).
+
 ```ts
-interface EngineClient {
-  /** Соединение открыто: вернуть hello. */
-  start(): ClientMessage[];
-  /** Принять сообщение хоста. */
-  receive(raw: string): ClientEvent[];
-  /** Снимок редактора изменился: вернуть сообщения для отправки (open/update/close/library). */
-  sync(snapshot: {
-    tabs: { doc: DocId; graph: Graph }[];
-    composites: CompositeDef[];
-  }): ClientMessage[];
+interface Snapshot {
+  tabs: { doc: DocId; graph: Graph }[];
+  composites: CompositeDef[]; // сравнивается по ссылке — стор передаёт тот же массив, пока определения не менялись
 }
+interface ClientOutput {
+  events: ClientEvent[]; // для стора
+  send: string[]; // строки JSON для канала
+}
+interface EngineClient {
+  /** Соединение открыто: сбросить зеркала и вернуть hello. */
+  start(): string[];
+  /** Принять сообщение хоста. */
+  receive(raw: string): ClientOutput;
+  /** Снимок редактора изменился: open/update/close/library по разнице. */
+  sync(snapshot: Snapshot): ClientOutput;
+}
+function createEngineClient(options?: { engineVersion?: string }): EngineClient;
+
 type ClientEvent =
   | { kind: 'ready'; protocol: number; engine: string }
   | { kind: 'incompatible'; host: { protocol: number; engine: string } }
   | { kind: 'pending'; doc: DocId; nodes: string[] }
   | { kind: 'states'; doc: DocId; states: Record<string, NodeState> }
-  | { kind: 'too-large'; doc?: DocId }
+  | { kind: 'too-large'; doc?: DocId } // не отправлено из-за лимита; без doc — library
+  | { kind: 'sent'; doc?: DocId } // ранее слишком большое теперь отправлено
   | { kind: 'failed'; code: 'invalid-message' | 'internal' | 'too-large'; doc?: DocId } // уведомление
   | { kind: 'resend'; doc: DocId }; // unknown-doc по открытой вкладке: молча open заново (FR-025)
 ```
 
-- После `welcome`: `library` (все определения), затем `open` для каждой открытой вкладки
-  в текущем виде (FR-015, FR-021).
+- До `welcome` клиент ничего не отправляет, кроме `hello`; `sync` только запоминает
+  снимок. После `welcome`: `library` (все определения), затем `open` для каждой
+  открытой вкладки в текущем виде (FR-015, FR-021). `start()` сбрасывает зеркала:
+  каждое подключение получает полный снимок.
 - `sync` сравнивает снимок с последним отправленным по ссылкам (`graph !==`,
-  `composites !==`), как сейчас `evaluation.ts`: новая вкладка → `open`, изменённая →
-  `update` с `rev + 1`, исчезнувшая → `close`, изменённые определения → `library`.
-- Перед отправкой — проверка размера; больше лимита → событие `too-large` по документу
-  без отправки (FR-024: ноды вкладки приглушены, новая попытка при следующей правке).
-  Слишком большой `library` → `too-large` без `doc`: приглушены все вкладки.
-- `states` с `rev` меньше последнего отправленного применяется (это последнее
-  известное), но ноды из последнего `pending` остаются `computing`.
-- Входящие сообщения проверяются схемой; ошибка схемы → событие `failed` с кодом
-  `invalid-message` (уведомление пользователю, деталь — в консоль адаптера).
-- Сообщения до `welcome`, кроме `error`, игнорируются.
+  `composites !==`): новая вкладка → `open`, изменённая → `update` с `rev + 1`,
+  исчезнувшая → `close`, изменённые определения → `library` (перед вкладками).
+- Перед отправкой — проверка размера; больше лимита → событие `too-large` без отправки
+  (FR-024: ноды вкладки приглушены, новая попытка при следующей правке). Слишком
+  большой `library` → `too-large` без `doc`: приглушены все вкладки. Когда сообщение
+  снова помещается — событие `sent` (снять приглушение).
+- `pending` и `states` применяются как есть, только по открытым вкладкам: канал
+  упорядочен, и `states` хоста отражает всё, что он принял к этому моменту (правило
+  про `rev` из черновика не нужно — уточнено при реализации).
+- Входящие сообщения проверяются схемой; не JSON или ошибка схемы → событие `failed`
+  с кодом `invalid-message`.
+- Сообщения до `welcome` игнорируются.
 - `welcome` с `protocol` ≠ `PROTOCOL_VERSION` → событие `incompatible` (версии хоста —
   из `welcome`); последующий `error version-mismatch` и закрытие соединения клиент
   **не** считает обрывом: статус `incompatible`, без повторов (FR-023). Пробная
   попытка в этом случае неудачна с текстом о версии протокола.
-- `error unknown-doc` → `resend`, только если вкладка ещё открыта у клиента (есть в
-  зеркале); по закрытой вкладке (ответ на `close`) — игнорируется.
+- `error unknown-doc` → `resend` и `open` с `rev + 1`, только если вкладка ещё открыта
+  у клиента; по закрытой вкладке (ответ на `close`) — игнорируется.
 - `error invalid-message` / `internal` с `doc` → событие `failed` и повторный `open`
-  этой вкладки **один раз на ревизию**: если повтор тоже не удался, следующая попытка —
-  при следующей правке вкладки (новый `rev`), без цикла (FR-025). Без `doc` — только
-  уведомление.
+  этой вкладки **один раз на граф**: если повтор тоже не удался, следующая попытка —
+  при следующей правке вкладки, без цикла (FR-025). Без `doc` — только уведомление.
 - `error too-large` от хоста (страховка: клиент проверяет лимит сам) → событие `failed`
-  с кодом `too-large` без `doc`: уведомление, деталь — в консоль адаптера.
+  с кодом `too-large` без `doc`.
 
 ## Последовательности
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { startEvaluation } from '../store/evaluation';
+import { startEngine } from '../store/engine';
 import { createPersistence } from '../store/persistence';
 import { PersistenceProvider } from '../store/persistence-react';
 import { AppProvider, useAppState } from '../store/react';
@@ -16,7 +16,7 @@ function Shell() {
 export function App() {
   const [app] = useState(() => createAppStore());
   const [persistence] = useState(() => createPersistence(app));
-  useEffect(() => startEvaluation(app), [app]);
+  useEffect(() => startEngine(app), [app]);
   useEffect(() => {
     void persistence.start();
   }, [persistence]);

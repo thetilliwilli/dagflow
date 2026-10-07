@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { ENGINE_VERSION } from '@dagflow/engine';
 import { createActions } from '../../src/store/actions';
-import { startEvaluation } from '../../src/store/evaluation';
+import { startEngine } from '../../src/store/engine';
 import { activeTab } from '../../src/store/store';
 import { manualScheduler, testStore } from './helpers';
 
@@ -8,7 +9,7 @@ function setup() {
   const app = testStore();
   const actions = createActions(app);
   const frames = manualScheduler();
-  startEvaluation(app, frames.schedule);
+  startEngine(app, { schedule: frames.schedule });
   const tabId = activeTab(app.store.getState())!.id;
   const state = (nodeId: string) => app.store.getState().nodeStates[tabId]?.[nodeId];
   const add = (type: string, values: Record<string, number> = {}) => {
@@ -20,7 +21,16 @@ function setup() {
   return { app, actions, frames, state, add };
 }
 
-describe('связка стора и движка', () => {
+describe('связка стора и engine через протокол (Local)', () => {
+  it('после старта цель Local готова и показывает версию engine', () => {
+    const { app } = setup();
+    expect(app.store.getState().engine.status).toEqual({
+      kind: 'ready',
+      engine: ENGINE_VERSION,
+      encrypted: false,
+    });
+  });
+
   it('после изменения значения и кадра состояния обновлены (2 + 3 = 5 → 13)', () => {
     const { actions, frames, state, add } = setup();
     const n1 = add('builtin:number', { value: 2 });
@@ -101,9 +111,11 @@ describe('связка стора и движка', () => {
     const actions = createActions(app);
     let scheduled = 0;
     const queue: Array<() => void> = [];
-    startEvaluation(app, (fn) => {
-      scheduled += 1;
-      queue.push(fn);
+    startEngine(app, {
+      schedule: (fn) => {
+        scheduled += 1;
+        queue.push(fn);
+      },
     });
     actions.addNode('builtin:number', { x: 0, y: 0 });
     actions.addNode('builtin:number', { x: 0, y: 0 });

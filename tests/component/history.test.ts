@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createActions } from '../../src/store/actions';
-import { startEvaluation } from '../../src/store/evaluation';
+import { startEngine } from '../../src/store/engine';
 import { activeTab, tabGraph } from '../../src/store/store';
 import { manualScheduler, testStore } from './helpers';
 
@@ -8,7 +8,7 @@ function setup() {
   const app = testStore();
   const actions = createActions(app);
   const frames = manualScheduler();
-  startEvaluation(app, frames.schedule);
+  startEngine(app, { schedule: frames.schedule });
   const state = () => app.store.getState();
   const graph = () => tabGraph(state(), activeTab(state()))!;
   const add = (type: string) => {

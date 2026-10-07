@@ -348,4 +348,14 @@ describe('Evaluator', () => {
     ev.flush();
     expect(ev.state('J').outputs).toEqual({ value });
   });
+
+  it('состояние computing не содержит ключа message (JSON-совместимо, research R5)', () => {
+    const ev = createEvaluator(createRegistry([]));
+    ev.setGraph(graph([node('D', 'builtin:divide', { a: 1, b: 0 })]), []);
+    ev.flush();
+    expect(ev.state('D').message).toBeDefined();
+    ev.setGraph(graph([node('D', 'builtin:divide', { a: 1, b: 2 })]), []);
+    expect(ev.state('D').status).toBe('computing');
+    expect('message' in ev.state('D')).toBe(false);
+  });
 });

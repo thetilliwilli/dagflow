@@ -169,6 +169,7 @@ packages/
 src/
 ├── engine/                          # → packages/engine/src (папка удаляется)
 ├── + engine-link/                   # связь редактора с целью вычисления (браузер)
+│   ├── + types.ts                   # EngineTarget, ConnectionStatus, Trial, EngineSlice (data-model)
 │   ├── + address.ts                 # разбор адреса, локальность, порядок схем (R8, R9)
 │   ├── + recent.ts                  # операции со списком целей (до 5, «×», подъём наверх)
 │   ├── + settings.ts                # dagflow:engine в IndexedDB, EngineSettingsSchema (R16)

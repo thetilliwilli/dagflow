@@ -68,8 +68,21 @@ export default tseslint.config(
     },
   },
   {
+    // Протокол: только engine и valibot — без сервера, приложения и UI-библиотек.
+    files: ['packages/protocol/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['react', 'react-dom', 'zustand', 'immer', 'idb-keyval', '@dagflow/server'],
+          patterns: ['@xyflow/*', '**/src/**'],
+        },
+      ],
+    },
+  },
+  {
     // Ядро без ввода-вывода (sans-IO, конституция 2.1.0, research R2): ни API среды, ни недетерминизма.
-    files: ['packages/engine/src/**/*.ts'],
+    files: ['packages/engine/src/**/*.ts', 'packages/protocol/src/**/*.ts'],
     rules: {
       'no-restricted-globals': ['error', ...SANS_IO_GLOBALS],
       'no-restricted-properties': [
