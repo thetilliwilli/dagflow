@@ -93,9 +93,11 @@ type ConnectionStatus =
 ```ts
 interface Trial {
   target: EngineTarget;
-  phase: 'probing'; // перебор схем ws/wss (R8)
+  phase: 'probing';
   awaitingPermission?: boolean; // ждём ответа на запрос Local Network Access
-  error?: string; // текст из ui-texts.md, показывается у поля или строки
+  // Причина неудачи; текст у поля или строки — из src/ui/messages.ts (уточнено при реализации, T036)
+  failure?: 'unreachable' | 'blocked' | 'incompatible' | 'invalid-address' | 'no-worker';
+  host?: { protocol: number; engine: string }; // при failure: 'incompatible'
 }
 ```
 
@@ -103,7 +105,7 @@ interface Trial {
 - Пока идёт попытка, текущая цель работает как обычно.
 - Успех: новая цель становится текущей, вкладки открываются на ней, старое подключение
   закрывается, настройки сохраняются.
-- Неудача: `error` у поля или строки; текущая цель и её статус не меняются.
+- Неудача: `failure` (текст у поля или строки — `src/ui/layout/engine-text.ts` по ui-texts.md); текущая цель и её статус не меняются.
 
 ## Срез стора `engine` (Zustand)
 

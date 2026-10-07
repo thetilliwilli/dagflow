@@ -8,22 +8,46 @@ import {
   type Snapshot,
 } from '@dagflow/protocol';
 import { createInlineChannel } from '../engine-link/channels/inline';
+import {
+  createConnection,
+  type AttachInfo,
+  type ConnectionDeps,
+  type Opening,
+} from '../engine-link/connection';
+import { probe, type ProbeDeps, type SocketLike } from '../engine-link/probe';
+import type { EngineTarget } from '../engine-link/types';
 import { tabGraph, type AppState, type AppStore } from './store';
 
 type Schedule = (fn: () => void) => void;
 
 const defaultSchedule: Schedule = (fn) => requestAnimationFrame(() => fn());
 
+/** Браузерные зависимости пробы: настоящий WebSocket и таймеры. */
+function browserProbeDeps(): ProbeDeps {
+  return {
+    pageSecure: globalThis.location?.protocol === 'https:',
+    // Браузерный WebSocket совместим с SocketLike (обработчики получают событие, которое мы не читаем)
+    createSocket: (url) => new WebSocket(url) as unknown as SocketLike,
+    setTimer: (fn, ms) => setTimeout(fn, ms),
+    clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+  };
+}
+
 export interface EngineOptions {
   /** Планировщик кадра: пересчёт в Local и запись в стор — не чаще раза за кадр. */
   schedule?: Schedule;
+  /** Открытие целей; по умолчанию Local — в окне, Server — проба через WebSocket. */
+  open?: ConnectionDeps['open'];
 }
+
+const MAX_RECENT = 5;
 
 export function startEngine(app: AppStore, options: EngineOptions = {}): () => void {
   const { store } = app;
   const schedule = options.schedule ?? defaultSchedule;
   const client = createEngineClient();
-  let channel: Channel = createInlineChannel(schedule);
+  let channel: Channel | null = null;
+  let encrypted = false;
 
   // Один и тот же массив определений, пока state.composites не изменился: клиент сравнивает по ссылке
   let compositesRecord: AppState['composites'] | undefined;
@@ -44,7 +68,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
 
   function handle(out: ClientOutput) {
     if (out.events.length > 0) apply(out.events);
-    for (const text of out.send) channel.send(text);
+    for (const text of out.send) channel?.send(text);
   }
 
   function apply(events: ClientEvent[]) {
@@ -52,7 +76,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
       for (const e of events) {
         switch (e.kind) {
           case 'ready':
-            draft.engine.status = { kind: 'ready', engine: e.engine, encrypted: false };
+            draft.engine.status = { kind: 'ready', engine: e.engine, encrypted };
             break;
           case 'incompatible':
             draft.engine.status = { kind: 'incompatible', host: e.host };
@@ -75,7 +99,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
             break;
           case 'failed':
           case 'resend':
-            // Уведомления и повтор — US6 (T076)
+            // Уведомления — US6 (T076)
             break;
         }
       }
@@ -101,19 +125,68 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     }
   }
 
-  function connect(next: Channel) {
+  /** Новый текущий канал: полный снимок открытых вкладок (FR-015, FR-021). */
+  function attach(next: Channel, welcome: string | undefined, info: AttachInfo) {
     channel = next;
-    channel.onMessage = (text) => handle(client.receive(text));
-    channel.onClose = () => {
+    encrypted = info.encrypted;
+    store.setState((draft: AppState) => {
+      draft.engine.target = info.target;
+      draft.engine.status = { kind: 'connecting' };
+      draft.engine.tooLarge = { library: false, tabs: {} };
+      if (info.target.kind === 'server') {
+        const { address } = info.target;
+        const others = draft.engine.recent.filter((r) => r.address !== address);
+        draft.engine.recent = [{ address, scheme: info.scheme }, ...others].slice(0, MAX_RECENT);
+      }
+    });
+    next.onMessage = (text) => handle(client.receive(text));
+    next.onClose = () => {
       // Переподключение — US3 (T044)
+      store.setState((draft: AppState) => {
+        draft.engine.status = { kind: 'offline', attempt: 0, retryAt: 0 };
+      });
     };
-    // Сначала сброс клиента, потом снимок (до welcome он только запоминается), потом hello
+    // Сначала сброс клиента, потом снимок (до welcome он только запоминается)
     const hello = client.start();
     client.sync(snapshot(store.getState()));
-    handle({ events: [], send: hello });
+    if (welcome === undefined) handle({ events: [], send: hello });
+    else handle(client.receive(welcome));
   }
 
-  connect(channel);
+  const open: ConnectionDeps['open'] =
+    options.open ??
+    ((target: EngineTarget, opts): Opening => {
+      if (target.kind === 'server') return probe(target.address, opts, browserProbeDeps());
+      if (target.kind === 'local') {
+        const immediate = { ok: true as const, channel: createInlineChannel(schedule) };
+        return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
+      }
+      // Фоновый поток — US2 (T060)
+      const failed = { ok: false as const, reason: 'unreachable' as const };
+      return { result: Promise.resolve(failed), cancel: () => {} };
+    });
+
+  const connection = createConnection(
+    { open },
+    {
+      attach,
+      trial: (trial) =>
+        store.setState((draft: AppState) => {
+          draft.engine.trial = trial;
+        }),
+      unavailable: () =>
+        store.setState((draft: AppState) => {
+          // Переподключение и «Use local engine» — US3
+          draft.engine.status = { kind: 'offline', attempt: 0, retryAt: 0 };
+        }),
+    },
+  );
+
+  app.engine = {
+    select: (target, opts) => connection.select(target, opts ?? {}),
+  };
+
+  connection.start(store.getState().engine.target);
   const unsubscribe = store.subscribe((state, prev) => {
     if (
       state.workflows !== prev.workflows ||
@@ -126,6 +199,8 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
 
   return () => {
     unsubscribe();
-    channel.close();
+    connection.dispose();
+    channel = null;
+    delete app.engine;
   };
 }

@@ -4,6 +4,7 @@ import { useAppState } from '../store/react';
 import { Editor } from './Editor';
 import { FloatingLayer } from './floating/FloatingLayer';
 import { useGlobalKeys } from './floating/useGlobalKeys';
+import { EngineIndicator } from './layout/EngineIndicator';
 import { MenuButton } from './layout/MenuButton';
 import { Notifications } from './layout/Notifications';
 import { SidebarWindow } from './layout/SidebarWindow';
@@ -19,6 +20,7 @@ export function Workbench() {
         <header className="topbar">
           <MenuButton />
           <TabBar />
+          <EngineIndicator />
         </header>
         <main className="main">
           {activeTabId ? (

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRegistry } from '../src/registry';
-import {
-  canAddNode,
-  canConnect,
-  linkCandidates,
-  validateGraph,
-} from '../src/validate';
+import { canAddNode, canConnect, linkCandidates, validateGraph } from '../src/validate';
 import { edge, graph, node } from './helpers';
 
 const registry = createRegistry([]);

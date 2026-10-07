@@ -1,8 +1,9 @@
-// Левая панель — плавающее окно: хранилище, список workflow, выгрузка и загрузка,
+// Левая панель — плавающее окно: хранилище, цель вычисления (фича 004), список workflow, выгрузка и загрузка,
 // внизу — ссылка на репозиторий проекта (FR-004)
 import { useUi } from '../../store/ui';
 import { ManagedWindow } from '../floating/ManagedWindow';
 import { windowMessages } from '../messages';
+import { EngineSection } from './EngineSection';
 import { ExportImport } from './ExportImport';
 import { FolderBanner } from './FolderBanner';
 import { StorageIndicator } from './StorageIndicator';
@@ -22,6 +23,7 @@ export function SidebarWindow() {
         {/* Сообщения о хранилище — вверху панели (FR-006a) */}
         <FolderBanner />
         <StorageIndicator />
+        <EngineSection />
         <WorkflowList />
         <ExportImport />
         {/* Переход по ссылке — действие пользователя, приложение само в сеть не ходит (принцип III) */}

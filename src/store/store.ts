@@ -6,7 +6,7 @@ import type { UnavailableItem } from '../storage/directory-storage';
 import type { TabHistory } from './history';
 import type { StorageLocation } from '../storage/location';
 import { messages } from '../ui/messages';
-import { initialEngine, type EngineSlice } from '../engine-link/types';
+import { initialEngine, type EngineSlice, type EngineTarget } from '../engine-link/types';
 
 export type NotificationKind = 'info' | 'warning' | 'error';
 
@@ -78,6 +78,13 @@ export type AppStoreApi = ReturnType<typeof makeStore>;
 export interface AppStore {
   store: AppStoreApi;
   deps: StoreDeps;
+  /** Управление целью вычисления; появляется после startEngine (src/store/engine.ts). */
+  engine?: EngineControl;
+}
+
+/** Действия с целью вычисления, которые выполняет связка с протоколом. */
+export interface EngineControl {
+  select(target: EngineTarget, opts?: { hint?: 'ws' | 'wss'; remembered?: 'ws' | 'wss' }): void;
 }
 
 export const defaultDeps: StoreDeps = {

@@ -163,7 +163,8 @@ packages/
     │   ├── + messages.ts            # тексты сервера (ui-texts.md)
     │   ├── + session.ts             # соединение ↔ хост: tick, журнал, лимит, учёт подключений (общий для сред)
     │   ├── + http.ts                # CORS-заголовки, ответы OPTIONS/GET
-    │   └── adapters/ + node.ts, bun.ts, deno.ts, + runtimes.d.ts  # минимальные типы Bun/Deno (R10)
+    │   └── adapters/ + runtime.ts (интерфейс адаптера, адрес клиента), node.ts, bun.ts, deno.ts,
+    │                 + runtimes.d.ts  # минимальные типы Bun/Deno (R10)
     └── test/ + options.test.ts, session.test.ts (фейковый сокет и часы)
 
 src/
@@ -188,6 +189,7 @@ src/
     ├── ~ messages.ts                # engineMessages (ui-texts.md)
     ├── layout/+ EngineSection.tsx   # раздел «Engine» в SidebarWindow
     ├── layout/+ EngineIndicator.tsx # индикатор в topbar
+    ├── layout/+ engine-text.ts      # тексты индикатора и ошибок пробной попытки по причине (T038)
     ├── layout/~ SidebarWindow.tsx, ~ Workbench.tsx
     ├── ~ Editor.tsx                 # полоса над холстом: «too large» для вкладки (FR-024)
     ├── canvas/~ FlowNode.tsx        # приглушённый вид

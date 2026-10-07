@@ -25,8 +25,10 @@ export interface Trial {
   target: EngineTarget;
   phase: 'probing';
   awaitingPermission?: boolean;
-  /** Текст из contracts/ui-texts.md — у поля или строки. */
-  error?: string;
+  /** Причина неудачи; текст у поля или строки — из src/ui/messages.ts (contracts/ui-texts.md). */
+  failure?: 'unreachable' | 'blocked' | 'incompatible' | 'invalid-address' | 'no-worker';
+  /** Версии хоста при failure: 'incompatible'. */
+  host?: { protocol: number; engine: string };
 }
 
 export interface EngineSlice {

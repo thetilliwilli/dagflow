@@ -2,6 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // Тесты фичи 004 запускают собранный сервер выполнения
+  globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: true,
   use: { baseURL: 'http://localhost:5173', trace: 'retain-on-failure' },
   projects: [

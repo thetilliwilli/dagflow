@@ -15,8 +15,10 @@
     "test:e2e": "playwright test --project chromium",
     "test:perf": "playwright test --project perf",
     "test:e2e:firefox": "playwright test --project firefox",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/engine/tsconfig.json --noEmit && tsc -p packages/protocol/tsconfig.json --noEmit",
-    "lint": "eslint ."
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p packages/engine/tsconfig.json --noEmit && tsc -p packages/protocol/tsconfig.json --noEmit && tsc -p packages/server/tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "build:server": "vite build --config packages/server/vite.config.ts",
+    "server": "npm run build:server && node packages/server/dist/dagflow-server.mjs"
   },
   "dependencies": {
     "@dagflow/engine": "*",
@@ -37,6 +39,7 @@
     "@types/node": "^24.19.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/ws": "^8.18.2",
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10.12.0",
     "eslint-plugin-react-hooks": "^7.1.1",
