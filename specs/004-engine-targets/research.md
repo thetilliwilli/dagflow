@@ -1,0 +1,346 @@
+# Research: выполнение workflow на выбранном engine
+
+Решения для [plan.md](./plan.md). Обсуждение архитектуры до specify — `ignore/artefacts/`
+(01–07); прототип сервера — `ignore/artefacts/proto-server/` (проверен в Node 24.18,
+Bun 1.4.2, Deno 2.9.6 на linux-x64).
+
+## R1. Монорепо: пакеты и место приложения
+
+- **Decision**: npm workspaces. Редактор остаётся в корне репозитория (пакет `dagflow`),
+  рядом три пакета:
+  - `packages/engine` (`@dagflow/engine`) — содержимое `src/engine/` без изменений API;
+  - `packages/protocol` (`@dagflow/protocol`) — сообщения, схемы Valibot, sans-IO хост и
+    клиент протокола, интерфейс канала;
+  - `packages/server` (`@dagflow/server`) — CLI и адаптеры WebSocket для Node, Bun, Deno.
+- Пакеты отдают **исходники TypeScript** (`"exports": { ".": "./src/index.ts" }`): Vite,
+  Vitest и `tsc` (`moduleResolution: bundler`) читают их напрямую, отдельной сборки
+  пакетов для редактора нет. Собирается только сервер (R11).
+- Границы: у `engine` и `protocol` свои `tsconfig.json` без DOM (`lib: ["ESNext"]`,
+  `types: []`) и правила ESLint (R2). `engine` ни от чего не зависит; `protocol` →
+  `engine`, `valibot`; `server` → `protocol`, `engine`, `ws`; редактор → все, кроме
+  `server`.
+- Тесты пакетов лежат в пакетах (`packages/*/test/`) и входят в общий `npm test` как
+  проекты Vitest. Хелперы тестов engine (`helpers.ts`, `composite-fixtures.ts`) тоже
+  переезжают и экспортируются из `packages/engine/test/` для тестов `src/model`.
+- **Rationale**: конституция требует отдельных пакетов для engine, протокола, сервера и
+  приложения; корень и есть пакет приложения. Перенос редактора в `packages/editor`
+  затронул бы ещё ~120 файлов (кроме переезжающего engine), workflow GitHub Pages, конфиги Vite и Playwright и все
+  команды в `CLAUDE.md` — без пользы для фичи (принцип I).
+- **Alternatives**:
+  - `packages/editor` — **отложено, не отклонено** (`specs/BACKLOG.md`, «Редактор
+    отдельным пакетом и название designer»). Довод «за» корень — только экономия
+    переноса (~120 файлов, конфиги, Pages, `CLAUDE.md`), а перенос почти механический.
+    Минусы корня: корневой `package.json` совмещает настройку монорепо (ESLint,
+    Prettier, Playwright, workspaces) и зависимости редактора; корень может
+    импортировать `packages/*/src` относительным путём в обход `exports`; структура из
+    четырёх пакетов-соседей нагляднее (принцип V).
+  - Пакеты со сборкой в `dist` и `.d.ts` — отклонено: пакеты не публикуются, все
+    потребители (Vite, Vitest, `tsc` с `moduleResolution: bundler`) читают исходники;
+    сборка добавила бы шаг перед `dev` и тестами, `tsc --watch` и ошибки «устаревший
+    `dist`». Минус выбранного: в таком виде пакет нельзя опубликовать в npm или
+    подключить без бандлера — сборка добавится, когда понадобится публикация (вне рамок).
+  - pnpm / Turborepo — отклонено: проект на npm (`package-lock.json`, `npm ci` в CI);
+    Turborepo — кэш задач для больших монорепо, здесь собирается только сервер (~1 с).
+    Минус npm: зависимости поднимаются в корневой `node_modules`, и пакет может
+    импортировать то, чего не объявил (pnpm это запрещает). Частично закрывается
+    `no-restricted-imports` в ESLint (R2).
+
+## R2. Ядро без ввода-вывода: как проверяется
+
+- **Decision**: для `packages/engine/src` и `packages/protocol/src`:
+  - `tsconfig.json` с `lib: ["ESNext"]`, `types: []` — DOM и Node-типов нет, `setTimeout`,
+    `console`, `structuredClone`, `fetch` не компилируются;
+  - ESLint: `no-restricted-globals` (`setTimeout`, `setInterval`, `queueMicrotask`,
+    `console`, `structuredClone`, `fetch`, `crypto`, `performance`, `process`, `Deno`,
+    `Bun`, `globalThis`, `self`, `window`), `no-restricted-properties` (`Date.now`,
+    `Math.random`), `no-restricted-syntax` для `new Date()`;
+  - `no-restricted-imports`: как сейчас для `src/engine` (без UI, стора, хранилища) +
+    `protocol` не импортирует `server` и приложение.
+- Нынешние `tsconfig.engine.json` и блок ESLint для `src/engine` переезжают в пакет.
+- **Rationale**: конституция 2.1.0 (sans-IO). Проверка `tsc` ловит API среды, ESLint —
+  недетерминизм, который в ECMAScript есть (`Date`, `Math.random`).
+- Проверено (Explore): в `src/engine` сейчас нет ни API среды, ни недетерминизма.
+
+## R3. Синхронизация снимками, а не очередью
+
+- **Decision**: граф — у редактора. При каждом (пере)подключении клиент шлёт полный
+  снимок: `hello` → `library` → `open` всех вкладок. Состояние хоста привязано к
+  соединению. Очереди неотправленных правок нет: пока связи нет, правки просто живут в
+  сторе.
+- **Rationale**: FR-021, принцип III; переподключение к перезапущенному серверу и
+  смена цели — один и тот же путь кода. Расхождений между копиями быть не может.
+- **Alternatives**: очередь операций/патчей (отклонено: сложнее, а граф на 100 нодов —
+  десятки КБ).
+
+## R4. Хост и клиент протокола: sans-IO, строки на входе
+
+- **Decision**: `createEngineHost()` и `createEngineClient()` в `@dagflow/protocol`:
+  `receive(raw: string)` → сообщения или события; хост ещё `tick()` и `needsTick()`.
+  Таймеров, сокетов и консоли в них нет. Адаптеры:
+  - Local: in-memory пара каналов, доставка строки в следующей макрозадаче
+    (`setTimeout(0)`), хост вызывает `tick()` тоже через `setTimeout(0)`;
+  - Worker: `postMessage(string)` в обе стороны;
+  - Server: текстовые кадры WebSocket.
+- Строка — во всех каналах: размер считается одинаково (R10), нет общих ссылок между
+  стором и хостом в режиме Local (то же поведение, что по сети).
+- Хост пересчитывает (`flush`) в `tick()`: несколько правок до тика — один пересчёт
+  (FR-016). `pending` уходит сразу из `receive`, `states` — из `tick`.
+- **Rationale**: конституция (sans-IO); детерминированные unit-тесты хоста и клиента без
+  сокетов и часов; один хост на все цели.
+- **Alternatives**: структурированные объекты через `postMessage` (отклонено: другой
+  путь, чем сеть; размер не посчитать); JSON-RPC (отклонено: запрос-ответ не нужен,
+  связь — через `rev`).
+
+## R5. Схемы Valibot: где живут и что проверяют
+
+- **Decision**: `JsonValueSchema`, `PortDefSchema`, `GraphSchema`, `CompositeSchema`
+  переезжают из `src/model/schemas.ts` в `packages/protocol/src/schemas.ts`;
+  `src/model/schemas.ts` импортирует их и добавляет обёртки файлов. Новые схемы:
+  `NodeStateSchema` и схемы всех сообщений (`ClientMessageSchema`,
+  `HostMessageSchema` — `v.variant('type', …)`).
+- Хост проверяет все входящие (данные от любой страницы, FR-031); клиент — все
+  входящие от хоста (сервер может быть другой версии).
+- `engine` от Valibot не зависит.
+- Замечание: `Evaluator.flatState` возвращает `message: undefined` для `computing`;
+  после JSON это поле исчезает, схема с `v.optional` принимает оба варианта.
+  Conformance сравнивает состояния после JSON (R13).
+- **Rationale**: схемы графа уже есть и проверены импортом (001); одна схема — для файлов
+  и для сети.
+
+## R6. Версии
+
+- **Decision**: `PROTOCOL_VERSION = 1` — константа в `protocol`. `ENGINE_VERSION` —
+  константа в `packages/engine/src/version.ts`, unit-тест сверяет её с `version` из
+  `packages/engine/package.json`. Сервер печатает обе при запуске.
+- **Rationale**: FR-023, clarify (сверяется только протокол). Константа вместо импорта
+  `package.json` не требует настроек сборки ни в одной среде.
+- **Alternatives**: `define` в Vite (отклонено: сборок несколько — редактор, worker,
+  сервер; везде пришлось бы повторять); импорт JSON с `with { type: 'json' }`
+  (отклонено: разная поддержка в рантаймах без сборки).
+
+## R7. Переподключение
+
+- **Decision**: машина состояний подключения (`src/engine-link/connection.ts`) без
+  таймеров внутри: часы и планировщик передаются (`now()`, `setTimer`, `clearTimer`).
+  Пауза перед попыткой `n`: `min(500 · 2^(n-1) · (1 ± 0,2), 10 000)` мс — разброс ±20 %
+  применяется до ограничения, так что пауза никогда не больше 10 с (FR-020); случайность
+  тоже передаётся, для тестов. Попытка сразу — «Retry now», событие `online`,
+  `visibilitychange` → `visible`.
+- `online` — только подсказка: для localhost он бесполезен (loopback работает
+  офлайн), основа — паузы.
+- **Rationale**: FR-020, SC-003 (после запуска сервера значения пересчитаны ≤ 15 с: пауза
+  не больше 10 с + до 3 с на попытку + пересчёт). Проверка — unit-тест машины состояний
+  на фейковых часах (верхняя граница паузы) и e2e US3 с замером времени (2 с / 15 с).
+
+## R8. Подбор схемы, ограничения браузеров
+
+Факты (проверено по источникам, октябрь 2026):
+
+Поддерживаемые браузеры — Chromium и Firefox.
+
+| Ситуация                                                                 | Chrome/Edge 147+                                                  | Firefox 154+    |
+| ------------------------------------------------------------------------ | ----------------------------------------------------------------- | --------------- |
+| Страница `http://localhost:5173` → `ws://localhost:8080`                 | разрешено, без запросов                                           | разрешено       |
+| Страница `https://…github.io` → `ws://localhost` / `127.0.0.1` / `[::1]` | не mixed content; **запрос разрешения Local Network Access**      | так же (LNA)    |
+| `https` → `ws://192.168.x.x`                                             | разрешено с LNA-запросом                                          | не подтверждено |
+| `https` → `ws://domain.com`                                              | синхронный `SecurityError` из конструктора                        | так же          |
+| Причина неудачи рукопожатия                                              | не видна скрипту (спецификация запрещает): `error` → `close 1006` | так же          |
+
+- **Decision**:
+  1. Порядок схем: локальный адрес — `ws`, затем `wss`; остальные — `wss`, затем `ws`;
+     страница по `https` и адрес не локальный — только `wss` (FR-009, FR-011).
+     Схема, указанная пользователем, или запомненная у адреса — первой.
+  2. Попытки строго **по очереди**: RFC 6455 допускает одно соединение в состоянии
+     CONNECTING на адрес, вторая попытка ждала бы первую. Не удалась — `close()` и
+     следующая схема.
+  3. Синхронное исключение из `new WebSocket` → «браузер запрещает» (текст из
+     ui-texts.md), схема пропускается.
+  4. Таймауты: 3 с на `welcome` после открытия сокета (FR-012); 3 с на открытие сокета,
+     **кроме** случая, когда разрешение Local Network Access в состоянии `prompt`
+     (`navigator.permissions.query({ name: 'loopback-network' | 'local-network' })`, в
+     `try` — в других браузерах имя неизвестно) — тогда ждём ответа пользователя, пока
+     попытку не отменят. Состояние `denied` → отдельный текст «доступ к локальной сети
+     запрещён в настройках сайта» (FR-011).
+  5. Заголовок `Access-Control-Allow-Private-Network: true` сервер оставляет (решение
+     пользователя), хотя механизм Private Network Access заменён на LNA и заголовок
+     больше ни на что не влияет.
+- **Rationale**: FR-009 – FR-012; без последовательных попыток `wss` после `ws` ждал бы
+  очереди; без особого случая для LNA пользователь не успел бы нажать «Allow».
+- **Не проверено, проверить вручную (quickstart)**: держит ли Chrome/Firefox рукопожатие
+  до ответа на запрос LNA.
+
+## R9. Адрес сервера
+
+- **Decision**: разбор через `new URL('ws://' + ввод)` (или ввод со схемой
+  `ws|wss|http|https` → схема-подсказка). Проверки: непустой хост, без
+  `user:pass@`, без `?query` и `#hash`; порт — как ввёл пользователь (`URL` сам не
+  подставляет его для `ws`/`wss`, если не указан). Нормализация для списка: хост в
+  нижнем регистре, без завершающего `/`. Локальный адрес: `localhost`, `*.localhost`,
+  `127.0.0.0/8`, `[::1]`.
+- Функции чистые (`src/engine-link/address.ts`), тесты — таблицей.
+- **Rationale**: FR-008 – FR-010; стандартный парсер вместо регулярных выражений.
+
+## R10. Сервер: один файл для трёх сред
+
+Проверено прототипом (`ignore/artefacts/proto-server/`).
+
+- **Decision**: `packages/server/src/main.ts` выбирает среду при запуске:
+  `globalThis.Deno` → `Deno.serve` + `Deno.upgradeWebSocket`; `globalThis.Bun` →
+  `Bun.serve` с `websocket`; иначе Node: `node:http` + `ws` (в Node 24 нет встроенного
+  WebSocket-сервера). Код `ws` вычисляется только в ветке Node (Rolldown оборачивает
+  CommonJS в ленивую функцию), Bun и Deno его не исполняют.
+
+| Что           | Node (`ws` 8.22)                                      | Bun 1.4                                         | Deno 2.9                                  |
+| ------------- | ----------------------------------------------------- | ----------------------------------------------- | ----------------------------------------- |
+| Аргументы     | `process.argv`                                        | `process.argv`                                  | `Deno.args`                               |
+| Занятый порт  | событие `error` у `http.Server`, `code: 'EADDRINUSE'` | исключение из `Bun.serve`, `code: 'EADDRINUSE'` | исключение `Deno.errors.AddrInUse`        |
+| CORS на 101   | `wss.on('headers')`                                   | `server.upgrade(req, { headers })`              | `response.headers.set`                    |
+| Адрес клиента | `req.socket.remoteAddress`                            | `server.requestIP(req)`                         | `info.remoteAddr` (до `upgradeWebSocket`) |
+| Лимит кадра   | `maxPayload`                                          | `maxPayloadLength`                              | нет опции (~64 МиБ встроенный)            |
+| Пинг          | `ws.ping()` каждые 30 с, `terminate()` без `pong`     | `idleTimeout: 30`, `sendPings: true`            | `idleTimeout: 30`                         |
+
+- Лимит 8 МБ: транспорту ставится `8 МБ + 1 КБ`, точную проверку делает хост
+  (`too-large` ответом, соединение живо). Больше лимита транспорта — соединение
+  закрывается (Node 1009, Bun 1006); в Deno опции нет, и адаптер сам закрывает
+  соединение с кодом 1009, если строка длиннее `8 МБ + 1 КБ`. Клиент воспринимает
+  закрытие как обрыв, но сам не
+  отправляет сообщений больше 8 МБ (FR-024). Node: обязателен `ws.on('error')`, иначе
+  превышение роняет процесс.
+- Deno 2.9.6 присылает `close` дважды после `idleTimeout` — адаптер считает
+  отключение один раз (флаг).
+- HTTP-запрос без upgrade → `200 text/plain` «DAG Flow engine `<version>`»; `OPTIONS` →
+  `204`; во всех ответах `Access-Control-Allow-Origin/Methods/Headers: *`,
+  `Access-Control-Allow-Private-Network: true` (FR-031). WebSocket — на любом пути.
+- Deno запускается с `--allow-net` (больше прав не нужно).
+- Типы: для Node — `@types/node` (уже есть); для Bun и Deno — свой маленький
+  `adapters/runtimes.d.ts` только с используемыми API (`Bun.serve`, `Deno.serve`,
+  `Deno.upgradeWebSocket`, `Deno.args`) вместо пакетов `@types/bun` и типов Deno.
+- TLS (`wss`) сервер сам не делает: для `wss` — обратный прокси (вне рамок фичи).
+- **Alternatives**: свой WebSocket на `node:http` `upgrade` для всех трёх сред
+  (отклонено: ~200 строк протокольного кода, а `upgrade` в Bun поддержан не полностью);
+  HTTP + SSE (отклонено: два канала, порядок сообщений сложнее).
+
+## R11. Сборка сервера
+
+- **Decision**: Vite 8 (уже в проекте, внутри Rolldown) в режиме SSR:
+  `packages/server/vite.config.ts` — `ssr: { noExternal: true, target: 'node' }`,
+  `build.ssr: 'src/main.ts'`, `rolldownOptions.output: { format: 'es',
+entryFileNames: 'dagflow-server.mjs', codeSplitting: false }`, без минификации.
+  Результат — `packages/server/dist/dagflow-server.mjs`, ~125 КБ, без `node_modules`
+  рядом.
+- Расширение `.mjs`: Node иначе смотрит на `type` ближайшего `package.json`.
+- `build.lib` не подходит: подставляет браузерную заглушку `ws`. `codeSplitting: false`
+  обязателен: иначе ветка Node уходит в отдельный файл.
+- Необязательные `bufferutil`/`utf-8-validate` заменяются заглушками, `ws` работает без
+  них.
+- Запуск из папки проекта (FR-029a): `npm run server` = сборка + `node …mjs`;
+  `server:bun`, `server:deno` — то же для Bun и Deno. Отдельного запуска исходников нет:
+  разработчик и тесты работают с тем же файлом, что и пользователь.
+- **Alternatives**: esbuild/tsup (отклонено: новая зависимость, Vite уже умеет);
+  запуск TS-исходников через `node --experimental-strip-types` (отклонено: импорты без
+  расширений, Deno их не понимает — пришлось бы два пути).
+
+## R12. Node, Bun и Deno — среды, которые ставит пользователь
+
+- **Decision**: среды выполнения не входят в зависимости npm. Разработчик сам ставит
+  Node 24+, Bun 1.4+ и Deno 2.9+ на машину; требования записаны в
+  `packages/server/package.json` (`"engines": { "node": ">=24", "bun": ">=1.4",
+"deno": ">=2.9" }`), в quickstart и `CLAUDE.md`. Тесты запускают `node`, `bun`,
+  `deno` из `PATH`.
+- Если среды нет, проект `conformance` **падает** с понятным сообщением («Bun is not
+  installed or not in PATH. Install Bun 1.4+ and run again.»), а не пропускает её:
+  проверка бандла в каждой среде обязательна (конституция).
+- `npm run test:conformance` не входит в `npm test` и в сборку GitHub Pages: обычный
+  `npm ci` и `npm test` не требуют Bun и Deno.
+- **Rationale**: решение пользователя (2026-10-07): не тянуть ~168 МБ бинарников в
+  каждый `npm ci`, включая сборку Pages.
+- **Alternatives**: devDependencies `bun` и `deno` из npm (отклонено: +168 МБ к каждой
+  установке); `peerDependencies` (отклонено: npm 7+ сам ставит обязательные peer-
+  зависимости — те же 168 МБ, а с `optional: true` это просто запись без проверки; для
+  требований к среде в npm служит `engines`).
+
+## R13. Одинаковые результаты во всех средах (SC-001, FR-017)
+
+- **Decision**: проект Vitest `conformance` (`tests/conformance/`), запускается
+  `npm run test:conformance` (сначала собирает сервер):
+  1. эталонные workflow — JSON в `tests/conformance/fixtures/` (все встроенные ноды,
+     составные, ошибки нодов, ожидание входов, неизвестный тип, цикл);
+  2. эталон — тот же хост протокола в процессе (`createEngineHost`), состояния после
+     JSON;
+  3. для каждой среды (`node`, `bun`, `deno run --allow-net` из `PATH`, R12) запускается
+     **собранный** `dagflow-server.mjs` на свободном порту, тест подключается
+     WebSocket-клиентом Node, открывает каждый workflow и сравнивает `states` с
+     эталоном (`toEqual`);
+  4. там же — сценарии сервера: занятый порт, предупреждение для сетевого адреса,
+     строки журнала и отсутствие данных workflow в выводе, `too-large`, некорректное
+     сообщение, изоляция двух подключений, CORS-заголовки.
+- Браузер — тоже поддерживаемая среда: Local и Worker проверяются на **собранном**
+  редакторе. Проект Playwright `bundle` (`npm run test:e2e:bundle`, Chromium и Firefox)
+  запускает `vite build` + `vite preview`
+  (`http://localhost:4173/dagflow/`) и гоняет на нём e2e
+  `engine-conformance.spec.ts`: эталонные workflow из `tests/conformance/fixtures/`
+  в Local и в Worker дают те же состояния, что хост в Node (эталон считает сам тест
+  хостом `@dagflow/protocol` в процессе Playwright). Остальные e2e остаются на
+  dev-сервере (быстрее и с HMR).
+- **Rationale**: проверяется собранный бандл в каждой среде (конституция); код в среде
+  выполняет сам бандл, тестовый фреймворк остаётся в Node — Vitest в Bun/Deno не нужен.
+- **Alternatives**: самописный скрипт сценариев внутри каждой среды (отклонено: тот же
+  результат без Vitest, но без отчётов и `toEqual`; сервер-бандл всё равно нужно
+  проверять через сеть); `bun test`/`deno test` (отклонено: три раннера на один набор).
+
+## R14. Фоновый поток
+
+- **Decision**: `src/engine-link/engine-worker.ts` — модульный worker
+  (`new Worker(new URL(…), { type: 'module' })`, как `opfs-write-worker.ts`): хост
+  протокола + адаптер `postMessage`. Исключения хоста превращаются в `error internal`
+  (протокол). «Падение» — событие `error` у объекта `Worker` (ошибка загрузки или
+  необработанное исключение вне хоста): канал закрывается с причиной `crashed`, worker
+  завершается (`terminate`) и создаётся заново, вкладки передаются снова, уведомление
+  (FR-027). Три падения за 60 с (по часам адаптера) → статус `failed`.
+- OOM в Chromium роняет всю вкладку — отдельно не обрабатывается.
+- Нет `Worker` в браузере → пробная попытка неудачна с текстом из ui-texts.md.
+- Тест падения — unit-тест канала и машины состояний с фейковым `Worker`; e2e — обычный
+  путь Worker (US2 #1, #4).
+
+## R15. Связка со стором
+
+- **Decision**: `src/store/engine.ts` заменяет `evaluation.ts`. Подписка на `workflows`,
+  `composites`, `tabs` (как сейчас) → `client.sync(snapshot)` → сообщения в текущий
+  канал. События клиента → запись `nodeStates` не чаще раза за кадр (rAF, как сейчас;
+  в тестах — `manualScheduler`). Срез `engine` (data-model.md) — в сторе, действия:
+  `selectTarget`, `connectServer`, `removeServer`, `retryNow`, `useLocalEngine`.
+- UI читает только стор: `FlowNode`, `PropertyGrid`, `PortPanels` получают признак
+  «приглушено» селектором (`status.kind !== 'ready'` или флаги `tooLarge`).
+- **Rationale**: шов уже есть — `evaluation.ts` единственный, кто говорит с
+  вычислителем; UI и стор почти не меняются.
+
+## R16. Настройки цели в браузере
+
+- **Decision**: `src/engine-link/settings.ts` — `loadEngineSettings`/`saveEngineSettings`
+  через `idb-keyval` (ключ `dagflow:engine`), env-объект для тестов, как
+  `src/storage/location.ts`. Проверка схемой Valibot; ошибка → значения по умолчанию.
+  Окна не синхронизируются (FR-006).
+
+## R17. e2e с сервером
+
+- **Decision**: фикстура Playwright `tests/e2e/engine-server.ts`: перед тестом находит
+  свободный порт, запускает `node packages/server/dist/dagflow-server.mjs --port N`, ждёт
+  строку «is listening», после теста останавливает. Умеет остановить и снова запустить
+  сервер на том же порту (US3). Поддельные серверы для US1 #8 и US6 — маленькие
+  WebSocket-серверы на `ws` прямо в фикстуре: «не engine» (HTTP 200), «молчит» (нет
+  `welcome`), «другой протокол» (`welcome` с `protocol: 2`), «другой engine»,
+  «не знает нод».
+- `globalSetup` собирает сервер один раз (`npm run build:server`).
+- Перф-тест (`tests/e2e/perf.spec.ts`, SC-002) — те же замеры для Worker и Server.
+
+## R18. Новые зависимости
+
+| Пакет       | Где                         | Зачем                            | Почему не самим                                                                                                           |
+| ----------- | --------------------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `ws` 8.22.x | `@dagflow/server` (runtime) | WebSocket-сервер в Node (FR-029) | в Node 24 нет встроенного сервера; свой RFC 6455 — ~200 строк протокольного кода с тонкостями (фрагментация, маски, ping) |
+| `@types/ws` 8.18.x | dev                  | типы `ws`                        | —                                                                                                                         |
+
+Bun и Deno — не зависимости npm, их ставит пользователь (R12).
+
+Совместимость: `npm view ws peerDependencies` — `bufferutil`, `utf-8-validate`
+(необязательные). Valibot, Vite, Vitest, Playwright, idb-keyval — уже в проекте.

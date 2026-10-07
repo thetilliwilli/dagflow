@@ -30,7 +30,7 @@ idb-keyval) → OPFS (запасной вариант); экспорт/импо�
 @playwright/test 1.63 (Chromium)
 
 **Target Platform**: настольные браузеры последних двух версий. Chromium — полный
-функционал; Firefox и Safari — без рабочей папки (OPFS + файлы)
+функционал; Firefox — без рабочей папки (OPFS + файлы)
 
 **Project Type**: одностраничное веб-приложение (SPA), только клиент
 
@@ -179,8 +179,8 @@ tests/
 6. **US4**: composite (collapse/expand/ports/разворачивание, E8, E9), вкладка
    составного нода, палитра составных нодов, слияние при импорте.
 7. **US5**: undo/redo, групповое выделение и удаление, навигация по холсту.
-8. **Сквозное**: e2e по quickstart, перф-тесты SC-002/SC-003, проверка Safari
-   OPFS `createWritable` (риск R7).
+8. **Сквозное**: e2e по quickstart, перф-тесты SC-002/SC-003, запасной путь
+   OPFS без `createWritable` (риск R7).
 
 ## Complexity Tracking
 

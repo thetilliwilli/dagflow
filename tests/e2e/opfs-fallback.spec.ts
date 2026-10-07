@@ -1,4 +1,4 @@
-// Риск R7: браузер без FileSystemFileHandle.createWritable (как старые Safari) — запись через воркер
+// Риск R7: браузер без FileSystemFileHandle.createWritable — запись через воркер
 import { expect, test } from '@playwright/test';
 import { addNode, setInput, inputField } from './helpers';
 

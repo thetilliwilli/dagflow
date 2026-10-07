@@ -226,13 +226,12 @@ description: "Task list for 001-dag-workflow-editor"
 - [X] T091 [P] Написать `tests/unit/engine/evaluator.perf.test.ts`: цепочка и «широкий» граф по 100 нодов — `setValue` + `flush` укладываются в 20 мс без UI (запас для SC-003)
 - [X] T092 [P] Написать `tests/e2e/perf.spec.ts` (замеры внутри страницы через `performance.mark`/`measure`, отдельный Playwright-проект `perf`, не входит в основной прогон): граф из 100 нодов — добавление и перемещение нода отражаются меньше чем за 100 мс (SC-002), изменение входа доходит до последнего нода меньше чем за 200 мс (SC-003)
 - [X] T093 [P] Написать `tests/e2e/autosave-durability.spec.ts`: изменение → ожидание 1 с → перезагрузка → изменение на месте, и в режиме папки, и в режиме браузера (SC-008)
-- [X] T094 Проверить `createWritable()` для OPFS в актуальном Safari (риск R7); при отсутствии поддержки добавить запасной путь записи через Web Worker и `createSyncAccessHandle()` в `src/storage/opfs-write-worker.ts` и использовать его в `src/storage/directory-storage.ts`
+- [X] T094 Добавить на случай браузера без `createWritable()` для OPFS (риск R7) запасной путь записи через Web Worker и `createSyncAccessHandle()` в `src/storage/opfs-write-worker.ts` и использовать его в `src/storage/directory-storage.ts`
 - [X] T095 [P] Профилировать перерисовки на графе из 100 нодов (React DevTools Profiler): изменение одного значения перерисовывает только затронутые `FlowNode`; при необходимости уточнить селекторы в `src/ui/canvas/FlowNode.tsx`
 - [X] T096 [P] Создать `README.md`: что это за проект, команды из [quickstart.md](./quickstart.md), ссылки на спеку и план
 - [X] T097 Прогнать `npm run typecheck`, `npm run lint`, `npm test`, `npm run test:e2e` — всё зелёное; пройти вручную сценарии [quickstart.md](./quickstart.md) в Chromium и Firefox
   - *Итог*: всё зелёное (213 unit/component, 14 e2e Chromium, 9 e2e Firefox, perf). Сценарии quickstart
     пройдены автоматически e2e-тестами в обоих браузерах; ручной проход глазами — за пользователем.
-    Safari не проверен (см. research R7).
 
 ---
 
