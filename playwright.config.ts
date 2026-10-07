@@ -7,14 +7,18 @@ export default defineConfig({
   fullyParallel: true,
   use: { baseURL: 'http://localhost:5173', trace: 'retain-on-failure' },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: /perf\.spec\.ts/ },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: /(perf|engine-conformance)\.spec\.ts/,
+    },
     // Замеры производительности — отдельно от основного прогона (npm run test:perf)
     { name: 'perf', use: { ...devices['Desktop Chrome'] }, testMatch: /perf\.spec\.ts/ },
     // Firefox: без выбора рабочей папки (такого API нет) — проверяем всё остальное (npm run test:e2e:firefox)
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'] },
-      testIgnore: /(perf|autosave-durability|opfs-fallback)\.spec\.ts/,
+      testIgnore: /(perf|autosave-durability|opfs-fallback|engine-conformance)\.spec\.ts/,
       grepInvert: /рабочая папка|требует подтверждения/,
     },
   ],

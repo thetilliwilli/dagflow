@@ -129,7 +129,8 @@ specs/004-engine-targets/
 - tsconfig.engine.json               # → packages/engine/tsconfig.json
 ~ eslint.config.js                   # sans-IO правила для packages/engine и packages/protocol (R2)
 ~ vite.config.ts                     # проекты Vitest: unit (+ packages/*/test), component, conformance
-~ playwright.config.ts               # globalSetup: сборка сервера; проект bundle (vite build + preview, R13)
+~ playwright.config.ts               # globalSetup: сборка сервера
++ playwright.bundle.config.ts        # собранный редактор: vite build + preview, Chromium и Firefox (R13)
 ~ CLAUDE.md                          # структура (packages/*), команды, тексты в packages/engine/src/errors.ts,
                                      #   sans-IO, среды Node/Bun/Deno в PATH, «готово» += test:conformance, test:e2e:bundle
 ~ README.md                          # команды и структура (без tsconfig.engine.json)

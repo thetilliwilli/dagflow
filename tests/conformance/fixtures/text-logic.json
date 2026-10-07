@@ -24,7 +24,7 @@
           "type": "builtin:text",
           "name": "t2",
           "position": {
-            "x": 0,
+            "x": 280,
             "y": 0
           },
           "values": {
@@ -36,7 +36,7 @@
           "type": "builtin:concat",
           "name": "cat",
           "position": {
-            "x": 0,
+            "x": 560,
             "y": 0
           },
           "values": {}
@@ -46,7 +46,7 @@
           "type": "builtin:text-length",
           "name": "len",
           "position": {
-            "x": 0,
+            "x": 840,
             "y": 0
           },
           "values": {}
@@ -57,7 +57,7 @@
           "name": "num",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 170
           },
           "values": {
             "value": 3.5
@@ -68,8 +68,8 @@
           "type": "builtin:to-text",
           "name": "tt",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 170
           },
           "values": {}
         },
@@ -78,8 +78,8 @@
           "type": "builtin:to-number",
           "name": "tn",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 170
           },
           "values": {
             "text": "42"
@@ -90,8 +90,8 @@
           "type": "builtin:to-number",
           "name": "bad",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 840,
+            "y": 170
           },
           "values": {
             "text": "abc"
@@ -103,7 +103,7 @@
           "name": "yes",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 340
           },
           "values": {
             "value": true
@@ -114,8 +114,8 @@
           "type": "builtin:boolean",
           "name": "no",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 340
           },
           "values": {
             "value": false
@@ -126,8 +126,8 @@
           "type": "builtin:and",
           "name": "and",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 340
           },
           "values": {}
         },
@@ -136,8 +136,8 @@
           "type": "builtin:or",
           "name": "or",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 840,
+            "y": 340
           },
           "values": {}
         },
@@ -147,7 +147,7 @@
           "name": "not",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 510
           },
           "values": {}
         },
@@ -156,8 +156,8 @@
           "type": "builtin:equals",
           "name": "eq",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 510
           },
           "values": {
             "b": 42
@@ -168,8 +168,8 @@
           "type": "builtin:if",
           "name": "if",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 510
           },
           "values": {
             "then": "big",

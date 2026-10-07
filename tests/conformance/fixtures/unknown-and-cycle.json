@@ -22,7 +22,7 @@
           "type": "builtin:number",
           "name": "n",
           "position": {
-            "x": 0,
+            "x": 280,
             "y": 0
           },
           "values": {
@@ -34,7 +34,7 @@
           "type": "builtin:show",
           "name": "show",
           "position": {
-            "x": 0,
+            "x": 560,
             "y": 0
           },
           "values": {}
@@ -44,7 +44,7 @@
           "type": "builtin:add",
           "name": "x",
           "position": {
-            "x": 0,
+            "x": 840,
             "y": 0
           },
           "values": {}
@@ -55,7 +55,7 @@
           "name": "y",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 170
           },
           "values": {}
         }

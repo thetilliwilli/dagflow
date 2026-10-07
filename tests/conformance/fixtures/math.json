@@ -24,7 +24,7 @@
           "type": "builtin:number",
           "name": "b",
           "position": {
-            "x": 0,
+            "x": 280,
             "y": 0
           },
           "values": {
@@ -36,7 +36,7 @@
           "type": "builtin:add",
           "name": "add",
           "position": {
-            "x": 0,
+            "x": 560,
             "y": 0
           },
           "values": {}
@@ -46,7 +46,7 @@
           "type": "builtin:subtract",
           "name": "sub",
           "position": {
-            "x": 0,
+            "x": 840,
             "y": 0
           },
           "values": {}
@@ -57,7 +57,7 @@
           "name": "mul",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 170
           },
           "values": {}
         },
@@ -66,8 +66,8 @@
           "type": "builtin:divide",
           "name": "div",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 170
           },
           "values": {}
         },
@@ -76,8 +76,8 @@
           "type": "builtin:divide",
           "name": "zero",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 170
           },
           "values": {
             "a": 1,
@@ -89,8 +89,8 @@
           "type": "builtin:greater",
           "name": "gt",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 840,
+            "y": 170
           },
           "values": {}
         },
@@ -100,7 +100,7 @@
           "name": "lt",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 340
           },
           "values": {}
         },
@@ -109,8 +109,8 @@
           "type": "builtin:show",
           "name": "show",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 340
           },
           "values": {}
         }

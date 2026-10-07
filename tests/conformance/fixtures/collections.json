@@ -24,7 +24,7 @@
           "type": "builtin:array-append",
           "name": "app",
           "position": {
-            "x": 0,
+            "x": 280,
             "y": 0
           },
           "values": {
@@ -36,7 +36,7 @@
           "type": "builtin:array-get",
           "name": "get",
           "position": {
-            "x": 0,
+            "x": 560,
             "y": 0
           },
           "values": {
@@ -48,7 +48,7 @@
           "type": "builtin:array-get",
           "name": "out",
           "position": {
-            "x": 0,
+            "x": 840,
             "y": 0
           },
           "values": {
@@ -61,7 +61,7 @@
           "name": "len",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 170
           },
           "values": {}
         },
@@ -70,8 +70,8 @@
           "type": "builtin:json",
           "name": "obj",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 170
           },
           "values": {
             "value": {
@@ -84,8 +84,8 @@
           "type": "builtin:object-set",
           "name": "set",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 170
           },
           "values": {
             "key": "b",
@@ -97,8 +97,8 @@
           "type": "builtin:object-get",
           "name": "oget",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 840,
+            "y": 170
           },
           "values": {
             "key": "b"
@@ -110,7 +110,7 @@
           "name": "miss",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 340
           },
           "values": {
             "key": "zzz"
@@ -121,8 +121,8 @@
           "type": "builtin:show",
           "name": "show",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 340
           },
           "values": {}
         }

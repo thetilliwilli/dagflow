@@ -8,6 +8,7 @@ import {
   type Snapshot,
 } from '@dagflow/protocol';
 import { createInlineChannel } from '../engine-link/channels/inline';
+import { openWorker, type WorkerLike } from '../engine-link/channels/worker';
 import {
   createConnection,
   type AttachInfo,
@@ -16,6 +17,7 @@ import {
 } from '../engine-link/connection';
 import { probe, type ProbeDeps, type SocketLike } from '../engine-link/probe';
 import type { EngineTarget } from '../engine-link/types';
+import { engineMessages } from '../ui/messages';
 import { tabGraph, type AppState, type AppStore } from './store';
 
 type Schedule = (fn: () => void) => void;
@@ -108,6 +110,13 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     });
   }
 
+  function notify(kind: 'info' | 'warning' | 'error', text: string) {
+    const id = app.deps.newId();
+    store.setState((draft: AppState) => {
+      draft.notifications.push({ id, kind, text });
+    });
+  }
+
   function markComputing(draft: AppState, tabId: string, nodes: string[]) {
     const states = (draft.nodeStates[tabId] ??= {});
     const graph = tabGraph(
@@ -158,9 +167,16 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
         const immediate = { ok: true as const, channel: createInlineChannel(schedule) };
         return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
       }
-      // Фоновый поток — US2 (T060)
-      const failed = { ok: false as const, reason: 'unreachable' as const };
-      return { result: Promise.resolve(failed), cancel: () => {} };
+      return openWorker(
+        () =>
+          new Worker(new URL('../engine-link/engine-worker.ts', import.meta.url), {
+            type: 'module',
+          }) as unknown as WorkerLike,
+        {
+          setTimer: (fn, ms) => setTimeout(fn, ms),
+          clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+        },
+      );
     });
 
   const connection = createConnection(
@@ -181,6 +197,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
         store.setState((draft: AppState) => {
           draft.engine.status = status;
         }),
+      restarted: () => notify('warning', engineMessages.workerRestarted),
     },
   );
 

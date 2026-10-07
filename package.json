@@ -21,7 +21,8 @@
     "server": "npm run build:server && node packages/server/dist/dagflow-server.mjs",
     "test:conformance": "npm run build:server && vitest run --project conformance",
     "server:bun": "npm run build:server && bun packages/server/dist/dagflow-server.mjs",
-    "server:deno": "npm run build:server && deno run --allow-net packages/server/dist/dagflow-server.mjs"
+    "server:deno": "npm run build:server && deno run --allow-net packages/server/dist/dagflow-server.mjs",
+    "test:e2e:bundle": "playwright test -c playwright.bundle.config.ts"
   },
   "dependencies": {
     "@dagflow/engine": "*",

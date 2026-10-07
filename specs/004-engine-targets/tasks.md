@@ -181,16 +181,16 @@ US2 → US4 → US6. US3 идёт сразу за US1: без переподкл
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T057 [P] [US2] Тесты канала worker `tests/unit/engine-link/worker-channel.test.ts` с фейковым `Worker` и часами: строки в обе стороны; событие `error` у `Worker` → `onClose('crashed')`, `terminate()`, новый worker, повторная передача вкладок, уведомление «The engine restarted after a failure.» (US2 #2); третье падение за 60 с → статус `failed`, без перезапуска, индикатор «The background engine keeps failing.» + «Use local engine» (US2 #3); нет `Worker` в браузере → пробная попытка неудачна с текстом «This browser cannot run the engine in the background.» (Edge Cases)
-- [ ] T058 [US2] e2e `tests/e2e/engine-us2-worker.spec.ts`: выбор строки «Worker» → «● Worker», значения всех вкладок те же (US2 #1); возврат на «This tab · Local» без потери значений (#4)
-- [ ] T059 [US2] e2e `tests/e2e/engine-conformance.spec.ts` для проекта Playwright `bundle` (research R13): эталоны `tests/conformance/fixtures/*.json` загружаются через «Import» в левой панели (`setInputFiles`), в Local и в Worker состояния всех нодов совпадают с хостом `@dagflow/protocol`, вычисленным в процессе теста (SC-001 для браузера; после T049 — эталоны из US5)
+- [X] T057 [P] [US2] Тесты канала worker `tests/unit/engine-link/worker-channel.test.ts` с фейковым `Worker` и часами: строки в обе стороны; событие `error` у `Worker` → `onClose('crashed')`, `terminate()`, новый worker, повторная передача вкладок, уведомление «The engine restarted after a failure.» (US2 #2); третье падение за 60 с → статус `failed`, без перезапуска, индикатор «The background engine keeps failing.» + «Use local engine» (US2 #3); нет `Worker` в браузере → пробная попытка неудачна с текстом «This browser cannot run the engine in the background.» (Edge Cases)
+- [X] T058 [US2] e2e `tests/e2e/engine-us2-worker.spec.ts`: выбор строки «Worker» → «● Worker», значения всех вкладок те же (US2 #1); возврат на «This tab · Local» без потери значений (#4)
+- [X] T059 [US2] e2e `tests/e2e/engine-conformance.spec.ts` для проекта Playwright `bundle` (research R13): эталоны `tests/conformance/fixtures/*.json` загружаются через «Import» в левой панели (`setInputFiles`), в Local и в Worker состояния всех нодов совпадают с хостом `@dagflow/protocol`, вычисленным в процессе теста (SC-001 для браузера; после T049 — эталоны из US5)
 
 ### Implementation for User Story 2
 
-- [ ] T060 [US2] Хост в worker `src/engine-link/engine-worker.ts` (`createEngineHost`, `postMessage(string)`, `tick` по `setTimeout(0)`, исключения хоста → `error internal`) и канал `src/engine-link/channels/worker.ts` (`new Worker(new URL('../engine-worker.ts', import.meta.url), { type: 'module' })`, учёт падений по часам адаптера) — чтобы прошли T057
-- [ ] T061 [US2] Строка «This browser · Worker» в `EngineSection.tsx` выбирает Worker через пробную попытку (`welcome` от worker); индикатор «● Worker»; статус `failed` и уведомление в `src/store/engine.ts`
-- [ ] T062 [US2] Проект Playwright `bundle` в `playwright.config.ts`: `webServer` — `npm run build && npx vite preview --port 4173 --strictPort`, `baseURL: http://localhost:4173/dagflow/`, `testMatch: /engine-conformance\.spec\.ts/`, Chromium и Firefox; основной проект `chromium`/`firefox` этот файл игнорирует; скрипт `test:e2e:bundle` в `package.json`
-- [ ] T063 [US2] Прогнать T057–T059 (`npm run test:e2e:bundle`); ручной сценарий 4 (шаг 1) из quickstart.md
+- [X] T060 [US2] Хост в worker `src/engine-link/engine-worker.ts` (`createEngineHost`, `postMessage(string)`, `tick` по `setTimeout(0)`, исключения хоста → `error internal`) и канал `src/engine-link/channels/worker.ts` (`new Worker(new URL('../engine-worker.ts', import.meta.url), { type: 'module' })`, учёт падений по часам адаптера) — чтобы прошли T057
+- [X] T061 [US2] Строка «This browser · Worker» в `EngineSection.tsx` выбирает Worker через пробную попытку (`welcome` от worker); индикатор «● Worker»; статус `failed` и уведомление в `src/store/engine.ts`
+- [X] T062 [US2] Проект Playwright `bundle` в `playwright.config.ts`: `webServer` — `npm run build && npx vite preview --port 4173 --strictPort`, `baseURL: http://localhost:4173/dagflow/`, `testMatch: /engine-conformance\.spec\.ts/`, Chromium и Firefox; основной проект `chromium`/`firefox` этот файл игнорирует; скрипт `test:e2e:bundle` в `package.json`
+- [X] T063 [US2] Прогнать T057–T059 (`npm run test:e2e:bundle`); ручной сценарий 4 (шаг 1) из quickstart.md
 
 **Checkpoint**: три цели — Local, Worker, Server — работают через один хост.
 

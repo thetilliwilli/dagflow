@@ -41,6 +41,7 @@ function setup(random = 0.5) {
       ),
     trial: (t) => trials.push(t),
     status: (st) => statuses.push(st),
+    restarted: () => log.push('restarted'),
   };
   const conn = createConnection(
     {

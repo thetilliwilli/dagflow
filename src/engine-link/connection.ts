@@ -7,7 +7,16 @@ import type { ConnectionStatus, EngineTarget, Trial } from './types';
 
 /** Открытие Local: канал без welcome — клиент протокола сам отправит hello. */
 export type LocalOk = { ok: true; channel: Channel };
-export type OpenResult = ProbeResult | LocalOk;
+/** Цель подтвердила welcome (Worker): как проба сервера, но без схемы. */
+export type WelcomedOk = {
+  ok: true;
+  channel: Channel;
+  welcome: string;
+  engine: string;
+  scheme?: Scheme;
+  encrypted?: boolean;
+};
+export type OpenResult = ProbeResult | LocalOk | WelcomedOk | { ok: false; reason: 'no-worker' };
 
 export interface Opening {
   result: Promise<OpenResult>;
@@ -27,8 +36,10 @@ export interface ConnectionEvents {
   attach(channel: Channel, welcome: string | undefined, info: AttachInfo): void;
   /** Пробная попытка: идёт, не удалась или закончилась (undefined). */
   trial(trial: Trial | undefined): void;
-  /** Состояние, которое знает только подключение: offline, connecting (повтор), incompatible. */
+  /** Состояние, которое знает только подключение: offline, connecting (повтор), incompatible, failed. */
   status(status: ConnectionStatus): void;
+  /** Фоновый поток упал и перезапущен — уведомление (FR-027). */
+  restarted(): void;
 }
 
 export interface ConnectionDeps {
@@ -55,6 +66,9 @@ export interface Connection {
   dispose(): void;
 }
 
+const MAX_CRASHES = 3;
+const CRASH_WINDOW_MS = 60_000;
+
 /** Пауза перед попыткой n: min(500 · 2^(n-1) · (1 ± 0,2), 10 000) мс (data-model, R7). */
 export function retryDelay(attempt: number, random: number): number {
   const base = 500 * 2 ** (attempt - 1);
@@ -71,6 +85,7 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
   let timer: unknown = null;
   let attempt = 0;
   let halted = false;
+  let crashes: number[] = [];
 
   function stopRetries() {
     if (timer !== null) deps.clearTimer(timer);
@@ -98,16 +113,31 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
     const probed = 'welcome' in r ? r : undefined;
     scheme = probed?.scheme;
     const channel = r.channel;
-    channel.onClose = () => {
+    channel.onClose = (reason) => {
       if (current !== channel) return;
       current = null;
-      if (!halted) scheduleRetry();
+      if (halted) return;
+      if (reason === 'crashed') crashed();
+      else scheduleRetry();
     };
     events.attach(channel, probed?.welcome, {
       target: next,
       scheme,
       encrypted: probed?.encrypted ?? false,
     });
+  }
+
+  /** Падение фонового потока: сразу новый поток; 3 падения за 60 с → failed (FR-027). */
+  function crashed() {
+    const now = deps.now();
+    crashes = [...crashes.filter((t) => now - t < CRASH_WINDOW_MS), now];
+    if (crashes.length >= MAX_CRASHES) {
+      halted = true;
+      events.status({ kind: 'failed' });
+      return;
+    }
+    events.restarted();
+    reconnect();
   }
 
   function scheduleRetry() {
@@ -142,6 +172,13 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
       halted = true;
       stopRetries();
       events.status({ kind: 'incompatible', host: r.host });
+      return;
+    }
+    if (r.reason === 'no-worker') {
+      // Фонового потока в браузере нет — повторять бессмысленно
+      halted = true;
+      stopRetries();
+      events.status({ kind: 'failed' });
       return;
     }
     scheduleRetry();

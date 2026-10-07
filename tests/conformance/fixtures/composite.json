@@ -13,7 +13,7 @@
           "name": "n",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 340
           },
           "values": {
             "value": 5
@@ -24,8 +24,8 @@
           "type": "composite:DS",
           "name": "i1",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 340
           },
           "values": {
             "b": 3
@@ -36,8 +36,8 @@
           "type": "composite:Q",
           "name": "i2",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 340
           },
           "values": {}
         },
@@ -46,8 +46,8 @@
           "type": "builtin:number",
           "name": "zero",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 840,
+            "y": 340
           },
           "values": {
             "value": 0
@@ -59,7 +59,7 @@
           "name": "div",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 510
           },
           "values": {
             "a": 1
@@ -70,8 +70,8 @@
           "type": "composite:DS",
           "name": "i3",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 280,
+            "y": 510
           },
           "values": {
             "a": 1
@@ -82,8 +82,8 @@
           "type": "builtin:show",
           "name": "show",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 560,
+            "y": 510
           },
           "values": {}
         }
@@ -178,7 +178,7 @@
             "type": "builtin:input",
             "name": "ib",
             "position": {
-              "x": 0,
+              "x": 280,
               "y": 0
             },
             "values": {},
@@ -195,7 +195,7 @@
             "type": "builtin:add",
             "name": "add",
             "position": {
-              "x": 0,
+              "x": 560,
               "y": 0
             },
             "values": {}
@@ -205,7 +205,7 @@
             "type": "builtin:multiply",
             "name": "mul",
             "position": {
-              "x": 0,
+              "x": 840,
               "y": 0
             },
             "values": {
@@ -218,7 +218,7 @@
             "name": "o",
             "position": {
               "x": 0,
-              "y": 0
+              "y": 170
             },
             "values": {},
             "ports": [
@@ -290,8 +290,8 @@
             "type": "builtin:input",
             "name": "qa",
             "position": {
-              "x": 0,
-              "y": 0
+              "x": 280,
+              "y": 170
             },
             "values": {},
             "ports": [
@@ -307,8 +307,8 @@
             "type": "composite:DS",
             "name": "ds",
             "position": {
-              "x": 0,
-              "y": 0
+              "x": 560,
+              "y": 170
             },
             "values": {
               "b": 1
@@ -319,8 +319,8 @@
             "type": "builtin:output",
             "name": "qo",
             "position": {
-              "x": 0,
-              "y": 0
+              "x": 840,
+              "y": 170
             },
             "values": {},
             "ports": [

@@ -24,7 +24,7 @@
           "type": "builtin:show",
           "name": "show",
           "position": {
-            "x": 0,
+            "x": 280,
             "y": 0
           },
           "values": {}
@@ -34,7 +34,7 @@
           "type": "builtin:concat",
           "name": "cat",
           "position": {
-            "x": 0,
+            "x": 560,
             "y": 0
           },
           "values": {
@@ -46,7 +46,7 @@
           "type": "builtin:text-length",
           "name": "len",
           "position": {
-            "x": 0,
+            "x": 840,
             "y": 0
           },
           "values": {}
