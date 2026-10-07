@@ -79,6 +79,8 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
             draft.engine.status = { kind: 'ready', engine: e.engine, encrypted };
             break;
           case 'incompatible':
+            // Закрытие соединения после этого — не обрыв: повторов нет (FR-023)
+            connection.halt();
             draft.engine.status = { kind: 'incompatible', host: e.host };
             break;
           case 'pending':
@@ -139,13 +141,8 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
         draft.engine.recent = [{ address, scheme: info.scheme }, ...others].slice(0, MAX_RECENT);
       }
     });
+    // onClose канала ведёт подключение (переподключение, connection.ts)
     next.onMessage = (text) => handle(client.receive(text));
-    next.onClose = () => {
-      // Переподключение — US3 (T044)
-      store.setState((draft: AppState) => {
-        draft.engine.status = { kind: 'offline', attempt: 0, retryAt: 0 };
-      });
-    };
     // Сначала сброс клиента, потом снимок (до welcome он только запоминается)
     const hello = client.start();
     client.sync(snapshot(store.getState()));
@@ -167,26 +164,43 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     });
 
   const connection = createConnection(
-    { open },
+    {
+      open,
+      now: () => Date.now(),
+      random: () => Math.random(),
+      setTimer: (fn, ms) => setTimeout(fn, ms),
+      clearTimer: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+    },
     {
       attach,
       trial: (trial) =>
         store.setState((draft: AppState) => {
           draft.engine.trial = trial;
         }),
-      unavailable: () =>
+      status: (status) =>
         store.setState((draft: AppState) => {
-          // Переподключение и «Use local engine» — US3
-          draft.engine.status = { kind: 'offline', attempt: 0, retryAt: 0 };
+          draft.engine.status = status;
         }),
     },
   );
 
   app.engine = {
     select: (target, opts) => connection.select(target, opts ?? {}),
+    retryNow: () => connection.retryNow(),
+    useLocal: () => connection.useLocal(),
   };
 
-  connection.start(store.getState().engine.target);
+  // Сеть вернулась или вкладка снова видна — попробовать сразу (FR-020; online — только подсказка, R7)
+  const retrySoon = () => {
+    if (globalThis.document?.visibilityState !== 'hidden') connection.retryNow();
+  };
+  globalThis.addEventListener?.('online', retrySoon);
+  globalThis.document?.addEventListener('visibilitychange', retrySoon);
+
+  const { target, recent } = store.getState().engine;
+  const remembered =
+    target.kind === 'server' ? recent.find((r) => r.address === target.address)?.scheme : undefined;
+  connection.start(target, { remembered });
   const unsubscribe = store.subscribe((state, prev) => {
     if (
       state.workflows !== prev.workflows ||
@@ -198,6 +212,8 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
   });
 
   return () => {
+    globalThis.removeEventListener?.('online', retrySoon);
+    globalThis.document?.removeEventListener('visibilitychange', retrySoon);
     unsubscribe();
     connection.dispose();
     channel = null;

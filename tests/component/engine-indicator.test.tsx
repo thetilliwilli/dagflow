@@ -28,7 +28,7 @@ describe('индикатор цели', () => {
     const app = setup();
     setEngine(app, { status: { kind: 'ready', engine: '0.1.0', encrypted: false } });
     expect(indicator()).toHaveTextContent('● Local');
-    expect(indicator()).toHaveAttribute('data-tone', 'ready');
+    expect(indicator().closest('.engine-indicator')).toHaveAttribute('data-tone', 'ready');
   });
 
   it('сервер, та же версия engine → адрес и версия', () => {
@@ -69,7 +69,7 @@ describe('индикатор цели', () => {
     const app = setup();
     setEngine(app, { status: { kind: 'connecting' } });
     expect(indicator()).toHaveTextContent('Connecting…');
-    expect(indicator()).toHaveAttribute('data-tone', 'pending');
+    expect(indicator().closest('.engine-indicator')).toHaveAttribute('data-tone', 'pending');
   });
 
   it('щелчок открывает левую панель с разделом «Engine» (US4 #7)', () => {
@@ -77,5 +77,41 @@ describe('индикатор цели', () => {
     fireEvent.click(indicator());
     const panel = screen.getByRole('dialog', { name: 'Workflows & storage' });
     expect(panel).toContainElement(screen.getByRole('region', { name: 'Engine' }));
+  });
+
+  it('нет связи → «◌ Offline — retrying in N s», «Retry now» и «Use local engine» (US3 #1)', () => {
+    const app = setup();
+    const calls: string[] = [];
+    app.engine = {
+      select: () => calls.push('select'),
+      retryNow: () => calls.push('retry'),
+      useLocal: () => calls.push('local'),
+    };
+    setEngine(app, {
+      target: { kind: 'server', address: 'localhost:8080' },
+      status: { kind: 'offline', attempt: 2, retryAt: Date.now() + 3_500 },
+    });
+    expect(indicator()).toHaveTextContent('◌ Offline — retrying in 4 s');
+    expect(indicator().closest('.engine-indicator')).toHaveAttribute('data-tone', 'offline');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry now' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use local engine' }));
+    expect(calls).toEqual(['retry', 'local']);
+  });
+
+  it('другая версия протокола → текст и «Use local engine», без «Retry now» (US6 #2)', () => {
+    const app = setup();
+    setEngine(app, {
+      target: { kind: 'server', address: 'localhost:8080' },
+      status: { kind: 'incompatible', host: { protocol: 2, engine: '0.9.0' } },
+    });
+    expect(indicator()).toHaveTextContent('Protocol version differs (server 2, editor 1)');
+    expect(screen.queryByRole('button', { name: 'Retry now' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Use local engine' })).toBeInTheDocument();
+  });
+
+  it('Local готов — кнопок нет', () => {
+    const app = setup();
+    setEngine(app, { status: { kind: 'ready', engine: '0.1.0', encrypted: false } });
+    expect(screen.queryByRole('button', { name: 'Use local engine' })).toBeNull();
   });
 });

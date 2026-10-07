@@ -954,17 +954,39 @@ button.link {
 /* Цель вычисления (фича 004): индикатор в верхней панели и раздел «Engine» (FR-003, FR-013, FR-014) */
 .topbar > .engine-indicator {
   flex: none;
-  max-width: 45%;
-  padding: 0 12px;
-  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 55%;
+  padding: 0 8px;
   border-left: 1px solid var(--border);
-  background: none;
-  font: inherit;
   font-size: 13px;
+}
+.engine-indicator__state {
+  min-width: 0;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+}
+.engine-indicator > button:not(.engine-indicator__state) {
+  flex: none;
+  font-size: 12px;
+}
+/* Связи с целью нет: последние известные значения приглушены (FR-019) — это не состояние нода */
+.flow-node.is-stale,
+.prop-grid.is-stale .value-view {
+  opacity: 0.55;
+}
+.prop-grid__stale {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
 }
 .engine-indicator[data-tone='ready'] {
   color: var(--engine-ready);

@@ -4,7 +4,7 @@ import { memo } from 'react';
 import { Handle, Position, type NodeProps } from '@xyflow/react';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
-import { activeTab, tabGraph } from '../../store/store';
+import { activeTab, isStale, tabGraph } from '../../store/store';
 import { compositeMessages } from '../messages';
 import { NodeNameEditor } from './NodeNameEditor';
 import { NodeStatusBadge } from './NodeStatus';
@@ -16,6 +16,8 @@ export const FlowNode = memo(function FlowNode({ id, selected }: NodeProps) {
   const node = useAppState((s) => tabGraph(s, activeTab(s))?.nodes.find((n) => n.id === id));
   const def = useAppState((s) => (node ? registryOf(s).get(node.type) : undefined));
   const state = useAppState((s) => (s.activeTabId ? s.nodeStates[s.activeTabId]?.[id] : undefined));
+  // Связи с целью нет — последние известные значения, приглушённо (FR-019)
+  const stale = useAppState((s) => (s.activeTabId ? isStale(s, s.activeTabId) : false));
   if (!node) return null;
   // Тип не найден (составной нод удалён или файл повреждён) — нод не должен молча исчезать
   const typeTitle = def?.title ?? compositeMessages.unknownNode;
@@ -27,7 +29,9 @@ export const FlowNode = memo(function FlowNode({ id, selected }: NodeProps) {
   const status = def ? (state?.status ?? 'computing') : 'error';
 
   return (
-    <div className={`flow-node status-${status}${selected ? ' is-selected' : ''}`}>
+    <div
+      className={`flow-node status-${status}${selected ? ' is-selected' : ''}${stale ? ' is-stale' : ''}`}
+    >
       {/* Служебные невидимые «ручки»: без них React Flow не рисует линию (research R3) */}
       <Handle
         type="target"

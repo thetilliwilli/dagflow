@@ -331,6 +331,16 @@ export function createActions(app: AppStore) {
       app.engine?.select(target, { remembered });
     },
 
+    /** «Retry now»: попытка подключения сразу (FR-020). */
+    retryNow() {
+      app.engine?.retryNow();
+    },
+
+    /** «Use local engine»: цель Local сразу, повторы к прежней цели прекращаются (FR-022a). */
+    useLocalEngine() {
+      app.engine?.useLocal();
+    },
+
     /** Показать уведомление; возвращает его id. */
     notify(kind: NotificationKind, text: string): string {
       const id = deps.newId();

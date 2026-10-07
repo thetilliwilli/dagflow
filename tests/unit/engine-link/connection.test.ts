@@ -1,4 +1,4 @@
-// Пробная смена цели (FR-007): текущая цель работает, пока новая не подтвердит; новая попытка отменяет прежнюю
+// Подключение к цели: пробная смена (FR-007) и переподключение (FR-020 – FR-022a, data-model)
 import type { Channel } from '@dagflow/protocol';
 import { describe, expect, it } from 'vitest';
 import {
@@ -6,7 +6,7 @@ import {
   type ConnectionEvents,
   type OpenResult,
 } from '../../../src/engine-link/connection';
-import type { EngineTarget, Trial } from '../../../src/engine-link/types';
+import type { ConnectionStatus, EngineTarget, Trial } from '../../../src/engine-link/types';
 
 function fakeChannel(name: string): Channel & { name: string; closed: boolean } {
   const c = {
@@ -22,7 +22,11 @@ function fakeChannel(name: string): Channel & { name: string; closed: boolean } 
   return c;
 }
 
-function setup() {
+function setup(random = 0.5) {
+  let clock = 1_000;
+  const timers = new Map<number, { fn: () => void; at: number }>();
+  let timerSeq = 0;
+  const statuses: ConnectionStatus[] = [];
   const openings: Array<{
     target: EngineTarget;
     resolve: (r: OpenResult) => void;
@@ -36,7 +40,7 @@ function setup() {
         `attach ${(channel as { name?: string }).name} ${welcome ?? '-'} ${info.target.kind} ${info.encrypted}`,
       ),
     trial: (t) => trials.push(t),
-    unavailable: (target, r) => log.push(`unavailable ${target.kind} ${r.reason}`),
+    status: (st) => statuses.push(st),
   };
   const conn = createConnection(
     {
@@ -53,11 +57,39 @@ function setup() {
           },
         };
       },
+      now: () => clock,
+      random: () => random,
+      setTimer: (fn, ms) => {
+        timers.set(++timerSeq, { fn, at: clock + ms });
+        return timerSeq;
+      },
+      clearTimer: (id) => {
+        timers.delete(id as number);
+      },
     },
     events,
   );
-  return { conn, openings, log, trials };
+  /** Перевести часы вперёд и выполнить созревшие таймеры. */
+  const advance = (ms: number) => {
+    clock += ms;
+    for (const [id, t] of [...timers]) {
+      if (t.at <= clock) {
+        timers.delete(id);
+        t.fn();
+      }
+    }
+  };
+  return { conn, openings, log, trials, statuses, timers, advance, now: () => clock };
 }
+
+const welcomeOk = (name: string) => ({
+  ok: true as const,
+  channel: fakeChannel(name),
+  scheme: 'ws' as const,
+  engine: '0.1.0',
+  encrypted: false,
+  welcome: 'W',
+});
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
 const server = (address: string): EngineTarget => ({ kind: 'server', address });
@@ -126,12 +158,12 @@ describe('connection: пробная смена цели', () => {
     expect(log).toEqual(['attach b - server false']);
   });
 
-  it('start: неудача → unavailable (сохранённая цель недоступна)', async () => {
-    const { conn, openings, log } = setup();
+  it('start: сохранённая цель недоступна → offline и повторы (FR-022, US3 #7)', async () => {
+    const { conn, openings, statuses } = setup();
     conn.start(server('localhost:8080'));
     openings[0]!.resolve({ ok: false, reason: 'unreachable' });
     await flush();
-    expect(log).toEqual(['unavailable server unreachable']);
+    expect(statuses.at(-1)).toEqual({ kind: 'offline', attempt: 1, retryAt: 1_500 });
   });
 
   it('dispose отменяет попытку и закрывает текущий канал', async () => {
@@ -144,5 +176,134 @@ describe('connection: пробная смена цели', () => {
     conn.dispose();
     expect(openings[1]!.cancelled).toBe(true);
     expect(local.closed).toBe(true);
+  });
+});
+
+describe('connection: обрыв и переподключение (US3)', () => {
+  /** Подключиться к серверу и вернуть его канал. */
+  async function connected(random = 0.5) {
+    const ctx = setup(random);
+    ctx.conn.start(server('localhost:8080'));
+    const ch = welcomeOk('s1');
+    ctx.openings[0]!.resolve(ch);
+    await flush();
+    return { ...ctx, channel: ch.channel };
+  }
+
+  it('обрыв → offline с первой паузой 0,5 с; по таймеру — connecting и новая проба', async () => {
+    const { channel, statuses, openings, advance } = await connected();
+    channel.onClose('closed');
+    expect(statuses.at(-1)).toEqual({ kind: 'offline', attempt: 1, retryAt: 1_500 });
+    advance(499);
+    expect(openings).toHaveLength(1);
+    advance(1);
+    expect(statuses.at(-1)).toEqual({ kind: 'connecting' });
+    expect(openings).toHaveLength(2);
+    expect(openings[1]!.target).toEqual(server('localhost:8080'));
+  });
+
+  it('пауза растёт 0,5 → 1 → 2 → 4 → 8 → 10 с и не превышает 10 с (FR-020)', async () => {
+    const { channel, statuses, openings, advance, now } = await connected();
+    channel.onClose('closed');
+    const delays: number[] = [];
+    for (let i = 0; i < 7; i++) {
+      const st = statuses.at(-1) as Extract<ConnectionStatus, { kind: 'offline' }>;
+      delays.push(st.retryAt - now());
+      advance(st.retryAt - now());
+      openings.at(-1)!.resolve({ ok: false, reason: 'unreachable' });
+      await flush();
+    }
+    expect(delays).toEqual([500, 1_000, 2_000, 4_000, 8_000, 10_000, 10_000]);
+  });
+
+  it.each([0, 0.999])('разброс ±20 %% не выводит паузу за 10 с (random = %s)', async (random) => {
+    const { channel, statuses, openings, advance, now } = await connected(random);
+    channel.onClose('closed');
+    for (let i = 0; i < 8; i++) {
+      const st = statuses.at(-1) as Extract<ConnectionStatus, { kind: 'offline' }>;
+      expect(st.retryAt - now()).toBeLessThanOrEqual(10_000);
+      advance(st.retryAt - now());
+      openings.at(-1)!.resolve({ ok: false, reason: 'unreachable' });
+      await flush();
+    }
+  });
+
+  it('успешная попытка → полный снимок через attach; следующий обрыв снова с 0,5 с', async () => {
+    const { channel, statuses, openings, advance, log, now } = await connected();
+    channel.onClose('closed');
+    advance(500);
+    openings[1]!.resolve({ ok: false, reason: 'unreachable' });
+    await flush();
+    advance(1_000);
+    const second = welcomeOk('s2');
+    openings[2]!.resolve(second);
+    await flush();
+    expect(log.at(-1)).toBe('attach s2 W server false');
+    second.channel.onClose('closed');
+    expect(statuses.at(-1)).toEqual({ kind: 'offline', attempt: 1, retryAt: now() + 500 });
+  });
+
+  it('«Retry now» → попытка сразу, таймер снят (US3 #4)', async () => {
+    const { conn, channel, openings, timers, statuses } = await connected();
+    channel.onClose('closed');
+    conn.retryNow();
+    expect(timers.size).toBe(0);
+    expect(openings).toHaveLength(2);
+    expect(statuses.at(-1)).toEqual({ kind: 'connecting' });
+  });
+
+  it('«Retry now» во время идущей попытки ничего не делает', async () => {
+    const { conn, channel, openings } = await connected();
+    channel.onClose('closed');
+    conn.retryNow();
+    conn.retryNow();
+    expect(openings).toHaveLength(2);
+  });
+
+  it('другой протокол при переподключении → incompatible, повторов нет (US6 #2)', async () => {
+    const { channel, statuses, openings, advance, timers } = await connected();
+    channel.onClose('closed');
+    advance(500);
+    openings[1]!.resolve({
+      ok: false,
+      reason: 'incompatible',
+      host: { protocol: 2, engine: '0.9' },
+    });
+    await flush();
+    expect(statuses.at(-1)).toEqual({ kind: 'incompatible', host: { protocol: 2, engine: '0.9' } });
+    expect(timers.size).toBe(0);
+  });
+
+  it('halt (клиент увидел другой протокол) → закрытие канала не ведёт к повторам', async () => {
+    const { conn, channel, statuses, timers } = await connected();
+    conn.halt();
+    channel.onClose('closed');
+    expect(statuses.filter((s) => s.kind === 'offline')).toEqual([]);
+    expect(timers.size).toBe(0);
+  });
+
+  it('смена цели во время offline: пока проба идёт, повторы к старой продолжаются; успех их прекращает', async () => {
+    const { conn, channel, openings, timers, advance, log } = await connected();
+    channel.onClose('closed');
+    conn.select({ kind: 'local' });
+    expect(timers.size).toBe(1);
+    advance(500);
+    expect(openings.map((o) => o.target.kind)).toEqual(['server', 'local', 'server']);
+    openings[1]!.resolve({ ok: true, channel: fakeChannel('local') });
+    await flush();
+    expect(openings[2]!.cancelled).toBe(true);
+    expect(timers.size).toBe(0);
+    expect(log.at(-1)).toBe('attach local - local false');
+  });
+
+  it('useLocal из offline: Local сразу, повторы прекращены (FR-022a)', async () => {
+    const { conn, channel, timers, log, trials, openings } = await connected();
+    channel.onClose('closed');
+    conn.useLocal();
+    openings.at(-1)!.resolve({ ok: true, channel: fakeChannel('local') });
+    await flush();
+    expect(timers.size).toBe(0);
+    expect(log.at(-1)).toMatch(/^attach .* local false$/);
+    expect(trials.at(-1)).toBeUndefined();
   });
 });

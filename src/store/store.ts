@@ -85,6 +85,8 @@ export interface AppStore {
 /** Действия с целью вычисления, которые выполняет связка с протоколом. */
 export interface EngineControl {
   select(target: EngineTarget, opts?: { hint?: 'ws' | 'wss'; remembered?: 'ws' | 'wss' }): void;
+  retryNow(): void;
+  useLocal(): void;
 }
 
 export const defaultDeps: StoreDeps = {
