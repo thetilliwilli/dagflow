@@ -1,0 +1,103 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-07T00:00:00.000Z",
+  "workflow": {
+    "id": "wf-odd",
+    "name": "Unknown type and cycle",
+    "graph": {
+      "nodes": [
+        {
+          "id": "u",
+          "type": "builtin:unknown",
+          "name": "u",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "n",
+          "type": "builtin:number",
+          "name": "n",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "value": 1
+          }
+        },
+        {
+          "id": "show",
+          "type": "builtin:show",
+          "name": "show",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "x",
+          "type": "builtin:add",
+          "name": "x",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "y",
+          "type": "builtin:add",
+          "name": "y",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e46",
+          "source": {
+            "node": "u",
+            "port": "value"
+          },
+          "target": {
+            "node": "show",
+            "port": "value"
+          }
+        },
+        {
+          "id": "e47",
+          "source": {
+            "node": "x",
+            "port": "result"
+          },
+          "target": {
+            "node": "y",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e48",
+          "source": {
+            "node": "y",
+            "port": "result"
+          },
+          "target": {
+            "node": "x",
+            "port": "a"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-10-07T00:00:00.000Z",
+    "updatedAt": "2026-10-07T00:00:00.000Z"
+  },
+  "composites": []
+}

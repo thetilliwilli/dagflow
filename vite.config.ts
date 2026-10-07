@@ -17,6 +17,17 @@ export default defineConfig(({ command, isPreview }) => ({
         },
       },
       {
+        // Собранный сервер в Node, Bun, Deno (research R13): npm run test:conformance, не входит в npm test
+        extends: true,
+        test: {
+          name: 'conformance',
+          environment: 'node',
+          include: ['tests/conformance/**/*.test.ts'],
+          testTimeout: 30_000,
+          hookTimeout: 30_000,
+        },
+      },
+      {
         extends: true,
         test: {
           name: 'component',

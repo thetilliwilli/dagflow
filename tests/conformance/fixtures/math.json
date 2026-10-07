@@ -1,0 +1,268 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-07T00:00:00.000Z",
+  "workflow": {
+    "id": "wf-math",
+    "name": "Math",
+    "graph": {
+      "nodes": [
+        {
+          "id": "a",
+          "type": "builtin:number",
+          "name": "a",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "value": 7
+          }
+        },
+        {
+          "id": "b",
+          "type": "builtin:number",
+          "name": "b",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "value": 2
+          }
+        },
+        {
+          "id": "add",
+          "type": "builtin:add",
+          "name": "add",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "sub",
+          "type": "builtin:subtract",
+          "name": "sub",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "mul",
+          "type": "builtin:multiply",
+          "name": "mul",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "div",
+          "type": "builtin:divide",
+          "name": "div",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "zero",
+          "type": "builtin:divide",
+          "name": "zero",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "a": 1,
+            "b": 0
+          }
+        },
+        {
+          "id": "gt",
+          "type": "builtin:greater",
+          "name": "gt",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "lt",
+          "type": "builtin:less",
+          "name": "lt",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "show",
+          "type": "builtin:show",
+          "name": "show",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "source": {
+            "node": "a",
+            "port": "value"
+          },
+          "target": {
+            "node": "add",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e2",
+          "source": {
+            "node": "b",
+            "port": "value"
+          },
+          "target": {
+            "node": "add",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e3",
+          "source": {
+            "node": "a",
+            "port": "value"
+          },
+          "target": {
+            "node": "sub",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e4",
+          "source": {
+            "node": "b",
+            "port": "value"
+          },
+          "target": {
+            "node": "sub",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e5",
+          "source": {
+            "node": "a",
+            "port": "value"
+          },
+          "target": {
+            "node": "mul",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e6",
+          "source": {
+            "node": "b",
+            "port": "value"
+          },
+          "target": {
+            "node": "mul",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e7",
+          "source": {
+            "node": "a",
+            "port": "value"
+          },
+          "target": {
+            "node": "div",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e8",
+          "source": {
+            "node": "b",
+            "port": "value"
+          },
+          "target": {
+            "node": "div",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e9",
+          "source": {
+            "node": "a",
+            "port": "value"
+          },
+          "target": {
+            "node": "gt",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e10",
+          "source": {
+            "node": "b",
+            "port": "value"
+          },
+          "target": {
+            "node": "gt",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e11",
+          "source": {
+            "node": "a",
+            "port": "value"
+          },
+          "target": {
+            "node": "lt",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e12",
+          "source": {
+            "node": "b",
+            "port": "value"
+          },
+          "target": {
+            "node": "lt",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e13",
+          "source": {
+            "node": "div",
+            "port": "result"
+          },
+          "target": {
+            "node": "show",
+            "port": "value"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-10-07T00:00:00.000Z",
+    "updatedAt": "2026-10-07T00:00:00.000Z"
+  },
+  "composites": []
+}
