@@ -74,7 +74,7 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 | III. Данные у пользователя                       | граф у редактора; сервер в памяти, без файлов; единственное подключение — по адресу пользователя; обрыв обрабатывается явно | ✅         | ✅ R3; SC-007 — проверка в conformance; offline-состояние и приглушённые значения                  |
 | IV. Понятные ошибки                              | тексты ошибок подключения, обмена и сервера; коды в протоколе, тексты на клиенте; без трассировок на сервере                | ✅         | ✅ [contracts/ui-texts.md](./contracts/ui-texts.md), [server-cli.md](./contracts/server-cli.md)    |
 | V. Учебная прозрачность                          | путь FR → контракт → модуль; `CLAUDE.md` обновляется (структура, команды)                                                   | ✅         | ✅                                                                                                 |
-| Огр.: зависимости                                | `ws`, `@types/ws` обоснованы; Bun и Deno — среды на машине, не пакеты                                                       | ✅         | ✅ R18                                                                                             |
+| Огр.: зависимости                                | `ws`, `@types/ws` — таблица «Обоснование зависимостей» ниже; Bun и Deno — среды на машине, не пакеты                                                       | ✅         | ✅ R18                                                                                             |
 | Огр.: продукт без сервера работает полностью     | Local по умолчанию; редактирование без связи                                                                                | ✅         | ✅                                                                                                 |
 | Огр.: один пакет engine для всех сред            | `@dagflow/engine` в редакторе, worker и сервере                                                                             | ✅         | ✅ R1                                                                                              |
 | Огр.: свежий TS, совместимость — сборкой         | исходники ESNext; сервер — сборка Vite SSR                                                                                  | ✅         | ✅ R11                                                                                             |
@@ -86,6 +86,17 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 **Результат**: нарушений нет, Complexity Tracking не требуется. Редактор в корне, а не в
 `packages/editor`, — это не нарушение: корень — отдельный пакет `dagflow` с явными
 зависимостями от пакетов (R1).
+
+### Обоснование зависимостей
+
+| Зависимость | Где | Задача | Почему не писать самим |
+|---|---|---|---|
+| `ws` 8.22.x | `@dagflow/server`, runtime | WebSocket-сервер в Node (FR-029) | в Node 24 нет встроенного WebSocket-сервера; своя реализация RFC 6455 — ~200 строк протокольного кода с тонкостями (фрагментация, маски, ping); в Bun и Deno используется встроенный сервер |
+| `@types/ws` 8.18.x | корень, dev | типы `ws` для `tsc` | — |
+
+Совместимость: `npm view ws peerDependencies` — `bufferutil`, `utf-8-validate`,
+обе необязательные. Node, Bun и Deno — не пакеты npm: их ставит пользователь, требования
+— в `engines` пакета `@dagflow/server` (research R12). Подробности — research R18.
 
 ## Project Structure
 
@@ -160,7 +171,7 @@ src/
 ├── + engine-link/                   # связь редактора с целью вычисления (браузер)
 │   ├── + address.ts                 # разбор адреса, локальность, порядок схем (R8, R9)
 │   ├── + recent.ts                  # операции со списком целей (до 5, «×», подъём наверх)
-│   ├── + settings.ts                # dagflow:engine в IndexedDB (R16)
+│   ├── + settings.ts                # dagflow:engine в IndexedDB, EngineSettingsSchema (R16)
 │   ├── + connection.ts              # машина состояний подключения и пробной попытки (R7)
 │   ├── + probe.ts                   # перебор схем ws/wss, таймауты, Local Network Access (R8)
 │   ├── + engine-worker.ts           # хост в фоновом потоке
@@ -186,9 +197,10 @@ src/
 tests/
 ├── unit/engine/ → packages/engine/test/
 ├── unit/engine-link/ + address.test.ts, recent.test.ts, settings.test.ts, connection.test.ts,
-│                       probe.test.ts, worker-channel.test.ts
+│                       probe.test.ts, worker-channel.test.ts, inline-channel.test.ts
 ├── unit/model/~ *.test.ts           # импорт хелперов из packages/engine/test
-├── component/~ evaluation.test.ts → engine.test.ts; + engine-section.test.tsx, engine-indicator.test.tsx
+├── component/~ evaluation.test.ts → engine.test.ts; + engine-section.test.tsx, engine-indicator.test.tsx,
+│                 stale-values.test.tsx
 ├── + conformance/                   # Vitest-проект: бандл сервера в node/bun/deno (R13)
 │   ├── fixtures/*.json
 │   ├── runtimes.ts                  # запуск среды, свободный порт, ожидание строки запуска
