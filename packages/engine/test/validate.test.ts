@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { createRegistry } from '../../../src/engine/registry';
+import { createRegistry } from '../src/registry';
 import {
   canAddNode,
   canConnect,
   linkCandidates,
   validateGraph,
-} from '../../../src/engine/validate';
+} from '../src/validate';
 import { edge, graph, node } from './helpers';
 
 const registry = createRegistry([]);

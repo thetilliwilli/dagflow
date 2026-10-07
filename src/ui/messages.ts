@@ -1,5 +1,5 @@
 // Тексты интерфейса (принцип IV: все сообщения понятные; язык — английский, фича 003)
-import { typeNames, type NodeStatus, type PortType } from '../engine';
+import { typeNames, type NodeStatus, type PortType } from '@dagflow/engine';
 
 export const statusLabels: Record<NodeStatus, string> = {
   ok: 'computed',

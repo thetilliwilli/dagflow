@@ -1,8 +1,8 @@
 // Запас для SC-003: движок без UI пересчитывает 100 нодов меньше чем за 20 мс
 import { describe, expect, it } from 'vitest';
-import { createEvaluator } from '../../../src/engine/evaluator';
-import { createRegistry } from '../../../src/engine/registry';
-import type { Edge, NodeInstance } from '../../../src/engine';
+import { createEvaluator } from '../src/evaluator';
+import { createRegistry } from '../src/registry';
+import type { Edge, NodeInstance } from '../src';
 
 const BUDGET_MS = 20;
 

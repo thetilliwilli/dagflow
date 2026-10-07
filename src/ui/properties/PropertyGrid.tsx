@@ -1,6 +1,6 @@
 // Окно свойств выделенного нода: панели «Входы» и «Выходы», ручной ввод, источники,
 // состояние и действия нода (US3, FR-012 – FR-017); строки — источники связывания (US4)
-import { compositeIdOf, IO_INPUT, IO_OUTPUT } from '../../engine';
+import { compositeIdOf, IO_INPUT, IO_OUTPUT } from '@dagflow/engine';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';

@@ -1,4 +1,4 @@
-import type { Edge, Graph, JsonValue, NodeInstance } from '../../../src/engine/types';
+import type { Edge, Graph, JsonValue, NodeInstance } from '../src/types';
 
 let edgeSeq = 0;
 

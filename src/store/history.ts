@@ -1,5 +1,5 @@
 // История отмены: снапшоты графа на вкладку (research R5, FR-009). Только в памяти.
-import type { Graph } from '../engine';
+import type { Graph } from '@dagflow/engine';
 
 export const HISTORY_LIMIT = 100;
 export const COALESCE_MS = 500;

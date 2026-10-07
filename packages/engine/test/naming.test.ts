@@ -1,10 +1,10 @@
 // Имя экземпляра нода: нормализация, сворачивание/разворачивание, сообщения (FR-009, E13–E15)
 import { describe, expect, it } from 'vitest';
-import { collapse, expand } from '../../../src/engine/composite';
-import { createEvaluator } from '../../../src/engine/evaluator';
-import { createRegistry } from '../../../src/engine/registry';
-import { normalizeNodeName } from '../../../src/engine/validate';
-import { IO_INPUT, IO_OUTPUT } from '../../../src/engine/builtins/io';
+import { collapse, expand } from '../src/composite';
+import { createEvaluator } from '../src/evaluator';
+import { createRegistry } from '../src/registry';
+import { normalizeNodeName } from '../src/validate';
+import { IO_INPUT, IO_OUTPUT } from '../src/builtins/io';
 import { edge, graph, node } from './helpers';
 
 const reg = createRegistry([]);

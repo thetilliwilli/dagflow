@@ -5,10 +5,10 @@ import {
   compositePorts,
   expand,
   validateIoPorts,
-} from '../../../src/engine/composite';
-import { createRegistry } from '../../../src/engine/registry';
-import { canAddNode } from '../../../src/engine/validate';
-import type { Graph } from '../../../src/engine';
+} from '../src/composite';
+import { createRegistry } from '../src/registry';
+import { canAddNode } from '../src/validate';
+import type { Graph } from '../src';
 import { def, doubleSum, io } from './composite-fixtures';
 import { edge, graph, node } from './helpers';
 

@@ -8,7 +8,7 @@ import {
   type NodeInstance,
   type Workflow,
   type Workspace,
-} from '../engine';
+} from '@dagflow/engine';
 import {
   CompositeFileSchema,
   ExportFileSchema,

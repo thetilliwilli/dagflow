@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { createEvaluator } from '../../../src/engine/evaluator';
-import { NodeError } from '../../../src/engine/errors';
-import { createRegistry } from '../../../src/engine/registry';
-import type { JsonValue, NodeRegistry, NodeTypeDef } from '../../../src/engine/types';
+import { createEvaluator } from '../src/evaluator';
+import { NodeError } from '../src/errors';
+import { createRegistry } from '../src/registry';
+import type { JsonValue, NodeRegistry, NodeTypeDef } from '../src/types';
 import { edge, graph, node } from './helpers';
 
 /** Тестовый реестр: «src» отдаёт своё значение, «inc» прибавляет 1 и считает вызовы, «sum» складывает a и b. */

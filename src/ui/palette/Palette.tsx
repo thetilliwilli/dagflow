@@ -1,7 +1,7 @@
 // Палитра — плавающее окно с вкладками категорий (FR-001; фича 002: FR-005, FR-006, research R11)
 import { useState, type DragEvent } from 'react';
 import { useReactFlow } from '@xyflow/react';
-import { categories, COMPOSITE_CATEGORY, type NodeTypeDef } from '../../engine';
+import { categories, COMPOSITE_CATEGORY, type NodeTypeDef } from '@dagflow/engine';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';

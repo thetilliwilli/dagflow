@@ -1,7 +1,7 @@
 // Строка окна свойств: [маркер] [тип] [имя] [значение] (FR-013, FR-013a, FR-013b).
 // В своём окне строка — источник связывания (FR-018, FR-018a), во временном — цель (FR-020).
 import type { PointerEvent, ReactNode } from 'react';
-import type { PortDef, PortSide } from '../../engine';
+import type { PortDef, PortSide } from '@dagflow/engine';
 import { propertiesMessages as m, typeAbbr, typeLabels } from '../messages';
 
 interface Props {

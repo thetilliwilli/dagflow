@@ -1,6 +1,6 @@
 // Редактор портов нода «Вход»/«Выход» (FR-021a, FR-021c)
 import { useState } from 'react';
-import type { PortDef, PortType } from '../../engine';
+import type { PortDef, PortType } from '@dagflow/engine';
 import { ValueEditor } from './ValueEditor';
 import { useActions } from '../../store/react';
 import { compositeMessages as m, typeLabels } from '../messages';

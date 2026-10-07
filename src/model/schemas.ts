@@ -1,6 +1,6 @@
 // Valibot-схемы файлов (contracts/file-formats.md) с ограничениями data-model
 import * as v from 'valibot';
-import type { JsonValue } from '../engine';
+import type { JsonValue } from '@dagflow/engine';
 
 export const JsonValueSchema: v.GenericSchema<JsonValue> = v.lazy(() =>
   v.union([

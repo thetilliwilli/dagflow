@@ -23,7 +23,7 @@ import {
   toggleWindow,
   type UiState,
 } from '../../../src/store/ui-logic';
-import type { Graph } from '../../../src/engine';
+import type { Graph } from '@dagflow/engine';
 
 const graphOf = (nodes: string[], edges: Array<[string, string]> = []): Graph => ({
   nodes: nodes.map((id) => ({

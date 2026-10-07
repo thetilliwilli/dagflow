@@ -1,6 +1,6 @@
 // Редактор значения входа по типу порта (FR-007)
 import { useEffect, useState } from 'react';
-import type { JsonValue, PortDef } from '../../engine';
+import type { JsonValue, PortDef } from '@dagflow/engine';
 import type { Result } from '../../store/actions';
 import { messages } from '../messages';
 

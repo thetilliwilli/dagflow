@@ -13,7 +13,7 @@ export default defineConfig(({ command, isPreview }) => ({
         test: {
           name: 'unit',
           environment: 'node',
-          include: ['tests/unit/**/*.test.ts'],
+          include: ['tests/unit/**/*.test.ts', 'packages/*/test/**/*.test.ts'],
         },
       },
       {

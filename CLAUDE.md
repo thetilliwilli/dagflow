@@ -18,7 +18,7 @@ development на GitHub Spec Kit. Интерфейс и все тексты дл
 | `npm run test:e2e` | e2e-тесты в Chromium (Playwright) |
 | `npm run test:e2e:firefox` | e2e в Firefox (без сценариев выбора рабочей папки) |
 | `npm run test:perf` | замеры SC-002/SC-003 на графе из 100 нодов |
-| `npm run typecheck` | TypeScript для приложения и отдельно для движка (`tsconfig.engine.json`, без DOM) |
+| `npm run typecheck` | TypeScript для приложения и отдельно для движка (`packages/engine/tsconfig.json`, без DOM) |
 | `npm run lint` | ESLint |
 | `npm run build` | проверка типов и production-сборка |
 
@@ -26,13 +26,15 @@ development на GitHub Spec Kit. Интерфейс и все тексты дл
 
 ## Устройство
 
-- `src/engine/` — чистый TypeScript без зависимостей от UI, DOM и хранилища
-  (это проверяют `tsconfig.engine.json` и правило ESLint). API среды вроде
-  `structuredClone` в движке не использовать.
+- `packages/engine/` (`@dagflow/engine`, монорепо на npm workspaces) — чистый TypeScript
+  без зависимостей от UI, DOM и хранилища, без ввода-вывода (sans-IO): это проверяют
+  `packages/engine/tsconfig.json` и правила ESLint (ни API среды вроде `setTimeout`,
+  `console`, `structuredClone`, ни `Date.now`/`Math.random`). Тесты движка —
+  `packages/engine/test/`.
 - `src/model/` — форматы файлов, схемы Valibot, импорт; `src/storage/` — рабочая папка /
   OPFS, автосохранение; `src/store/` — Zustand-стор, история, связка с вычислителем;
   `src/ui/` — React-компоненты.
-- Тексты для пользователя — только в `src/ui/messages.ts` и `src/engine/errors.ts`.
+- Тексты для пользователя — только в `src/ui/messages.ts` и `packages/engine/src/errors.ts`.
 - Числа в текстах — без склонения: число после двоеточия («Links removed: 3»,
   «[items: 3]»). Функций вроде `plural` не заводить, тестов на формы числа не писать.
 - Код форматируется Prettier: `npx prettier --write <файлы>`.

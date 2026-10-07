@@ -1,7 +1,7 @@
 // Временное окно свойств нода под курсором при связывании (FR-018, FR-018a, FR-020):
 // рядом с нодом, недоступные строки затенены, но остаются на своих местах
 import { useCallback } from 'react';
-import { linkCandidates } from '../../engine';
+import { linkCandidates } from '@dagflow/engine';
 import { useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';

@@ -1,7 +1,7 @@
 // Стор приложения (research R5). Создаётся фабрикой, чтобы тесты получали свежий экземпляр.
 import { createStore } from 'zustand/vanilla';
 import { immer } from 'zustand/middleware/immer';
-import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '../engine';
+import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '@dagflow/engine';
 import type { UnavailableItem } from '../storage/directory-storage';
 import type { TabHistory } from './history';
 import type { StorageLocation } from '../storage/location';

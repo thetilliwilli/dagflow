@@ -1,6 +1,7 @@
 node_modules/
 dist/
 coverage/
+ignore/
 package-lock.json
 
 # Форматируется только код; документация и файлы Spec Kit — нет

@@ -1,6 +1,6 @@
 // Пучки связей: одна линия на пару нодов и подпись «выход→вход» (FR-023, FR-024, SC-004)
 import { describe, expect, it } from 'vitest';
-import type { Edge } from '../../../src/engine';
+import type { Edge } from '@dagflow/engine';
 import { bundleEdges, bundleLabel } from '../../../src/ui/canvas/bundles';
 
 const e = (id: string, s: string, sp: string, t: string, tp: string): Edge => ({

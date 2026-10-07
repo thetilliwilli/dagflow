@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { createEvaluator } from '../../../src/engine/evaluator';
-import { createRegistry } from '../../../src/engine/registry';
-import type { CompositeDef, Graph } from '../../../src/engine';
+import { createEvaluator } from '../src/evaluator';
+import { createRegistry } from '../src/registry';
+import type { CompositeDef, Graph } from '../src';
 import { def, doubleSum, io } from './composite-fixtures';
 import { edge, graph, node } from './helpers';
 

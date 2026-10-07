@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { CompositeDef, Workflow } from '../../../src/engine';
+import type { CompositeDef, Workflow } from '@dagflow/engine';
 import { importExport, mergeComposites } from '../../../src/model/import';
 import { buildExport, toJsonText } from '../../../src/model/serialize';
-import { def, doubleSum } from '../engine/composite-fixtures';
-import { graph, node } from '../engine/helpers';
+import { def, doubleSum } from '../../../packages/engine/test/composite-fixtures';
+import { graph, node } from '../../../packages/engine/test/helpers';
 
 function seqId() {
   let n = 0;

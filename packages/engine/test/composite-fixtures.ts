@@ -1,4 +1,4 @@
-import type { CompositeDef, Graph, NodeInstance, PortDef } from '../../../src/engine';
+import type { CompositeDef, Graph, NodeInstance, PortDef } from '../src';
 import { edge, node } from './helpers';
 
 export function io(

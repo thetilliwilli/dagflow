@@ -1,4 +1,4 @@
-import type { Workflow } from '../../../src/engine';
+import type { Workflow } from '@dagflow/engine';
 
 export function sampleWorkflow(id = 'wf1'): Workflow {
   return {

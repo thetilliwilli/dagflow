@@ -1,6 +1,6 @@
 // Состояние интерфейса и чистые переходы: окна, z-порядок, выделение, Escape
 // (specs/002-editor-ui-redesign/data-model.md «UiState», research R4, R6)
-import type { Graph, LinkEnd } from '../engine';
+import type { Graph, LinkEnd } from '@dagflow/engine';
 
 export type WindowId = 'sidebar' | 'palette' | 'properties' | 'edges';
 

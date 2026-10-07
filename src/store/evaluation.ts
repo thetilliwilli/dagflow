@@ -5,7 +5,7 @@ import {
   type Evaluator,
   type Graph,
   type NodeState,
-} from '../engine';
+} from '@dagflow/engine';
 import { tabGraph, type AppState, type AppStore } from './store';
 
 /** Внутренние ноды экземпляров имеют id `экземпляр/нод`; на холсте виден нод верхнего уровня. */

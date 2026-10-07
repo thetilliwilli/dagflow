@@ -22,7 +22,7 @@ import {
   type PortRef,
   type Position,
   type Rejection,
-} from '../engine';
+} from '@dagflow/engine';
 import { compositeMessages, messages } from '../ui/messages';
 import { record, redo as redoStep, undo as undoStep } from './history';
 import { registryOf } from './registry';

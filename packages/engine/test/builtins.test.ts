@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { builtinNodes } from '../../../src/engine/builtins';
-import { createRegistry } from '../../../src/engine/registry';
-import { NodeError } from '../../../src/engine/errors';
-import type { Inputs, JsonValue, NodeTypeDef } from '../../../src/engine/types';
+import { builtinNodes } from '../src/builtins';
+import { createRegistry } from '../src/registry';
+import { NodeError } from '../src/errors';
+import type { Inputs, JsonValue, NodeTypeDef } from '../src/types';
 
 function def(id: string): NodeTypeDef {
   const d = builtinNodes.find((n) => n.id === id);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { Workflow } from '../../../src/engine';
+import type { Workflow } from '@dagflow/engine';
 import { toJsonText, workflowToFile, workspaceToFile } from '../../../src/model/serialize';
 import { createPersistence } from '../../../src/store/persistence';
 import { createAppStore, type AppState } from '../../../src/store/store';

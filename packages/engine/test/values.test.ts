@@ -5,8 +5,8 @@ import {
   formatCompact,
   isCompatible,
   matchesType,
-} from '../../../src/engine/values';
-import type { PortType } from '../../../src/engine/types';
+} from '../src/values';
+import type { PortType } from '../src/types';
 
 describe('matchesType', () => {
   it('number — только конечные числа', () => {
