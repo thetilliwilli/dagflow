@@ -343,3 +343,24 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 - `packages/engine` и `packages/protocol` — без API среды и без `Date`/`Math.random`
   (tsconfig и ESLint проверяют).
 - Коммит — после каждой фазы, по команде пользователя.
+
+---
+
+## Phase 10: Convergence
+
+- [ ] T083 Показывать текст «The browser blocks unencrypted connections from this page. The server at `<address>` needs an encrypted (wss) address.», когда страница открыта по `https` и адрес не локальный, а `wss` не удался (или любая схема запрещена браузером) — сейчас `src/engine-link/probe.ts` даёт `blocked` только если бросили все схемы, а `wss` не бросает никогда; поправить `probe.ts` и ожидания в `tests/unit/engine-link/probe.test.ts` (реалистичная подделка: синхронно бросает только `ws`) per FR-011, Edge Cases (contradicts)
+- [ ] T084 Применять лимит 8 МБ только к цели «Server»: опция клиента протокола (`createEngineClient({ maxMessageBytes })` в `packages/protocol/src/client.ts`), в `src/store/engine.ts` — лимит для сервера, без лимита для Local и Worker; тесты клиента и компонентный/e2e тест, что вкладка больше 8 МБ в Local вычисляется per FR-024, FR-002 (contradicts)
+- [ ] T085 Отвечать на отклонённое по схеме сообщение `error invalid-message` с `doc`, если JSON разобран и в нём есть строковое поле `doc` (`packages/protocol/src/host.ts`), чтобы клиент повторно передал вкладку; тесты хоста и клиента per US6 #6, FR-025 (partial)
+- [ ] T086 Считать неудачный запуск фонового потока после падения (нет `welcome`) ещё одним падением в `src/engine-link/connection.ts`: перезапуски Worker не уходят в «Offline», третье падение за 60 с → `failed`; тест в `tests/unit/engine-link/worker-channel.test.ts` per FR-027 (partial)
+- [ ] T087 Компонентные тесты: после `restarted` — уведомление «The engine restarted after a failure.»; в статусе `failed` индикатор показывает «The background engine keeps failing.» и «Use local engine» (`tests/component/engine-indicator.test.tsx`) per US2 #2, US2 #3, Constitution II (missing)
+- [ ] T088 Тест: событие `online` и `visibilitychange` (visible) во время «Offline» запускают попытку сразу — компонентный тест `startEngine` с подменённым `open` per FR-020 (missing)
+- [ ] T089 Показывать ошибку пробной попытки у строки, к которой подключались (Worker или сервер из списка), а не только у поля адреса (`src/ui/layout/EngineSection.tsx`); компонентный тест текста «This browser cannot run the engine in the background.» per Edge Cases, FR-007 (partial)
+- [ ] T090 Сохранённая цель Worker в браузере без Worker → индикатор с текстом «This browser cannot run the engine in the background.» и «Use local engine» вместо «keeps failing» (`src/engine-link/connection.ts`, `engine-text.ts`, `types.ts` — причина у статуса `failed`); тест per FR-027, data-model (partial)
+- [ ] T091 Conformance-тест: `--host` с адресом, который нельзя слушать (например, `203.0.113.1`) → «Cannot listen on 203.0.113.1. Check the --host address.» и код выхода 1 в Node, Bun, Deno (`tests/conformance/server.test.ts`) per FR-030, contracts/server-cli.md (missing)
+- [ ] T092 Unit-тесты `useLocal` из статусов `incompatible` и `failed` в `tests/unit/engine-link/connection.test.ts` per FR-022a (missing)
+- [ ] T093 Не блокировать «Connect» на время пробной попытки: новая попытка отменяет прежнюю (в том числе ожидающую ответа на запрос разрешения браузера) — `src/ui/layout/EngineSection.tsx`; компонентный тест per FR-007, Edge Cases (partial)
+- [ ] T094 Не показывать «The engine could not process the workflow. Retrying.», когда повтора не будет (второй сбой на том же графе) — событие клиента без уведомления или другой признак в `packages/protocol/src/client.ts`, `src/store/engine.ts`; тест per FR-025, Edge Cases (partial)
+- [ ] T095 Не сериализовать заново вкладку, не прошедшую по лимиту, при каждом `sync`: повтор — только когда меняется граф этой вкладки (или определения) — `packages/protocol/src/client.ts`; тест per FR-024 (partial)
+- [ ] T096 Разделитель «·» между названием строки и типом в разделе «Engine» («This tab · Local», «`<address>` · Server») и отделить подпись версий — `src/ui/layout/EngineSection.tsx`; обновить ожидания тестов per FR-003, US4 #1 (partial)
+- [ ] T097 Сервер: `--host` без значения → понятный текст (контракт: «Unknown option» неточен — уточнить текст в `contracts/ui-texts.md`), лимит транспорта сравнивать в байтах (`byteLength`) в `packages/server/src/session.ts`; тесты `options.test.ts`, `session.test.ts` per FR-030, contracts/server-cli.md (partial)
+- [ ] T098 Записать отклонения в артефакты: `Trial.failure` `'lna-denied'` в `data-model.md`; загрузка настроек — в `src/ui/App.tsx` (а не `main.tsx`) в `plan.md` и тексте T070 per CLAUDE.md «отклонения», Constitution V (partial)
