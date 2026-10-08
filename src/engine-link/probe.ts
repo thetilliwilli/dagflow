@@ -19,7 +19,7 @@ export type ProbeResult =
       /** Полученный welcome — его обрабатывает клиент протокола вместо повторного hello. */
       welcome: string;
     }
-  | { ok: false; reason: 'unreachable' | 'blocked' | 'cancelled' }
+  | { ok: false; reason: 'unreachable' | 'blocked' | 'cancelled' | 'lna-denied' }
   | { ok: false; reason: 'incompatible'; host: { protocol: number; engine: string } };
 
 export interface ProbeDeps {
@@ -28,7 +28,14 @@ export interface ProbeDeps {
   createSocket(url: string): SocketLike;
   setTimer(fn: () => void, ms: number): unknown;
   clearTimer(handle: unknown): void;
+  /**
+   * Состояние разрешения браузера на доступ к localhost / локальной сети (Local Network Access,
+   * research R8); undefined — браузер такого разрешения не знает.
+   */
+  permission?(address: string): Promise<'granted' | 'prompt' | 'denied' | undefined>;
 }
+
+export type PermissionState = 'granted' | 'prompt' | 'denied' | undefined;
 
 export interface Probe {
   result: Promise<ProbeResult>;
@@ -37,7 +44,7 @@ export interface Probe {
 
 export function probe(
   address: string,
-  opts: { hint?: Scheme; remembered?: Scheme },
+  opts: { hint?: Scheme; remembered?: Scheme; onPrompt?: () => void },
   deps: ProbeDeps,
 ): Probe {
   const schemes = schemeOrder(address, { pageSecure: deps.pageSecure, ...opts });
@@ -47,6 +54,8 @@ export function probe(
   let current: SocketLike | null = null;
   let timer: unknown;
   let blocked = 0;
+  /** Браузер спрашивает разрешение: открытие сокета ждёт пользователя — без таймаута (FR-012). */
+  let waitForUser = false;
 
   function finish(r: ProbeResult) {
     if (done) return;
@@ -82,7 +91,7 @@ export function probe(
       current = null;
       attempt(index + 1);
     };
-    timer = deps.setTimer(next, PROBE_TIMEOUT_MS);
+    if (!waitForUser) timer = deps.setTimer(next, PROBE_TIMEOUT_MS);
     socket.onerror = next;
     socket.onclose = next;
     socket.onopen = () => {
@@ -121,7 +130,19 @@ export function probe(
     };
   }
 
-  attempt(0);
+  if (!deps.permission) attempt(0);
+  else {
+    const query = deps.permission(address).catch((): PermissionState => undefined);
+    void query.then((state) => {
+      if (done) return;
+      if (state === 'denied') return finish({ ok: false, reason: 'lna-denied' });
+      if (state === 'prompt') {
+        waitForUser = true;
+        opts.onPrompt?.();
+      }
+      attempt(0);
+    });
+  }
   return {
     result,
     cancel() {

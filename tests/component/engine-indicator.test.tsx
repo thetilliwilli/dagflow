@@ -114,4 +114,16 @@ describe('индикатор цели', () => {
     setEngine(app, { status: { kind: 'ready', engine: '0.1.0', encrypted: false } });
     expect(screen.queryByRole('button', { name: 'Use local engine' })).toBeNull();
   });
+
+  it('браузер спрашивает разрешение → «Connecting…» с подсказкой и «Use local engine» (FR-011)', () => {
+    const app = setup();
+    setEngine(app, {
+      target: { kind: 'server', address: 'localhost:8080' },
+      status: { kind: 'connecting', awaitingPermission: true },
+    });
+    expect(indicator()).toHaveTextContent(
+      'Connecting… Allow local network access in the browser prompt.',
+    );
+    expect(screen.getByRole('button', { name: 'Use local engine' })).toBeInTheDocument();
+  });
 });

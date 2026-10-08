@@ -11,30 +11,50 @@ development на GitHub Spec Kit. Интерфейс и все тексты дл
 
 ## Команды
 
+Нужны Node 24+, а для `test:conformance` и запуска сервера в других средах — Bun 1.4+ и
+Deno 2.9+ в `PATH` (не зависимости npm: ставятся на машину, фича 004, research R12).
+
 | Команда | Что делает |
 |---|---|
 | `npm run dev` | dev-сервер на http://localhost:5173 |
-| `npm test` | unit- и компонентные тесты (Vitest) |
-| `npm run test:e2e` | e2e-тесты в Chromium (Playwright) |
+| `npm test` | unit- и компонентные тесты (Vitest, проекты `unit` и `component`) |
+| `npm run test:e2e` | e2e-тесты в Chromium (Playwright); перед ними собирается сервер |
 | `npm run test:e2e:firefox` | e2e в Firefox (без сценариев выбора рабочей папки) |
-| `npm run test:perf` | замеры SC-002/SC-003 на графе из 100 нодов |
-| `npm run typecheck` | TypeScript для приложения и отдельно для движка (`packages/engine/tsconfig.json`, без DOM) |
-| `npm run lint` | ESLint |
-| `npm run build` | проверка типов и production-сборка |
+| `npm run test:e2e:bundle` | собранный редактор (`vite build` + `vite preview`): Local и Worker = хост протокола |
+| `npm run test:conformance` | собранный сервер в Node, Bun, Deno = хост протокола; сценарии сервера |
+| `npm run test:perf` | замеры SC-002/SC-003 на графе из 100 нодов (Local, Worker, Server) |
+| `npm run typecheck` | TypeScript для приложения и отдельно для каждого пакета (`packages/*/tsconfig.json`) |
+| `npm run lint` | ESLint, в том числе sans-IO правила для `packages/engine` и `packages/protocol` |
+| `npm run build` | проверка типов и production-сборка редактора |
+| `npm run build:server` | сервер выполнения одним файлом: `packages/server/dist/dagflow-server.mjs` |
+| `npm run server -- --port 8080` | собрать и запустить сервер в Node (`server:bun`, `server:deno` — в Bun, Deno) |
 
-Перед тем как считать работу готовой: `typecheck`, `lint`, `npm test` и `test:e2e` зелёные.
+Перед тем как считать работу готовой: `typecheck`, `lint`, `npm test`, `test:e2e`,
+`test:e2e:bundle` и `test:conformance` зелёные.
 
 ## Устройство
 
-- `packages/engine/` (`@dagflow/engine`, монорепо на npm workspaces) — чистый TypeScript
-  без зависимостей от UI, DOM и хранилища, без ввода-вывода (sans-IO): это проверяют
-  `packages/engine/tsconfig.json` и правила ESLint (ни API среды вроде `setTimeout`,
-  `console`, `structuredClone`, ни `Date.now`/`Math.random`). Тесты движка —
-  `packages/engine/test/`.
-- `src/model/` — форматы файлов, схемы Valibot, импорт; `src/storage/` — рабочая папка /
-  OPFS, автосохранение; `src/store/` — Zustand-стор, история, связка с вычислителем;
-  `src/ui/` — React-компоненты.
-- Тексты для пользователя — только в `src/ui/messages.ts` и `packages/engine/src/errors.ts`.
+Монорепо на npm workspaces: редактор — корневой пакет, рядом `packages/*` (фича 004).
+
+- `packages/engine/` (`@dagflow/engine`) — модель графа и вычислитель. Чистый TypeScript
+  без зависимостей от UI, DOM и хранилища, без ввода-вывода (sans-IO).
+- `packages/protocol/` (`@dagflow/protocol`) — протокол редактор ↔ engine: сообщения,
+  схемы Valibot (общие с форматами файлов), sans-IO хост и клиент.
+- В `engine` и `protocol` нет API среды (`setTimeout`, `console`, `structuredClone`,
+  `fetch`, `TextEncoder`…) и `Date.now`/`Math.random`/`new Date()`: это проверяют их
+  `tsconfig.json` (`lib: ESNext`, `types: []`) и ESLint. Время, таймеры и случайность
+  передаются извне.
+- `packages/server/` (`@dagflow/server`) — сервер выполнения: адаптеры WebSocket для Node
+  (`ws`), Bun и Deno, один собранный файл (Vite SSR). Тексты — `packages/server/src/messages.ts`.
+- Пакеты отдают исходники TypeScript (`exports: ./src/index.ts`); тесты пакетов —
+  `packages/*/test/`.
+- `src/engine-link/` — связь редактора с целью вычисления (Local, Worker, Server): адрес,
+  проба схем, подключение и переподключение, каналы, настройки `dagflow:engine`.
+- `src/model/` — форматы файлов, импорт; `src/storage/` — рабочая папка / OPFS,
+  автосохранение; `src/store/` — Zustand-стор, история; `src/store/engine.ts` — связка
+  стора с клиентом протокола (единственный, кто пишет `nodeStates`); `src/ui/` — React.
+- Тексты для пользователя — только в `src/ui/messages.ts`, `packages/engine/src/errors.ts`
+  и `packages/server/src/messages.ts`.
 - Числа в текстах — без склонения: число после двоеточия («Links removed: 3»,
   «[items: 3]»). Функций вроде `plural` не заводить, тестов на формы числа не писать.
 - Код форматируется Prettier: `npx prettier --write <файлы>`.
@@ -69,6 +89,12 @@ development на GitHub Spec Kit. Интерфейс и все тексты дл
   Chromium падает при чтении сохранённого дескриптора папки в «инкогнито»-контексте.
 - Перед `page.reload()` после правки ждать ~1 с: автосохранение срабатывает через 300 мс.
 - Поддерживаемые браузеры — Chromium и Firefox; e2e гоняются в обоих.
+- Сервер в e2e: фикстура `tests/e2e/engine-server.ts` — настоящий собранный сервер
+  (`engineServer`: `stop()`/`start()` на том же порту) и поддельные серверы
+  (`startFakeServer`: другой протокол, другой engine, неизвестный нод, сбои). Разные адреса
+  одного сервера — пути (`localhost:N/1`): сервер принимает WebSocket на любом пути.
+- Эталонные workflow для одинаковых результатов — `tests/conformance/fixtures/` (формат
+  файла выгрузки); их используют `test:conformance` и `test:e2e:bundle`.
 
 ## Spec Kit
 

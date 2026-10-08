@@ -97,6 +97,9 @@ export function EngineSection() {
           {probing ? m.connecting : m.connect}
         </button>
       </form>
+      {engine.trial?.awaitingPermission && !error && (
+        <p className="engine-section__hint">{m.lnaPrompt}</p>
+      )}
       {error && (
         <p className="engine-section__error" role="alert">
           {error}

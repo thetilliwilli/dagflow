@@ -27,7 +27,10 @@ export function EngineIndicator() {
   const text = indicatorText(engine, secondsLeft);
   const canUseLocal =
     engine.target.kind !== 'local' &&
-    (status.kind === 'offline' || status.kind === 'incompatible' || status.kind === 'failed');
+    (status.kind === 'offline' ||
+      status.kind === 'incompatible' ||
+      status.kind === 'failed' ||
+      (status.kind === 'connecting' && status.awaitingPermission === true));
   return (
     <div className="engine-indicator" data-tone={engineTone(engine)}>
       <button

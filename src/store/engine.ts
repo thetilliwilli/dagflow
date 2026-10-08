@@ -15,6 +15,7 @@ import {
   type ConnectionDeps,
   type Opening,
 } from '../engine-link/connection';
+import { isLocalHost } from '../engine-link/address';
 import { probe, type ProbeDeps, type SocketLike } from '../engine-link/probe';
 import { rememberServer } from '../engine-link/recent';
 import { loadEngineSettings, saveEngineSettings, type SettingsEnv } from '../engine-link/settings';
@@ -27,8 +28,19 @@ type Schedule = (fn: () => void) => void;
 const defaultSchedule: Schedule = (fn) => requestAnimationFrame(() => fn());
 
 /** Браузерные зависимости пробы: настоящий WebSocket и таймеры. */
+/** Разрешение браузера на доступ к localhost / локальной сети (Chrome 147+, Firefox 154+; R8). */
+async function lnaPermission(address: string) {
+  const name = isLocalHost(address) ? 'loopback-network' : 'local-network';
+  // Имена разрешений есть не во всех браузерах — неизвестное имя бросает TypeError
+  const status = await navigator.permissions.query({ name } as unknown as PermissionDescriptor);
+  return status.state === 'granted' || status.state === 'prompt' || status.state === 'denied'
+    ? status.state
+    : undefined;
+}
+
 function browserProbeDeps(): ProbeDeps {
   return {
+    permission: globalThis.navigator?.permissions ? lnaPermission : undefined,
     pageSecure: globalThis.location?.protocol === 'https:',
     // Браузерный WebSocket совместим с SocketLike (обработчики получают событие, которое мы не читаем)
     createSocket: (url) => new WebSocket(url) as unknown as SocketLike,

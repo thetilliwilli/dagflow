@@ -1070,6 +1070,11 @@ button.link {
   flex: 1;
   min-width: 0;
 }
+.engine-section__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
 .engine-section__error {
   margin: 0;
   color: var(--error);

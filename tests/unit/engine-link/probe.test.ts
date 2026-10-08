@@ -173,4 +173,54 @@ describe('probe', () => {
     expect(sockets[0]!.sent.at(-1)).toBe('x');
     expect(closed).toBe('closed');
   });
+
+  describe('разрешение Local Network Access (FR-011, FR-012, research R8)', () => {
+    const flush = () => new Promise((r) => setTimeout(r, 0));
+
+    it('denied → lna-denied, подключения нет', async () => {
+      const { deps, sockets } = setup();
+      const p = probe('localhost:8080', {}, { ...deps, permission: async () => 'denied' });
+      expect(await p.result).toEqual({ ok: false, reason: 'lna-denied' });
+      expect(sockets).toHaveLength(0);
+    });
+
+    it('prompt → подсказка, открытие сокета ждёт пользователя без таймаута; welcome — по-прежнему 3 с', async () => {
+      const { deps, sockets, timers } = setup();
+      let prompted = false;
+      const p = probe(
+        'localhost:8080',
+        { onPrompt: () => (prompted = true) },
+        { ...deps, permission: async () => 'prompt' },
+      );
+      await flush();
+      expect(prompted).toBe(true);
+      expect(sockets).toHaveLength(1);
+      expect(timers.size).toBe(0);
+      sockets[0]!.open();
+      expect([...timers.values()].map((t) => t.ms)).toEqual([3000]);
+      sockets[0]!.reply(welcome);
+      expect(await p.result).toMatchObject({ ok: true });
+    });
+
+    it('granted или неизвестно → обычный путь с таймаутом', async () => {
+      for (const state of ['granted', undefined] as const) {
+        const { deps, sockets, timers } = setup();
+        probe('localhost:8080', {}, { ...deps, permission: async () => state });
+        await flush();
+        expect(sockets).toHaveLength(1);
+        expect(timers.size).toBe(1);
+      }
+    });
+
+    it('ошибка запроса разрешения → обычный путь', async () => {
+      const { deps, sockets } = setup();
+      probe(
+        'localhost:8080',
+        {},
+        { ...deps, permission: () => Promise.reject(new TypeError('x')) },
+      );
+      await flush();
+      expect(sockets).toHaveLength(1);
+    });
+  });
 });

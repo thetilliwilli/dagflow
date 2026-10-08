@@ -26,7 +26,8 @@ export interface Trial {
   phase: 'probing';
   awaitingPermission?: boolean;
   /** Причина неудачи; текст у поля или строки — из src/ui/messages.ts (contracts/ui-texts.md). */
-  failure?: 'unreachable' | 'blocked' | 'incompatible' | 'invalid-address' | 'no-worker';
+  failure?:
+    'unreachable' | 'blocked' | 'incompatible' | 'invalid-address' | 'no-worker' | 'lna-denied';
   /** Версии хоста при failure: 'incompatible'. */
   host?: { protocol: number; engine: string };
 }

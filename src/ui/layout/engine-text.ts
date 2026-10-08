@@ -34,7 +34,7 @@ export function indicatorText(engine: EngineSlice, secondsLeft = 0): string {
         : text;
     }
     case 'connecting':
-      return m.connecting;
+      return status.awaitingPermission ? `${m.connecting} ${m.lnaPrompt}` : m.connecting;
     case 'offline':
       return m.offline(secondsLeft);
     case 'incompatible':
@@ -57,6 +57,8 @@ export function trialError(trial: Trial | undefined): string | undefined {
       return m.protocolMismatch(trial.host?.protocol ?? 0, PROTOCOL_VERSION);
     case 'no-worker':
       return m.noWorker;
+    case 'lna-denied':
+      return m.lnaDenied;
     case 'unreachable':
       return trial.target.kind === 'worker' ? m.noWorker : m.couldNotConnect(address);
   }

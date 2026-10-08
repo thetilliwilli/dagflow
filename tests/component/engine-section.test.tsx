@@ -170,4 +170,22 @@ describe('раздел «Engine»', () => {
     );
     expect(within(section()).getByText('engine 0.0.9 (editor 0.1.0)')).toBeInTheDocument();
   });
+
+  it('доступ к локальной сети запрещён → текст про настройки сайта; запрос идёт → подсказка (FR-011)', async () => {
+    const { section, connect, pending, app } = setup();
+    await connect('localhost:8080');
+    act(() =>
+      app.store.setState((d) => {
+        d.engine.trial = { ...d.engine.trial!, awaitingPermission: true };
+      }),
+    );
+    expect(
+      within(section()).getByText('Allow local network access in the browser prompt.'),
+    ).toBeInTheDocument();
+    await act(async () => pending[0]!.resolve({ ok: false, reason: 'lna-denied' }));
+    await settle();
+    expect(within(section()).getByRole('alert')).toHaveTextContent(
+      'The browser blocks access to the local network for this page. Allow it in the site settings and try again.',
+    );
+  });
 });

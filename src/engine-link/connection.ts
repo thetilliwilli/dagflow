@@ -44,7 +44,11 @@ export interface ConnectionEvents {
 
 export interface ConnectionDeps {
   /** Открыть цель: Local — сразу, Server — проба схем. */
-  open(target: EngineTarget, opts: { hint?: Scheme; remembered?: Scheme }): Opening;
+  /** onPrompt — браузер спрашивает разрешение Local Network Access (подсказка пользователю). */
+  open(
+    target: EngineTarget,
+    opts: { hint?: Scheme; remembered?: Scheme; onPrompt?: () => void },
+  ): Opening;
   now(): number;
   /** [0, 1) — разброс паузы, чтобы вкладки не стучались одновременно. */
   random(): number;
@@ -155,7 +159,10 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
     if (!target || retry) return;
     if (attempt > 0) events.status({ kind: 'connecting' });
     const next = target;
-    const opening = deps.open(next, opts);
+    const opening = deps.open(next, {
+      ...opts,
+      onPrompt: () => events.status({ kind: 'connecting', awaitingPermission: true }),
+    });
     if (opening.immediate) return onRetry(opening.immediate, next);
     retry = opening;
     void opening.result.then((r) => {
@@ -203,7 +210,13 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
         ...(r.reason === 'incompatible' ? { host: r.host } : {}),
       });
     };
-    const opening = deps.open(next, opts);
+    const opening = deps.open(next, {
+      ...opts,
+      onPrompt: () => {
+        if (trial === opening)
+          events.trial({ target: next, phase: 'probing', awaitingPermission: true });
+      },
+    });
     if (opening.immediate) return done(opening.immediate);
     trial = opening;
     void opening.result.then((r) => {
