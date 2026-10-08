@@ -72,7 +72,7 @@ describe('раздел «Engine»', () => {
     expect(pending).toHaveLength(0);
   });
 
-  it('пробное подключение: «Connecting…», затем сервер выбран и первый в списке (US1 #1, US4 #2)', async () => {
+  it('пробное подключение: «Connecting…», затем сервер выбран и встал последним в списке (US1 #1, US4 #2)', async () => {
     const { section, connect, pending, frames, app } = setup();
     await connect('LocalHost:8080');
     // Кнопка не блокируется: новая попытка отменит эту (FR-007)

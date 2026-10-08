@@ -87,7 +87,7 @@ describe('EngineClient: подключение', () => {
 });
 
 describe('EngineClient: синхронизация снимка', () => {
-  it('новая вкладка → open, изменённая → update с rev + 1, исчезнувшая → close', () => {
+  it('US1 #5: новая вкладка → open, изменённая → update с rev + 1, исчезнувшая → close', () => {
     const { client } = connected(snap({ t1: g(1) }));
     const t1b = g(5);
     const t2 = g(2);
@@ -216,22 +216,34 @@ describe('EngineClient: сообщения хоста', () => {
     ]);
   });
 
-  it('invalid-message без doc и too-large от хоста → failed без повтора', () => {
-    const { client } = connected(snap({ t1: g() }));
-    expect(client.receive(host({ type: 'error', code: 'invalid-message' }))).toEqual({
-      events: [{ kind: 'failed', code: 'invalid-message' }],
+  it('сбой без вкладки (по набору определений) → один повтор library; повторный — без повтора (FR-025)', () => {
+    const composites = [doubleSum()];
+    const { client } = connected(snap({ t1: g() }, composites));
+    const first = client.receive(host({ type: 'error', code: 'internal', detail: 'boom' }));
+    expect(first.events).toEqual([{ kind: 'failed', code: 'internal', retrying: true }]);
+    expect(parse(first.send)).toEqual([{ type: 'library', composites }]);
+    const second = client.receive(host({ type: 'error', code: 'invalid-message' }));
+    expect(second).toEqual({
+      events: [{ kind: 'failed', code: 'invalid-message', retrying: false }],
       send: [],
     });
-    expect(client.receive(host({ type: 'error', code: 'too-large' })).events).toEqual([
-      { kind: 'failed', code: 'too-large' },
-    ]);
+  });
+
+  it('too-large от хоста → failed без повтора', () => {
+    const { client } = connected(snap({ t1: g() }));
+    expect(client.receive(host({ type: 'error', code: 'too-large' }))).toEqual({
+      events: [{ kind: 'failed', code: 'too-large', retrying: false }],
+      send: [],
+    });
   });
 
   it('невалидное сообщение хоста → failed invalid-message', () => {
     const { client } = connected(snap({ t1: g() }));
-    expect(client.receive('{oops').events).toEqual([{ kind: 'failed', code: 'invalid-message' }]);
+    expect(client.receive('{oops').events).toEqual([
+      { kind: 'failed', code: 'invalid-message', retrying: false },
+    ]);
     expect(client.receive(host({ type: 'states', doc: 't1' })).events).toEqual([
-      { kind: 'failed', code: 'invalid-message' },
+      { kind: 'failed', code: 'invalid-message', retrying: false },
     ]);
   });
 

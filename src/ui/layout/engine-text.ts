@@ -29,12 +29,10 @@ export function indicatorText(engine: EngineSlice, secondsLeft = 0): string {
       if (target.kind === 'local') return m.indicatorLocal;
       if (target.kind === 'worker') return m.indicatorWorker;
       const text = m.indicatorServer(target.address, status.engine, ENGINE_VERSION);
-      return !status.encrypted && !isLocalHost(target.address)
-        ? `${text} · ${m.notEncrypted}`
-        : text;
+      return !status.encrypted && !isLocalHost(target.address) ? m.withNotEncrypted(text) : text;
     }
     case 'connecting':
-      return status.awaitingPermission ? `${m.connecting} ${m.lnaPrompt}` : m.connecting;
+      return status.awaitingPermission ? m.connectingWithPrompt : m.connecting;
     case 'offline':
       return m.offline(secondsLeft);
     case 'incompatible':

@@ -156,7 +156,7 @@ describe('EngineHost: документы', () => {
     expect(states[0]!.states.add!.outputs).toEqual({ result: 8 });
   });
 
-  it('close удаляет документ: после него update → unknown-doc', () => {
+  it('US1 #5: close удаляет документ (память хоста освобождена): после него update → unknown-doc', () => {
     const host = ready();
     send(host, { type: 'open', doc: 'tab-1', rev: 1, graph: sumGraph() });
     expect(send(host, { type: 'close', doc: 'tab-1' })).toEqual([]);

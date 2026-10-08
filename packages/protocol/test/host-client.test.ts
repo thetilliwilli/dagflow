@@ -73,7 +73,7 @@ describe('клиент + хост', () => {
     expect(s.states.t1!.show!.inputs).toEqual({ value: 5 });
   });
 
-  it('правка составного нода пересчитывает экземпляры во всех вкладках', () => {
+  it('US1 #4: правка составного нода пересчитывает экземпляры во всех вкладках', () => {
     const inst = (id: string) => graph([node(id, 'composite:DS', { a: 1, b: 2 })]);
     const s = session();
     const g1 = inst('i1');

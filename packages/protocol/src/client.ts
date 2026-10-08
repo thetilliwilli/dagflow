@@ -79,6 +79,8 @@ export function createEngineClient(options: EngineClientOptions = {}): EngineCli
   let phase: 'connecting' | 'ready' | 'incompatible' = 'connecting';
   let mirrors = new Map<DocId, DocMirror>();
   let sentComposites: CompositeDef[] | undefined;
+  /** Набор определений, для которого уже был повтор после сбоя без вкладки (FR-025). */
+  let libraryRetried: CompositeDef[] | undefined;
   /**
    * Что сейчас не отправлено из-за лимита: вкладка или набор определений → отклонённые данные.
    * Те же данные (та же ссылка) повторно не сериализуются — новая попытка при правке (FR-024).
@@ -163,7 +165,14 @@ export function createEngineClient(options: EngineClientOptions = {}): EngineCli
       case 'invalid-message':
       case 'internal': {
         if (msg.doc === undefined) {
-          out.events.push({ kind: 'failed', code: msg.code });
+          // Сбой без вкладки — по набору определений: повторить его один раз на набор (FR-025)
+          const library = sentComposites;
+          const retrying = library !== undefined && libraryRetried !== library;
+          out.events.push({ kind: 'failed', code: msg.code, retrying });
+          if (retrying) {
+            libraryRetried = library;
+            emit(out, { type: 'library', composites: library }, LIBRARY, library);
+          }
           return out;
         }
         const graph = graphOf(msg.doc);
@@ -178,7 +187,7 @@ export function createEngineClient(options: EngineClientOptions = {}): EngineCli
         return out;
       }
       case 'too-large':
-        out.events.push({ kind: 'failed', code: 'too-large' });
+        out.events.push({ kind: 'failed', code: 'too-large', retrying: false });
         return out;
       default:
         // version-mismatch приходит вслед за welcome (уже incompatible); not-ready — сбой порядка
@@ -191,6 +200,7 @@ export function createEngineClient(options: EngineClientOptions = {}): EngineCli
       phase = 'connecting';
       mirrors = new Map();
       sentComposites = undefined;
+      libraryRetried = undefined;
       tooLarge.clear();
       return [JSON.stringify({ type: 'hello', protocol: PROTOCOL_VERSION, engine })];
     },
@@ -200,11 +210,11 @@ export function createEngineClient(options: EngineClientOptions = {}): EngineCli
       try {
         data = JSON.parse(raw);
       } catch {
-        return { events: [{ kind: 'failed', code: 'invalid-message' }], send: [] };
+        return { events: [{ kind: 'failed', code: 'invalid-message', retrying: false }], send: [] };
       }
       const parsed = v.safeParse(HostMessageSchema, data);
       if (!parsed.success) {
-        return { events: [{ kind: 'failed', code: 'invalid-message' }], send: [] };
+        return { events: [{ kind: 'failed', code: 'invalid-message', retrying: false }], send: [] };
       }
       const msg = parsed.output as HostMessage;
       if (phase !== 'ready') {

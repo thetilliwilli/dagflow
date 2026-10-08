@@ -122,6 +122,7 @@ interface EngineHost {
 interface EngineHostOptions {
   registry?: (composites: CompositeDef[]) => NodeRegistry; // по умолчанию — встроенные ноды
   engineVersion?: string; // по умолчанию — ENGINE_VERSION (подмена — для поддельных серверов в e2e)
+  maxMessageBytes?: number; // по умолчанию MAX_MESSAGE_BYTES; Infinity — хост в окне и Worker (FR-024, FR-002)
 }
 function createEngineHost(options?: EngineHostOptions): EngineHost;
 ```
@@ -129,7 +130,7 @@ function createEngineHost(options?: EngineHostOptions): EngineHost;
 | Вход            | Условие                                    | Ответ                                                                                                        |
 | --------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
 | любая строка    | длина в байтах UTF-8 > `MAX_MESSAGE_BYTES` | `error too-large` без `doc` (строку не разбираем); клиент проверяет лимит до отправки, так что это страховка |
-| любая строка    | не JSON / не прошла схему                  | `error invalid-message` (`detail` — путь и ожидание из Valibot)                                              |
+| любая строка    | не JSON / не прошла схему                  | `error invalid-message` (`detail` — путь и ожидание из Valibot); `doc`, если JSON разобран и в нём есть строковое `doc` — клиент передаст вкладку заново |
 | не `hello`      | `hello` ещё не было                        | `error not-ready`                                                                                            |
 | `hello`         | `protocol` ≠ `PROTOCOL_VERSION`            | `welcome` + `error version-mismatch`, `closed = true`                                                        |
 | `hello`         | версия совпала                             | `welcome`                                                                                                    |
@@ -170,7 +171,12 @@ interface EngineClient {
   /** Снимок редактора изменился: open/update/close/library по разнице. */
   sync(snapshot: Snapshot): ClientOutput;
 }
-function createEngineClient(options?: { engineVersion?: string }): EngineClient;
+function createEngineClient(options?: {
+  engineVersion?: string;
+  // Лимит для текущей цели; undefined — без лимита. По умолчанию MAX_MESSAGE_BYTES.
+  // Связка стора: лимит только для «Server», в окне и Worker — без лимита (FR-024, FR-002)
+  maxMessageBytes?: () => number | undefined;
+}): EngineClient;
 
 type ClientEvent =
   | { kind: 'ready'; protocol: number; engine: string }
@@ -179,7 +185,12 @@ type ClientEvent =
   | { kind: 'states'; doc: DocId; states: Record<string, NodeState> }
   | { kind: 'too-large'; doc?: DocId } // не отправлено из-за лимита; без doc — library
   | { kind: 'sent'; doc?: DocId } // ранее слишком большое теперь отправлено
-  | { kind: 'failed'; code: 'invalid-message' | 'internal' | 'too-large'; doc?: DocId } // уведомление
+  | {
+      kind: 'failed';
+      code: 'invalid-message' | 'internal' | 'too-large';
+      doc?: DocId;
+      retrying?: boolean; // будет ли повтор: «…Retrying.» только при true (ui-texts.md)
+    }
   | { kind: 'resend'; doc: DocId }; // unknown-doc по открытой вкладке: молча open заново (FR-025)
 ```
 
@@ -193,7 +204,8 @@ type ClientEvent =
 - Перед отправкой — проверка размера; больше лимита → событие `too-large` без отправки
   (FR-024: ноды вкладки приглушены, новая попытка при следующей правке). Слишком
   большой `library` → `too-large` без `doc`: приглушены все вкладки. Когда сообщение
-  снова помещается — событие `sent` (снять приглушение).
+  снова помещается — событие `sent` (снять приглушение). Отклонённые данные (та же ссылка
+  на граф или набор определений) повторно не сериализуются — новая попытка при правке.
 - `pending` и `states` применяются как есть, только по открытым вкладкам: канал
   упорядочен, и `states` хоста отражает всё, что он принял к этому моменту (правило
   про `rev` из черновика не нужно — уточнено при реализации).
@@ -208,9 +220,12 @@ type ClientEvent =
   у клиента; по закрытой вкладке (ответ на `close`) — игнорируется.
 - `error invalid-message` / `internal` с `doc` → событие `failed` и повторный `open`
   этой вкладки **один раз на граф**: если повтор тоже не удался, следующая попытка —
-  при следующей правке вкладки, без цикла (FR-025). Без `doc` — только уведомление.
+  при следующей правке вкладки, без цикла (FR-025): у события `retrying: true` для первого
+  сбоя на графе и `false` для повторного. Без `doc` (сбой по набору определений) — повторная
+  отправка `library` один раз на набор, тоже с флагом `retrying`.
 - `error too-large` от хоста (страховка: клиент проверяет лимит сам) → событие `failed`
-  с кодом `too-large` без `doc`.
+  с кодом `too-large` без `doc`, `retrying: false`. Некорректное сообщение хоста — тоже
+  `retrying: false`.
 
 ## Последовательности
 

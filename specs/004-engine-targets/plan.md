@@ -201,10 +201,10 @@ src/
 tests/
 ├── unit/engine/ → packages/engine/test/
 ├── unit/engine-link/ + address.test.ts, recent.test.ts, settings.test.ts, connection.test.ts,
-│                       probe.test.ts, worker-channel.test.ts, inline-channel.test.ts
+│                       probe.test.ts, worker-channel.test.ts, inline-channel.test.ts, traffic.test.ts
 ├── unit/model/~ *.test.ts           # импорт хелперов из packages/engine/test
 ├── component/~ evaluation.test.ts → engine.test.ts; + engine-section.test.tsx, engine-indicator.test.tsx,
-│                 stale-values.test.tsx
+│                 stale-values.test.tsx, engine-events.test.tsx
 ├── + conformance/                   # Vitest-проект: бандл сервера в node/bun/deno (R13)
 │   ├── fixtures/*.json
 │   ├── runtimes.ts                  # запуск среды, свободный порт, ожидание строки запуска
@@ -256,7 +256,7 @@ WebSocket, Worker, IndexedDB, Permissions API). В пакетах — тольк
 
 | Сценарии | Тесты |
 |---|---|
-| US1 #1–#8 | e2e `engine-us1-server.spec.ts` (фикстура: сервер, «не engine», «молчит»); unit `address.test.ts`, `probe.test.ts` (#7, перебор схем) |
+| US1 #1–#9, FR-013a | e2e `engine-us1-server.spec.ts` (#1–#3, #6–#9; #9 — tx/rx; фикстура: сервер, «не engine», «молчит»); unit `address.test.ts`, `probe.test.ts` (#7, перебор схем); US1 #4, #5 — unit протокола `host-client.test.ts`, `client.test.ts`; tx/rx — `traffic.test.ts`, `engine.test.ts`, `engine-indicator.test.tsx` |
 | US2 #1, #4 | e2e `engine-us2-worker.spec.ts`; `engine-conformance.spec.ts` (значения = Local) |
 | US2 #2, #3 | unit `worker-channel.test.ts`, `connection.test.ts` (фейковый `Worker` и часы) |
 | US3 #1–#8 | e2e `engine-us3-offline.spec.ts` (остановка и запуск сервера, замер 2 с / 15 с — SC-003); unit `connection.test.ts` (паузы ≤ 10 с, «Retry now», `online`) |

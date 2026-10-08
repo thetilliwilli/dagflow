@@ -217,6 +217,10 @@ export const engineMessages = {
   indicatorServer: (address: string, engine: string, editor: string) =>
     `● Server · ${address} · engine ${engine}${engine === editor ? '' : ` (editor ${editor})`}`,
   notEncrypted: 'not encrypted',
+  /** Разделитель адреса и типа в строке списка: «This tab · Local» (FR-003). */
+  rowSeparator: ' · ',
+  withNotEncrypted: (text: string) => `${text} · not encrypted`,
+  connectingWithPrompt: 'Connecting… Allow local network access in the browser prompt.',
   offline: (seconds: number) => `◌ Offline — retrying in ${seconds} s`,
   retryNow: 'Retry now',
   protocolDiffers: (server: number, editor: number) =>
@@ -230,7 +234,8 @@ export const engineMessages = {
     const units = ['KB', 'MB', 'GB'];
     let value = n / 1024;
     let unit = 0;
-    while (value >= 1024 && unit < units.length - 1) {
+    // Сравнение уже округлённого значения: 1 048 550 B → «1.0 MB», а не «1024.0 KB»
+    while (Number(value.toFixed(1)) >= 1024 && unit < units.length - 1) {
       value /= 1024;
       unit += 1;
     }
@@ -254,5 +259,7 @@ export const engineMessages = {
   staleValue: 'Last known value — engine offline',
   tooLarge: 'This workflow is too large for the server (limit: 8 MB).',
   processFailed: 'The engine could not process the workflow. Retrying.',
+  /** Повтора не будет (например, сообщение цели повреждено) — без «Retrying.» (FR-025). */
+  processFailedNoRetry: 'The engine could not process the workflow.',
   workerRestarted: 'The engine restarted after a failure.',
 };

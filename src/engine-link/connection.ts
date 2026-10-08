@@ -12,6 +12,8 @@ export type WelcomedOk = {
   ok: true;
   channel: Channel;
   welcome: string;
+  /** Отправленный hello — для счётчика tx (FR-013a). */
+  hello?: string;
   engine: string;
   scheme?: Scheme;
   encrypted?: boolean;
@@ -29,6 +31,8 @@ export interface AttachInfo {
   target: EngineTarget;
   scheme?: Scheme;
   encrypted: boolean;
+  /** hello, который уже отправила проба или запуск Worker (FR-013a). */
+  hello?: string;
 }
 
 export interface ConnectionEvents {
@@ -130,6 +134,7 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
       target: next,
       scheme,
       encrypted: probed?.encrypted ?? false,
+      hello: probed?.hello,
     });
   }
 

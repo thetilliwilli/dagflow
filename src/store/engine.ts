@@ -139,7 +139,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
             draft.notifications.push({
               id: app.deps.newId(),
               kind: 'warning',
-              text: engineMessages.processFailed,
+              text: e.retrying ? engineMessages.processFailed : engineMessages.processFailedNoRetry,
             });
             break;
           case 'resend':
@@ -223,6 +223,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     client.sync(snapshot(store.getState()));
     if (welcome === undefined) handle({ events: [], send: hello });
     else {
+      if (info.hello) count('tx', info.hello);
       count('rx', welcome);
       handle(client.receive(welcome));
     }

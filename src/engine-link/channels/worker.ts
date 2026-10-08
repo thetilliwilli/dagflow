@@ -55,6 +55,11 @@ export function openWorker(create: () => WorkerLike, timers: WorkerTimers): Open
     const failed: OpenResult = { ok: false, reason: 'no-worker' };
     return { immediate: failed, result: Promise.resolve(failed), cancel: () => {} };
   }
+  const hello = JSON.stringify({
+    type: 'hello',
+    protocol: PROTOCOL_VERSION,
+    engine: ENGINE_VERSION,
+  });
   let resolve!: (r: OpenResult) => void;
   const result = new Promise<OpenResult>((r) => (resolve = r));
   let done = false;
@@ -87,10 +92,9 @@ export function openWorker(create: () => WorkerLike, timers: WorkerTimers): Open
       channel: workerChannel(worker),
       engine: typeof msg.engine === 'string' ? msg.engine : '?',
       welcome: text,
+      hello,
     });
   };
-  worker.postMessage(
-    JSON.stringify({ type: 'hello', protocol: PROTOCOL_VERSION, engine: ENGINE_VERSION }),
-  );
+  worker.postMessage(hello);
   return { result, cancel: () => stop({ ok: false, reason: 'cancelled' }) };
 }

@@ -74,8 +74,9 @@
 
 | Ситуация                               | Вид     | Текст                                                |
 | -------------------------------------- | ------- | ---------------------------------------------------- |
-| `invalid-message` / `internal` от цели | warning | The engine could not process the workflow. Retrying. |
-| `too-large` от цели без вкладки (страховка) | warning | The engine could not process the workflow. Retrying. |
+| Повтор будет (вкладка или набор определений передаётся заново) | warning | The engine could not process the workflow. Retrying. |
+| Повтора не будет: `too-large` от цели, повреждённое сообщение цели, повторный сбой набора определений | warning | The engine could not process the workflow. |
+| Повторный сбой той же вкладки (повтор уже был) | — | без уведомления |
 | Фоновый поток упал и перезапущен       | warning | The engine restarted after a failure.                |
 
 ## Сервер (FR-030, FR-030a; `packages/server/src/messages.ts`)

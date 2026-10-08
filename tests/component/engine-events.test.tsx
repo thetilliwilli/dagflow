@@ -67,4 +67,35 @@ describe('связка стора с целью', () => {
       expect(opens).toBe(2);
     },
   );
+
+  it('сбой по набору определений: «…Retrying.» и один повтор; повторный сбой — «…workflow.» без «Retrying.» (FR-025)', () => {
+    const app = createAppStore();
+    // Цель, которая принимает hello и отвечает ошибкой без вкладки на каждый library
+    const sent: string[] = [];
+    const channel: Channel = {
+      onMessage: () => {},
+      onClose: () => {},
+      close: () => {},
+      send(text) {
+        const msg = JSON.parse(text) as { type: string };
+        sent.push(msg.type);
+        if (msg.type === 'library') {
+          channel.onMessage(JSON.stringify({ type: 'error', code: 'internal', detail: 'boom' }));
+        }
+      },
+    };
+    const welcome = JSON.stringify({ type: 'welcome', protocol: 1, engine: '0.1.0' });
+    startEngine(app, {
+      open: (): Opening => {
+        const immediate: OpenResult = { ok: true, channel, engine: '0.1.0', welcome };
+        return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
+      },
+    });
+    const texts = app.store.getState().notifications.map((n) => n.text);
+    expect(texts).toEqual([
+      'The engine could not process the workflow. Retrying.',
+      'The engine could not process the workflow.',
+    ]);
+    expect(sent.filter((t) => t === 'library')).toHaveLength(2);
+  });
 });

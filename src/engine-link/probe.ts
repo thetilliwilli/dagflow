@@ -9,6 +9,8 @@ export type { SocketLike } from './channels/websocket';
 /** Таймаут открытия сокета и ожидания welcome (FR-012). */
 export const PROBE_TIMEOUT_MS = 3000;
 
+const HELLO = JSON.stringify({ type: 'hello', protocol: PROTOCOL_VERSION, engine: ENGINE_VERSION });
+
 export type ProbeResult =
   | {
       ok: true;
@@ -18,6 +20,8 @@ export type ProbeResult =
       encrypted: boolean;
       /** Полученный welcome — его обрабатывает клиент протокола вместо повторного hello. */
       welcome: string;
+      /** Отправленный пробой hello — для счётчика tx (FR-013a). */
+      hello: string;
     }
   | { ok: false; reason: 'unreachable' | 'blocked' | 'cancelled' | 'lna-denied' }
   | { ok: false; reason: 'incompatible'; host: { protocol: number; engine: string } };
@@ -101,9 +105,7 @@ export function probe(
     socket.onopen = () => {
       deps.clearTimer(timer);
       timer = deps.setTimer(next, PROBE_TIMEOUT_MS);
-      socket.send(
-        JSON.stringify({ type: 'hello', protocol: PROTOCOL_VERSION, engine: ENGINE_VERSION }),
-      );
+      socket.send(HELLO);
     };
     socket.onmessage = (e) => {
       const text = String(e.data);
@@ -130,6 +132,7 @@ export function probe(
         engine,
         encrypted: scheme === 'wss',
         welcome: text,
+        hello: HELLO,
       });
     };
   }

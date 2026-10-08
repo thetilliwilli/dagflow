@@ -79,7 +79,7 @@ export function EngineSection() {
                   {versions && <small className="engine-section__versions"> {versions}</small>}
                 </span>
                 {/* «This tab · Local» — разделитель между адресом и типом (FR-003) */}
-                <span className="engine-section__sep"> · </span>
+                <span className="engine-section__sep">{m.rowSeparator}</span>
                 <span className="engine-section__kind">{kind}</span>
               </button>
               {/* «×» — только у невыбранного сервера (FR-005) */}

@@ -166,4 +166,32 @@ describe('объём обмена с целью (FR-013a, US1 #9)', () => {
     expect(traffic().tx).toBeLessThan(afterEdit.tx);
     expect(traffic().tx).toBeGreaterThan(0);
   });
+
+  it('hello, отправленный пробой, учитывается в tx (FR-013a)', () => {
+    const app = testStore();
+    const frames = manualScheduler();
+    const hello = JSON.stringify({ type: 'hello', protocol: 1, engine: '0.1.0' });
+    const welcome = JSON.stringify({ type: 'welcome', protocol: 1, engine: '0.1.0' });
+    startEngine(app, {
+      schedule: frames.schedule,
+      open: (target): Opening => {
+        if (target.kind === 'local') {
+          const immediate: OpenResult = { ok: true, channel: createInlineChannel(frames.schedule) };
+          return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
+        }
+        const channel: Channel = {
+          onMessage: () => {},
+          onClose: () => {},
+          send: () => {},
+          close: () => {},
+        };
+        const immediate: OpenResult = { ok: true, channel, engine: '0.1.0', welcome, hello };
+        return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
+      },
+    });
+    app.engine!.select({ kind: 'worker' });
+    const { tx, rx } = app.store.getState().engine.traffic;
+    expect(rx).toBe(welcome.length);
+    expect(tx).toBeGreaterThanOrEqual(hello.length);
+  });
 });
