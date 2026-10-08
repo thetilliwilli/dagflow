@@ -412,3 +412,9 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 - [X] T116 Не считать в `tx` строки, пока канала нет (обрыв, «Offline», `failed` у Worker): связка `src/store/engine.ts` отпускает канал по закрытию (или клиент сбрасывает фазу), новый счёт — с `attach`; тест: правка без связи не меняет `tx` (`tests/component/engine.test.ts`) per FR-013a, US1 #9 (partial)
 - [X] T117 Пометка «Last known value — engine offline» в окне «Properties» — только при потере связи (`status.kind !== 'ready'`); вкладка, не переданная из-за лимита, приглушена без этого текста — `src/ui/properties/PropertyGrid.tsx`, селектор в `src/store/store.ts`; компонентный тест в `tests/component/stale-values.test.tsx` per FR-019, FR-024, Constitution IV (contradicts)
 - [X] T118 «Connect» к адресу, который уже есть в списке, пробует запомненную схему первой: `connectServer` в `src/store/actions.ts` берёт `scheme` из `recent` по нормализованному адресу (схема из ввода по-прежнему важнее); тест в `tests/component/engine-section.test.tsx` per FR-009 (partial)
+
+---
+
+## Phase 16: Convergence
+
+- [ ] T119 Спрашивать разрешение Local Network Access только для адресов этого компьютера и локальной сети (`localhost`, `127.0.0.0/8`, `[::1]`, `10/8`, `172.16/12`, `192.168/16`, `169.254/16`, `fc00::/7`, `fe80::/10`, `*.local`): для публичного адреса — обычный путь с таймаутом 3 с, без подсказки и без `lna-denied` (`src/engine-link/address.ts` — `isPrivateHost`, `src/engine-link/probe.ts`); уточнить research R8 п. 4; тесты в `tests/unit/engine-link/probe.test.ts` и `address.test.ts`; заодно поправить JSDoc, оказавшиеся не над своими функциями (`src/store/engine.ts` `browserProbeDeps`, `src/store/store.ts` `isStale`) per FR-011, FR-012, Edge Cases (LNA) (partial)
