@@ -136,4 +136,38 @@ describe('раздел «Engine»', () => {
       'The server uses a different protocol version (server 2, editor 1). Update the server or the editor.',
     );
   });
+
+  it('список: «×» только у невыбранных серверов, точка выбранной строки — состояние цели (FR-005, FR-014)', () => {
+    const { app, section } = setup();
+    act(() =>
+      app.store.setState((d) => {
+        d.engine.target = { kind: 'server', address: 'a:1' };
+        d.engine.recent = [{ address: 'a:1' }, { address: 'b:2' }];
+        d.engine.status = { kind: 'ready', engine: '0.1.0', encrypted: false };
+      }),
+    );
+    const s = section();
+    expect(within(s).queryByRole('button', { name: 'Remove a:1 from the list' })).toBeNull();
+    const remove = within(s).getByRole('button', { name: 'Remove b:2 from the list' });
+    const rows = within(s).getAllByRole('listitem');
+    expect(rows[2]!.querySelector('.engine-dot')).toHaveAttribute('data-tone', 'ready');
+    expect(rows[3]!.querySelector('.engine-dot')).not.toHaveAttribute('data-tone');
+    fireEvent.click(remove);
+    expect(app.store.getState().engine.recent).toEqual([{ address: 'a:1' }]);
+    // У локальных строк «×» нет
+    expect(within(rows[0]!).getAllByRole('button')).toHaveLength(1);
+    expect(within(rows[1]!).getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('выбранный сервер другой версии engine — подпись с обеими версиями (US6 #3)', () => {
+    const { app, section } = setup();
+    act(() =>
+      app.store.setState((d) => {
+        d.engine.target = { kind: 'server', address: 'a:1' };
+        d.engine.recent = [{ address: 'a:1' }];
+        d.engine.status = { kind: 'ready', engine: '0.0.9', encrypted: false };
+      }),
+    );
+    expect(within(section()).getByText('engine 0.0.9 (editor 0.1.0)')).toBeInTheDocument();
+  });
 });

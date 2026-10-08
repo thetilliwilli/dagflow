@@ -173,7 +173,7 @@ src/
 ├── + engine-link/                   # связь редактора с целью вычисления (браузер)
 │   ├── + types.ts                   # EngineTarget, ConnectionStatus, Trial, EngineSlice (data-model)
 │   ├── + address.ts                 # разбор адреса, локальность, порядок схем (R8, R9)
-│   ├── + recent.ts                  # операции со списком целей (до 5, «×», подъём наверх)
+│   ├── + recent.ts                  # операции со списком целей (до 5, порядок добавления, «×»)
 │   ├── + settings.ts                # dagflow:engine в IndexedDB, EngineSettingsSchema (R16)
 │   ├── + connection.ts              # машина состояний подключения и пробной попытки (R7)
 │   ├── + probe.ts                   # перебор схем ws/wss, таймауты, Local Network Access (R8)

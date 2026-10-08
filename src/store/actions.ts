@@ -24,6 +24,7 @@ import {
   type Rejection,
 } from '@dagflow/engine';
 import { parseAddress } from '../engine-link/address';
+import { removeServer } from '../engine-link/recent';
 import type { EngineTarget } from '../engine-link/types';
 import { compositeMessages, messages } from '../ui/messages';
 import { record, redo as redoStep, undo as undoStep } from './history';
@@ -329,6 +330,14 @@ export function createActions(app: AppStore) {
           ? store.getState().engine.recent.find((r) => r.address === target.address)?.scheme
           : undefined;
       app.engine?.select(target, { remembered });
+    },
+
+    /** «×» у невыбранного сервера в списке (FR-005). */
+    removeServer(address: string) {
+      store.setState((draft: AppState) => {
+        const next = removeServer(draft.engine.recent, address, draft.engine.target);
+        if (next !== draft.engine.recent) draft.engine.recent = next;
+      });
     },
 
     /** «Retry now»: попытка подключения сразу (FR-020). */

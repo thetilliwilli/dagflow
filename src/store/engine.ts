@@ -16,6 +16,8 @@ import {
   type Opening,
 } from '../engine-link/connection';
 import { probe, type ProbeDeps, type SocketLike } from '../engine-link/probe';
+import { rememberServer } from '../engine-link/recent';
+import { loadEngineSettings, saveEngineSettings, type SettingsEnv } from '../engine-link/settings';
 import type { EngineTarget } from '../engine-link/types';
 import { engineMessages } from '../ui/messages';
 import { tabGraph, type AppState, type AppStore } from './store';
@@ -40,9 +42,12 @@ export interface EngineOptions {
   schedule?: Schedule;
   /** Открытие целей; по умолчанию Local — в окне, Server — проба через WebSocket. */
   open?: ConnectionDeps['open'];
+  /**
+   * Хранилище настроек цели (IndexedDB, ключ dagflow:engine). Есть — цель и список читаются при
+   * старте и сохраняются при каждом изменении; нет (тесты) — начальная цель из стора.
+   */
+  settings?: SettingsEnv;
 }
-
-const MAX_RECENT = 5;
 
 export function startEngine(app: AppStore, options: EngineOptions = {}): () => void {
   const { store } = app;
@@ -145,9 +150,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
       draft.engine.status = { kind: 'connecting' };
       draft.engine.tooLarge = { library: false, tabs: {} };
       if (info.target.kind === 'server') {
-        const { address } = info.target;
-        const others = draft.engine.recent.filter((r) => r.address !== address);
-        draft.engine.recent = [{ address, scheme: info.scheme }, ...others].slice(0, MAX_RECENT);
+        draft.engine.recent = rememberServer(draft.engine.recent, info.target.address, info.scheme);
       }
     });
     // onClose канала ведёт подключение (переподключение, connection.ts)
@@ -214,10 +217,37 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
   globalThis.addEventListener?.('online', retrySoon);
   globalThis.document?.addEventListener('visibilitychange', retrySoon);
 
-  const { target, recent } = store.getState().engine;
-  const remembered =
-    target.kind === 'server' ? recent.find((r) => r.address === target.address)?.scheme : undefined;
-  connection.start(target, { remembered });
+  let disposed = false;
+  let saving: (() => void) | undefined;
+
+  function begin() {
+    const { target, recent } = store.getState().engine;
+    const remembered =
+      target.kind === 'server'
+        ? recent.find((r) => r.address === target.address)?.scheme
+        : undefined;
+    connection.start(target, { remembered });
+  }
+
+  const settingsEnv = options.settings;
+  if (settingsEnv) {
+    // Окно читает настройки один раз и не перечитывает: окна независимы (FR-006, US4 #10)
+    void loadEngineSettings(settingsEnv).then((settings) => {
+      if (disposed) return;
+      store.setState((draft: AppState) => {
+        draft.engine.target = settings.target;
+        draft.engine.recent = settings.recent;
+      });
+      begin();
+      saving = store.subscribe((state, prev) => {
+        const { target, recent } = state.engine;
+        if (target !== prev.engine.target || recent !== prev.engine.recent) {
+          void saveEngineSettings(settingsEnv, { target, recent }).catch(() => {});
+        }
+      });
+    });
+  } else begin();
+
   const unsubscribe = store.subscribe((state, prev) => {
     if (
       state.workflows !== prev.workflows ||
@@ -229,6 +259,8 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
   });
 
   return () => {
+    disposed = true;
+    saving?.();
     globalThis.removeEventListener?.('online', retrySoon);
     globalThis.document?.removeEventListener('visibilitychange', retrySoon);
     unsubscribe();

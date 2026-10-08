@@ -1,5 +1,6 @@
 // Раздел «Engine» левой панели (FR-003 – FR-005): плоский список целей, поле адреса и «Connect»
 import { useState } from 'react';
+import { ENGINE_VERSION } from '@dagflow/engine';
 import { useActions, useAppState } from '../../store/react';
 import type { EngineTarget } from '../../engine-link/types';
 import { engineMessages as m } from '../messages';
@@ -10,6 +11,7 @@ const same = (a: EngineTarget, b: EngineTarget) =>
 
 export function EngineSection() {
   const engine = useAppState((s) => s.engine);
+  const { status } = engine;
   const actions = useActions();
   const [address, setAddress] = useState('');
   const probing = engine.trial !== undefined && engine.trial.failure === undefined;
@@ -31,8 +33,18 @@ export function EngineSection() {
       <ul className="engine-section__list">
         {rows.map(({ target, title, kind }) => {
           const selected = same(target, engine.target);
+          const versions =
+            selected &&
+            target.kind === 'server' &&
+            status.kind === 'ready' &&
+            status.engine !== ENGINE_VERSION
+              ? m.serverVersions(status.engine, ENGINE_VERSION)
+              : undefined;
           return (
-            <li key={target.kind === 'server' ? target.address : target.kind}>
+            <li
+              key={target.kind === 'server' ? target.address : target.kind}
+              className="engine-section__item"
+            >
               <button
                 type="button"
                 className="engine-section__row"
@@ -44,9 +56,24 @@ export function EngineSection() {
                   data-tone={selected ? engineTone(engine) : undefined}
                   aria-hidden="true"
                 />
-                <span className="engine-section__title">{title}</span>
+                <span className="engine-section__title">
+                  {title}
+                  {versions && <small className="engine-section__versions">{versions}</small>}
+                </span>
                 <span className="engine-section__kind">{kind}</span>
               </button>
+              {/* «×» — только у невыбранного сервера (FR-005) */}
+              {target.kind === 'server' && !selected && (
+                <button
+                  type="button"
+                  className="engine-section__remove"
+                  aria-label={m.remove(target.address)}
+                  title={m.remove(target.address)}
+                  onClick={() => actions.removeServer(target.address)}
+                >
+                  ×
+                </button>
+              )}
             </li>
           );
         })}

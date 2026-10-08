@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { browserSettingsEnv } from '../engine-link/settings';
 import { startEngine } from '../store/engine';
 import { createPersistence } from '../store/persistence';
 import { PersistenceProvider } from '../store/persistence-react';
@@ -16,7 +17,7 @@ function Shell() {
 export function App() {
   const [app] = useState(() => createAppStore());
   const [persistence] = useState(() => createPersistence(app));
-  useEffect(() => startEngine(app), [app]);
+  useEffect(() => startEngine(app, { settings: browserSettingsEnv() }), [app]);
   useEffect(() => {
     void persistence.start();
   }, [persistence]);
