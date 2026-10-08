@@ -176,7 +176,6 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     }
   }
 
-  /** Новый текущий канал: полный снимок открытых вкладок (FR-015, FR-021). */
   // Объём обмена с текущей целью (FR-013a): байты строк в канал и из канала. В стор пишется
   // вместе с событиями протокола (ответ хоста приходит на каждую отправку) — без лишних записей
   let traffic = { tx: 0, rx: 0 };
@@ -195,6 +194,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     });
   }
 
+  /** Новый текущий канал: полный снимок открытых вкладок (FR-015, FR-021). */
   function attach(next: Channel, welcome: string | undefined, info: AttachInfo) {
     channel = next;
     // Другая цель — счёт с нуля; переподключение к той же — продолжается

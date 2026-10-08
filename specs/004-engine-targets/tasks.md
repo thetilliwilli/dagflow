@@ -432,3 +432,10 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 
 - [X] T122 Вернуть `isLocalHost` к определению spec (Assumptions, R9: `localhost`, `*.localhost`, `127.0.0.0/8`, `[::1]`) — убрать `[::ffff:127.x.x.x]` из `src/engine-link/address.ts` и из таблицы `tests/unit/engine-link/address.test.ts`; в research R8 записать как ограничение: IPv4 внутри IPv6 распознаётся только в точечной записи и только для частных диапазонов per Assumptions, R9, Constitution V (contradicts)
 - [X] T123 Переписать пункт 4 решения R8 в `research.md`: «в `try` — …» — сразу после вызова `navigator.permissions.query(...)`, принятое ограничение — отдельным предложением per research R8 (partial)
+
+---
+
+## Phase 19: Convergence
+
+- [X] T124 Записать в research R9 уточнение: адрес разбирается регулярным выражением, потому что `URL` отбрасывает стандартный порт схемы (`:80` у `ws`) — это нарушило бы FR-010; `URL` проверяет только допустимость хоста per research R9, CLAUDE.md «отклонения» (contradicts)
+- [X] T125 Убрать из репозитория случайно попавший `deno.lock`: удалить файл, `deno run --no-lock` в скрипте `server:deno` (`package.json`), `deno.lock` в `.gitignore`; JSDoc «Новый текущий канал…» — прямо над `attach` в `src/store/engine.ts` per plan.md (дерево файлов), CLAUDE.md (unrequested)

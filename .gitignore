@@ -9,6 +9,8 @@ playwright-report/
 .DS_Store
 *.tmp
 *.swp
+# Deno создаёт lock-файл при запуске сервера из корня (npm run server:deno)
+deno.lock
 
 # my
 ignore
