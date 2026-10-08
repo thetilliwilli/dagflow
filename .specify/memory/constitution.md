@@ -1,4 +1,4 @@
-# SDD Test Constitution
+# DAG Flow Constitution
 
 ## Core Principles
 
@@ -110,4 +110,4 @@
 - На шагах plan и analyze проверяется соответствие конституции; несоответствие —
   блокирующая проблема.
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-07
+**Version**: 2.1.1 | **Ratified**: 2026-10-05 | **Last Amended**: 2026-10-08
