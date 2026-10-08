@@ -3,7 +3,7 @@
 import { compositeIdOf, IO_INPUT, IO_OUTPUT } from '@dagflow/engine';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
-import { activeTab, isStale, tabGraph } from '../../store/store';
+import { activeTab, isOffline, isStale, tabGraph } from '../../store/store';
 import { useUi } from '../../store/ui';
 import { IoPortsEditor } from '../canvas/IoPortsEditor';
 import { NodeNameEditor } from '../canvas/NodeNameEditor';
@@ -21,6 +21,8 @@ export function PropertyGrid({ nodeId }: { nodeId: string }) {
   );
   const picking = useUi((s) => s.linking.kind === 'picking');
   const stale = useAppState((s) => (s.activeTabId ? isStale(s, s.activeTabId) : false));
+  // Текст «engine offline» — только без связи; вкладка больше лимита приглушена без него (FR-019, FR-024)
+  const offline = useAppState(isOffline);
   const node = graph?.nodes.find((n) => n.id === nodeId);
   if (!graph || !node) return null;
   const def = registry.get(node.type);
@@ -49,7 +51,7 @@ export function PropertyGrid({ nodeId }: { nodeId: string }) {
       <div className="prop-grid__status">
         <NodeStatusBadge state={state} />
         <NodeMessage state={state} />
-        {stale && <p className="prop-grid__stale">{engineMessages.staleValue}</p>}
+        {offline && <p className="prop-grid__stale">{engineMessages.staleValue}</p>}
         {!def && (
           <div className="node-message node-message--error">
             {compositeMessages.unknownType(node.type)}

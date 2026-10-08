@@ -322,7 +322,14 @@ export function createActions(app: AppStore) {
         });
         return;
       }
-      app.engine?.select({ kind: 'server', address: parsed.address }, { hint: parsed.hint });
+      // Адрес из списка — запомненная схема первой; схема, введённая явно, важнее (FR-009)
+      const remembered = store
+        .getState()
+        .engine.recent.find((r) => r.address === parsed.address)?.scheme;
+      app.engine?.select(
+        { kind: 'server', address: parsed.address },
+        { hint: parsed.hint, remembered },
+      );
     },
 
     /** Выбрать цель из списка: сервер — пробная попытка с запомненной схемой. */

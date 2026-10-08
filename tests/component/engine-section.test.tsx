@@ -14,17 +14,21 @@ import { manualScheduler, openSidebar, testStore } from './helpers';
 function setup() {
   const app = testStore();
   const frames = manualScheduler();
-  const pending: Array<{ target: EngineTarget; resolve: (r: OpenResult) => void }> = [];
+  const pending: Array<{
+    target: EngineTarget;
+    opts: { hint?: string; remembered?: string };
+    resolve: (r: OpenResult) => void;
+  }> = [];
   startEngine(app, {
     schedule: frames.schedule,
-    open: (target): Opening => {
+    open: (target, opts): Opening => {
       if (target.kind === 'local') {
         const immediate = { ok: true as const, channel: createInlineChannel(frames.schedule) };
         return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
       }
       let resolve!: (r: OpenResult) => void;
       const result = new Promise<OpenResult>((r) => (resolve = r));
-      pending.push({ target, resolve });
+      pending.push({ target, opts, resolve });
       return { result, cancel: () => resolve({ ok: false, reason: 'cancelled' }) };
     },
   });
@@ -232,5 +236,18 @@ describe('раздел «Engine»', () => {
     expect(within(section()).getByRole('alert')).toHaveTextContent(
       'Enter a server address, for example localhost:8080.',
     );
+  });
+
+  it('«Connect» к адресу из списка — запомненная схема первой; явная схема важнее (FR-009)', async () => {
+    const { connect, pending, app } = setup();
+    act(() =>
+      app.store.setState((d) => {
+        d.engine.recent = [{ address: 'domain.com', scheme: 'ws' }];
+      }),
+    );
+    await connect('Domain.com/');
+    expect(pending[0]!.opts).toMatchObject({ remembered: 'ws' });
+    await connect('wss://domain.com');
+    expect(pending[1]!.opts).toMatchObject({ hint: 'wss', remembered: 'ws' });
   });
 });

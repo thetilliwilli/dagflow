@@ -25,9 +25,9 @@ async function servers(page: Page) {
   return texts.slice(2);
 }
 
-/** Автосохранение настроек — асинхронная запись в IndexedDB: дать ей завершиться. */
+/** Сохранение настроек — асинхронная запись в IndexedDB: дать ей завершиться (CLAUDE.md: ~1 с). */
 const reload = async (page: Page) => {
-  await page.waitForTimeout(500);
+  await page.waitForTimeout(1_000);
   await page.reload();
 };
 
@@ -131,7 +131,8 @@ test('US3 #7, #8: сохранённый сервер недоступен пр�
   await connectTo(page, engineServer.address);
   await engineServer.stop();
   await reload(page);
-  await expect(indicator(page)).toHaveText(/◌ Offline — retrying in \d+ s/);
+  // Под нагрузкой (параллельные e2e) проба остановленного сервера может занять больше 5 с
+  await expect(indicator(page)).toHaveText(/◌ Offline — retrying in \d+ s/, { timeout: 15_000 });
   await page.getByRole('button', { name: 'Use local engine' }).click();
   await expect(indicator(page)).toHaveText('● Local');
   await reload(page);

@@ -8,6 +8,7 @@ import {
   openSidebar,
   selectNode,
   setInput,
+  tabBar,
   valueOf,
 } from './helpers';
 import { expect, test } from './engine-server';
@@ -46,10 +47,22 @@ test('US3 #1–#6, SC-003, SC-004: обрыв, правки без связи, �
   await expect(page.getByText('Last known value — engine offline')).toBeVisible();
   await expect(show.locator('.flow-node')).toHaveClass(/is-stale/);
 
-  // #2, SC-004: редактирование без связи работает
+  // #2, SC-004: без связи работают правка значений, палитра, связи, отмена, вкладки, сохранение
   await setInput(page, n, 'value', '9');
-  const extra = await addNode(page, 'Number', 80, 320);
-  await expect(extra).toBeVisible();
+  const extra = await addNode(page, 'Number', 80, 320); // палитра
+  const show2 = await addNode(page, 'Show', 460, 320);
+  await setInput(page, extra, 'value', '5');
+  await connect(page, extra, 'value', show2, 'value'); // проверка связи — локальным engine
+  await expect(page.locator('.react-flow__edge')).toHaveCount(2);
+  const nodes = page.locator('.react-flow__node');
+  await addNode(page, 'Number', 820, 320);
+  await expect(nodes).toHaveCount(5);
+  await page.keyboard.press('Control+z'); // отмена
+  await expect(nodes).toHaveCount(4);
+  await (await openSidebar(page)).getByRole('button', { name: 'Create workflow' }).click();
+  await expect(tabBar(page).getByRole('tab')).toHaveCount(2);
+  await tabBar(page).getByRole('tab').first().click(); // переключение вкладок
+  await expect(nodes).toHaveCount(4);
 
   // #4: «Retry now» — попытка сразу (сервер ещё лежит — снова Offline)
   await page.getByRole('button', { name: 'Retry now' }).click();
@@ -62,6 +75,15 @@ test('US3 #1–#6, SC-003, SC-004: обрыв, правки без связи, �
   await expect(await valueOf(page, show, 'in', 'value')).toHaveText('9');
   expect(Date.now() - restartedAt).toBeLessThan(15_000);
   await expect(show.locator('.flow-node')).not.toHaveClass(/is-stale/);
+  // Ни одна правка без связи не потерялась: связь, созданная без связи, посчитана сервером
+  await expect(await valueOf(page, show2, 'in', 'value')).toHaveText('5');
+
+  // Сохранение работало без связи: после перезагрузки граф на месте и считается на сервере
+  await page.waitForTimeout(1_000);
+  await page.reload();
+  await expect(indicator(page)).toHaveText(/● Server/);
+  await expect(page.locator('.react-flow__node')).toHaveCount(4);
+  await expect(page.locator('.react-flow__edge')).toHaveCount(2);
 });
 
 test('US3 #8: «Use local engine» без связи → вычисление в окне, сервер остаётся в списке', async ({

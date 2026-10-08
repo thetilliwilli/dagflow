@@ -150,6 +150,11 @@ export function tabGraph(state: AppState, tab: Tab | undefined): Graph | undefin
 }
 
 /** Значения вкладки устарели: связи с целью нет или вкладка не передана из-за лимита (FR-019, FR-024). */
+/** Связи с целью нет — пометка «Last known value — engine offline» (FR-019). */
+export function isOffline(state: AppState): boolean {
+  return state.engine.status.kind !== 'ready';
+}
+
 export function isStale(state: AppState, tabId: string): boolean {
   const { status, tooLarge } = state.engine;
   return status.kind !== 'ready' || tooLarge.library || tooLarge.tabs[tabId] === true;

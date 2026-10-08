@@ -263,11 +263,18 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
         store.setState((draft: AppState) => {
           draft.engine.trial = trial;
         }),
-      status: (status) =>
+      status: (status) => {
+        // Эти состояния приходят, когда канала нет (обрыв, повтор, отказ): ничего не отправляется
+        // и не считается в tx до нового attach (FR-013a)
+        channel = null;
         store.setState((draft: AppState) => {
           draft.engine.status = status;
-        }),
-      restarted: () => notify('warning', engineMessages.workerRestarted),
+        });
+      },
+      restarted: () => {
+        channel = null;
+        notify('warning', engineMessages.workerRestarted);
+      },
     },
   );
 

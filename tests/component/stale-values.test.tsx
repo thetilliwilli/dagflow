@@ -77,4 +77,22 @@ describe('приглушённые значения без связи (FR-019)',
     expect(screen.getByRole('button', { name: 'Use local engine' })).toBeInTheDocument();
     expect(createActions(app).addNode('builtin:number', { x: 0, y: 0 }).ok).toBe(true);
   });
+
+  it('вкладка больше лимита при связи: нод приглушён, но без «engine offline» (FR-019, FR-024)', () => {
+    const { app, frames, actions, ui } = setup();
+    const r = actions.addNode('builtin:number', { x: 0, y: 0 });
+    if (!r.ok) throw new Error(r.message);
+    act(() => frames.flushFrames());
+    act(() => ui().setSelection([r.id]));
+    const tabId = activeTab(app.store.getState())!.id;
+    act(() =>
+      app.store.setState((d) => {
+        d.engine.tooLarge.tabs[tabId] = true;
+      }),
+    );
+    expect(document.querySelector(`.react-flow__node[data-id="${r.id}"] .flow-node`)).toHaveClass(
+      'is-stale',
+    );
+    expect(screen.queryByText('Last known value — engine offline')).toBeNull();
+  });
 });

@@ -194,4 +194,27 @@ describe('объём обмена с целью (FR-013a, US1 #9)', () => {
     expect(rx).toBe(welcome.length);
     expect(tx).toBeGreaterThanOrEqual(hello.length);
   });
+
+  it('без связи правки не считаются в tx: ничего не отправляется (FR-013a)', () => {
+    const app = testStore();
+    const actions = createActions(app);
+    const frames = manualScheduler();
+    const channels: Channel[] = [];
+    startEngine(app, {
+      schedule: frames.schedule,
+      open: (): Opening => {
+        const channel = createInlineChannel(frames.schedule);
+        channels.push(channel);
+        const immediate: OpenResult = { ok: true, channel };
+        return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
+      },
+    });
+    channels[0]!.onClose('closed');
+    expect(app.store.getState().engine.status.kind).toBe('offline');
+    const before = app.store.getState().engine.traffic.tx;
+    actions.addNode('builtin:number', { x: 0, y: 0 });
+    actions.addNode('builtin:number', { x: 100, y: 0 });
+    frames.flushFrames();
+    expect(app.store.getState().engine.traffic.tx).toBe(before);
+  });
 });
