@@ -26,6 +26,14 @@ describe('параметры запуска (contracts/server-cli.md)', () => {
     });
   });
 
+  it('--host без значения → понятный текст и код 2', () => {
+    expect(parseOptions(['--host'])).toEqual({
+      ok: false,
+      message: 'Option --host needs an address, for example --host 127.0.0.1.',
+      exitCode: 2,
+    });
+  });
+
   it('неизвестный параметр → текст и код 2', () => {
     expect(parseOptions(['--path', '/x'])).toEqual({
       ok: false,

@@ -126,4 +126,28 @@ describe('индикатор цели', () => {
     );
     expect(screen.getByRole('button', { name: 'Use local engine' })).toBeInTheDocument();
   });
+
+  it('сбой фонового потока: «The background engine keeps failing.» и «Use local engine» (US2 #3)', () => {
+    const app = setup();
+    setEngine(app, { target: { kind: 'worker' }, status: { kind: 'failed' } });
+    expect(indicator()).toHaveTextContent('The background engine keeps failing.');
+    expect(screen.getByRole('button', { name: 'Use local engine' })).toBeInTheDocument();
+  });
+
+  it('Worker в браузере нет → «This browser cannot run the engine in the background.» (FR-027)', () => {
+    const app = setup();
+    setEngine(app, { target: { kind: 'worker' }, status: { kind: 'failed', reason: 'no-worker' } });
+    expect(indicator()).toHaveTextContent('This browser cannot run the engine in the background.');
+  });
+
+  it('справа от состояния в той же строке — объём обмена «tx … / rx …» (FR-013a)', () => {
+    const app = setup();
+    setEngine(app, {
+      status: { kind: 'ready', engine: '0.1.0', encrypted: false },
+      traffic: { tx: 12_697, rx: 3.1 * 1024 * 1024 },
+    });
+    const traffic = screen.getByTestId('engine-traffic');
+    expect(traffic).toHaveTextContent('tx 12.4 KB / rx 3.1 MB');
+    expect(traffic.parentElement).toBe(indicator().parentElement);
+  });
 });

@@ -90,6 +90,8 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
   let attempt = 0;
   let halted = false;
   let crashes: number[] = [];
+  /** Попытка после падения потока: её неудача — тоже падение, а не «Offline» (FR-027). */
+  let restarting = false;
 
   function stopRetries() {
     if (timer !== null) deps.clearTimer(timer);
@@ -141,6 +143,7 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
       return;
     }
     events.restarted();
+    restarting = true;
     reconnect();
   }
 
@@ -173,8 +176,11 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
   }
 
   function onRetry(r: OpenResult, next: EngineTarget) {
+    const afterCrash = restarting;
+    restarting = false;
     if (r.ok) return attach(r, next);
     if (r.reason === 'cancelled') return;
+    if (afterCrash && r.reason !== 'no-worker') return crashed();
     if (r.reason === 'incompatible') {
       halted = true;
       stopRetries();
@@ -185,7 +191,7 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
       // Фонового потока в браузере нет — повторять бессмысленно
       halted = true;
       stopRetries();
-      events.status({ kind: 'failed' });
+      events.status({ kind: 'failed', reason: 'no-worker' });
       return;
     }
     scheduleRetry();

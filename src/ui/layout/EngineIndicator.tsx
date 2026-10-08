@@ -42,6 +42,10 @@ export function EngineIndicator() {
       >
         {text}
       </button>
+      {/* Объём обмена с текущей целью — та же строка, не обрезается вместе с адресом (FR-013a) */}
+      <span className="engine-indicator__traffic" data-testid="engine-traffic">
+        {m.traffic(engine.traffic.tx, engine.traffic.rx)}
+      </span>
       {status.kind === 'offline' && (
         <button type="button" onClick={() => actions.retryNow()}>
           {m.retryNow}

@@ -28,7 +28,13 @@ export type ClientEvent =
   /** Ранее слишком большое сообщение теперь отправлено. */
   | { kind: 'sent'; doc?: DocId }
   /** Цель не смогла обработать запрос — уведомление (FR-025). */
-  | { kind: 'failed'; code: 'invalid-message' | 'internal' | 'too-large'; doc?: DocId }
+  | {
+      kind: 'failed';
+      code: 'invalid-message' | 'internal' | 'too-large';
+      doc?: DocId;
+      /** По вкладке: будет ли повтор. false — повтор уже был, следующий — при правке (FR-025). */
+      retrying?: boolean;
+    }
   /** Цель забыла вкладку — передана заново без уведомления (FR-025). */
   | { kind: 'resend'; doc: DocId };
 
@@ -57,23 +63,42 @@ interface DocMirror {
 
 const LIBRARY = Symbol('library');
 
-export function createEngineClient(options: { engineVersion?: string } = {}): EngineClient {
+export interface EngineClientOptions {
+  engineVersion?: string;
+  /**
+   * Лимит сообщения для текущей цели; undefined — без лимита. По умолчанию MAX_MESSAGE_BYTES.
+   * Лимит 8 МБ — у сервера (FR-024); в окне и фоновом потоке размер не ограничен (FR-002).
+   */
+  maxMessageBytes?: () => number | undefined;
+}
+
+export function createEngineClient(options: EngineClientOptions = {}): EngineClient {
   const engine = options.engineVersion ?? ENGINE_VERSION;
+  const limit = options.maxMessageBytes ?? (() => MAX_MESSAGE_BYTES);
   let snapshot: Snapshot = { tabs: [], composites: [] };
   let phase: 'connecting' | 'ready' | 'incompatible' = 'connecting';
   let mirrors = new Map<DocId, DocMirror>();
   let sentComposites: CompositeDef[] | undefined;
-  /** Что сейчас не отправлено из-за лимита: вкладки и набор определений. */
-  const tooLarge = new Set<DocId | typeof LIBRARY>();
+  /**
+   * Что сейчас не отправлено из-за лимита: вкладка или набор определений → отклонённые данные.
+   * Те же данные (та же ссылка) повторно не сериализуются — новая попытка при правке (FR-024).
+   */
+  const tooLarge = new Map<DocId | typeof LIBRARY, unknown>();
 
   const empty = (): ClientOutput => ({ events: [], send: [] });
 
   /** Сериализовать и отправить, если влезает в лимит; иначе — событие too-large. */
-  function emit(out: ClientOutput, msg: ClientMessage, key: DocId | typeof LIBRARY): boolean {
+  function emit(
+    out: ClientOutput,
+    msg: ClientMessage,
+    key: DocId | typeof LIBRARY,
+    source: unknown,
+  ): boolean {
     const text = JSON.stringify(msg);
     const doc = key === LIBRARY ? {} : { doc: key };
-    if (byteLength(text) > MAX_MESSAGE_BYTES) {
-      tooLarge.add(key);
+    const max = limit();
+    if (max !== undefined && byteLength(text) > max) {
+      tooLarge.set(key, source);
       out.events.push({ kind: 'too-large', ...doc });
       return false;
     }
@@ -83,7 +108,7 @@ export function createEngineClient(options: { engineVersion?: string } = {}): En
   }
 
   function open(out: ClientOutput, doc: DocId, graph: Graph, rev: Rev) {
-    if (emit(out, { type: 'open', doc, rev, graph }, doc)) {
+    if (emit(out, { type: 'open', doc, rev, graph }, doc, graph)) {
       mirrors.set(doc, { ...mirrors.get(doc), rev, graph });
     }
   }
@@ -91,18 +116,20 @@ export function createEngineClient(options: { engineVersion?: string } = {}): En
   function diff(): ClientOutput {
     const out = empty();
     if (phase !== 'ready') return out;
-    if (snapshot.composites !== sentComposites) {
-      const msg: ClientMessage = { type: 'library', composites: snapshot.composites };
-      if (emit(out, msg, LIBRARY)) sentComposites = snapshot.composites;
+    const { composites } = snapshot;
+    if (composites !== sentComposites && tooLarge.get(LIBRARY) !== composites) {
+      const msg: ClientMessage = { type: 'library', composites };
+      if (emit(out, msg, LIBRARY, composites)) sentComposites = composites;
     }
     const open_ = new Set<DocId>();
     for (const { doc, graph } of snapshot.tabs) {
       open_.add(doc);
+      if (tooLarge.get(doc) === graph) continue;
       const mirror = mirrors.get(doc);
       if (!mirror) open(out, doc, graph, 1);
       else if (mirror.graph !== graph) {
         const rev = mirror.rev + 1;
-        if (emit(out, { type: 'update', doc, rev, graph }, doc)) {
+        if (emit(out, { type: 'update', doc, rev, graph }, doc, graph)) {
           mirrors.set(doc, { rev, graph });
         }
       }
@@ -110,9 +137,10 @@ export function createEngineClient(options: { engineVersion?: string } = {}): En
     for (const doc of [...mirrors.keys()]) {
       if (open_.has(doc)) continue;
       mirrors.delete(doc);
-      tooLarge.delete(doc);
       out.send.push(JSON.stringify({ type: 'close', doc } satisfies ClientMessage));
     }
+    for (const key of [...tooLarge.keys()])
+      if (key !== LIBRARY && !open_.has(key)) tooLarge.delete(key);
     return out;
   }
 
@@ -134,11 +162,15 @@ export function createEngineClient(options: { engineVersion?: string } = {}): En
       }
       case 'invalid-message':
       case 'internal': {
-        const doc = msg.doc === undefined ? {} : { doc: msg.doc };
-        out.events.push({ kind: 'failed', code: msg.code, ...doc });
-        const graph = msg.doc === undefined ? undefined : graphOf(msg.doc);
+        if (msg.doc === undefined) {
+          out.events.push({ kind: 'failed', code: msg.code });
+          return out;
+        }
+        const graph = graphOf(msg.doc);
         // Один повтор на граф: если и он не удался — до следующей правки (FR-025)
-        if (mirror && graph && msg.doc !== undefined && mirror.retried !== graph) {
+        const retrying = mirror !== undefined && graph !== undefined && mirror.retried !== graph;
+        out.events.push({ kind: 'failed', code: msg.code, doc: msg.doc, retrying });
+        if (retrying) {
           open(out, msg.doc, graph, mirror.rev + 1);
           const updated = mirrors.get(msg.doc);
           if (updated) updated.retried = graph;

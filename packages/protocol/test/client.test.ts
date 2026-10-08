@@ -199,10 +199,12 @@ describe('EngineClient: сообщения хоста', () => {
     const { client } = connected(snap({ t1 }));
     const fail = host({ type: 'error', code: 'internal', doc: 't1', detail: 'boom' });
     const first = client.receive(fail);
-    expect(first.events).toEqual([{ kind: 'failed', code: 'internal', doc: 't1' }]);
+    expect(first.events).toEqual([{ kind: 'failed', code: 'internal', doc: 't1', retrying: true }]);
     expect(parse(first.send)).toEqual([{ type: 'open', doc: 't1', rev: 2, graph: t1 }]);
     const second = client.receive(fail);
-    expect(second.events).toEqual([{ kind: 'failed', code: 'internal', doc: 't1' }]);
+    expect(second.events).toEqual([
+      { kind: 'failed', code: 'internal', doc: 't1', retrying: false },
+    ]);
     expect(second.send).toEqual([]);
     // Следующая правка — новая попытка
     const t1b = g(9);
@@ -231,5 +233,26 @@ describe('EngineClient: сообщения хоста', () => {
     expect(client.receive(host({ type: 'states', doc: 't1' })).events).toEqual([
       { kind: 'failed', code: 'invalid-message' },
     ]);
+  });
+
+  it('без лимита (Local, Worker) большая вкладка отправляется (FR-002, FR-024)', () => {
+    const client = createEngineClient({ maxMessageBytes: () => undefined });
+    client.start();
+    const huge = graph([node('n', 'builtin:text', { value: 'x'.repeat(MAX_MESSAGE_BYTES) })]);
+    client.sync(snap({ t1: huge }));
+    const out = client.receive(host(welcome));
+    expect(out.events.map((e) => e.kind)).toEqual(['ready']);
+    expect(parse(out.send).map((m) => m.type)).toEqual(['library', 'open']);
+  });
+
+  it('отклонённая по лимиту вкладка не сериализуется заново, пока её граф не изменится', () => {
+    const { client } = connected(snap({ t1: g() }));
+    const huge = graph([node('n', 'builtin:text', { value: 'x'.repeat(MAX_MESSAGE_BYTES) })]);
+    const t2 = g(2);
+    expect(client.sync(snap({ t1: huge })).events).toEqual([{ kind: 'too-large', doc: 't1' }]);
+    // Правка другой вкладки: t1 не пробуется снова — ни события, ни отправки по ней
+    const other = client.sync(snap({ t1: huge, t2 }));
+    expect(other.events).toEqual([]);
+    expect(parse(other.send).map((m) => m.doc)).toEqual(['t2']);
   });
 });

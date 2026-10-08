@@ -27,6 +27,24 @@ export function EngineSection() {
     })),
   ];
 
+  // Ошибка и подсказка — у строки, к которой подключались (Worker или сервер из списка),
+  // иначе — у поля адреса (новый адрес, неверный ввод; FR-007, Edge Cases)
+  const trial = engine.trial;
+  const atRow =
+    trial !== undefined &&
+    trial.failure !== 'invalid-address' &&
+    rows.some((r) => same(r.target, trial.target));
+  const feedback = (
+    <>
+      {trial?.awaitingPermission && !error && <p className="engine-section__hint">{m.lnaPrompt}</p>}
+      {error && (
+        <p className="engine-section__error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
+  );
+
   return (
     <section className="engine-section" aria-label={m.section}>
       <h2>{m.section}</h2>
@@ -58,8 +76,10 @@ export function EngineSection() {
                 />
                 <span className="engine-section__title">
                   {title}
-                  {versions && <small className="engine-section__versions">{versions}</small>}
+                  {versions && <small className="engine-section__versions"> {versions}</small>}
                 </span>
+                {/* «This tab · Local» — разделитель между адресом и типом (FR-003) */}
+                <span className="engine-section__sep"> · </span>
                 <span className="engine-section__kind">{kind}</span>
               </button>
               {/* «×» — только у невыбранного сервера (FR-005) */}
@@ -74,6 +94,7 @@ export function EngineSection() {
                   ×
                 </button>
               )}
+              {atRow && same(target, trial.target) && feedback}
             </li>
           );
         })}
@@ -93,18 +114,10 @@ export function EngineSection() {
           aria-invalid={error ? true : undefined}
           onChange={(e) => setAddress(e.target.value)}
         />
-        <button type="submit" disabled={probing}>
-          {probing ? m.connecting : m.connect}
-        </button>
+        {/* Не блокируется: новая попытка отменяет незавершённую (FR-007) */}
+        <button type="submit">{probing ? m.connecting : m.connect}</button>
       </form>
-      {engine.trial?.awaitingPermission && !error && (
-        <p className="engine-section__hint">{m.lnaPrompt}</p>
-      )}
-      {error && (
-        <p className="engine-section__error" role="alert">
-          {error}
-        </p>
-      )}
+      {!atRow && feedback}
     </section>
   );
 }

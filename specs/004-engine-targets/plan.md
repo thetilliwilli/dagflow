@@ -185,7 +185,7 @@ src/
 │   ├── + engine.ts                  # клиент протокола ↔ стор, nodeStates, срез engine (R15)
 │   ├── ~ store.ts                   # срез engine
 │   └── ~ actions.ts                 # selectTarget, connectServer, removeServer, retryNow, useLocalEngine
-├── ~ main.tsx                       # startEngine вместо startEvaluation, загрузка настроек
+├── ui/~ App.tsx                     # startEngine вместо startEvaluation, настройки из IndexedDB (уточнено: не main.tsx)
 └── ui/
     ├── ~ messages.ts                # engineMessages (ui-texts.md)
     ├── layout/+ EngineSection.tsx   # раздел «Engine» в SidebarWindow

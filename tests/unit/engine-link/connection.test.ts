@@ -307,4 +307,39 @@ describe('connection: обрыв и переподключение (US3)', () =>
     expect(log.at(-1)).toMatch(/^attach .* local false$/);
     expect(trials.at(-1)).toBeUndefined();
   });
+
+  it.each([
+    [
+      'incompatible',
+      { ok: false as const, reason: 'incompatible' as const, host: { protocol: 2, engine: '0.9' } },
+    ],
+  ])('useLocal из %s: Local сразу (FR-022a)', async (_name, failure) => {
+    const { conn, channel, openings, log, advance, statuses } = await connected();
+    channel.onClose('closed');
+    advance(500);
+    openings[1]!.resolve(failure);
+    await flush();
+    expect(statuses.at(-1)?.kind).toBe('incompatible');
+    conn.useLocal();
+    openings.at(-1)!.resolve({ ok: true, channel: fakeChannel('local') });
+    await flush();
+    expect(log.at(-1)).toBe('attach local - local false');
+  });
+
+  it('useLocal из failed (фоновый поток): Local сразу (FR-022a)', async () => {
+    const { conn, openings, log, statuses } = setup();
+    conn.start({ kind: 'worker' });
+    // Три падения подряд (часы стоят — все в пределах минуты): третье → failed
+    for (let i = 0; i < 3; i++) {
+      const w = fakeChannel(`w${i}`);
+      openings.at(-1)!.resolve({ ok: true, channel: w });
+      await flush();
+      w.onClose('crashed');
+    }
+    expect(statuses.at(-1)).toEqual({ kind: 'failed' });
+    conn.useLocal();
+    openings.at(-1)!.resolve({ ok: true, channel: fakeChannel('local') });
+    await flush();
+    expect(log.at(-1)).toBe('attach local - local false');
+  });
 });

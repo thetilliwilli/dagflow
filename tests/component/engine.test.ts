@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ENGINE_VERSION } from '@dagflow/engine';
+import type { Channel } from '@dagflow/protocol';
+import { createInlineChannel } from '../../src/engine-link/channels/inline';
+import type { Opening, OpenResult } from '../../src/engine-link/connection';
 import { createActions } from '../../src/store/actions';
 import { startEngine } from '../../src/store/engine';
 import { activeTab } from '../../src/store/store';
@@ -121,5 +124,46 @@ describe('связка стора и engine через протокол (Local)'
     actions.addNode('builtin:number', { x: 0, y: 0 });
     expect(scheduled).toBe(1);
     queue.shift()!();
+  });
+});
+
+describe('объём обмена с целью (FR-013a, US1 #9)', () => {
+  it('растёт при правке, сохраняется при переподключении к той же цели, обнуляется при смене цели', async () => {
+    const app = testStore();
+    const actions = createActions(app);
+    const frames = manualScheduler();
+    const channels: Channel[] = [];
+    startEngine(app, {
+      schedule: frames.schedule,
+      open: (): Opening => {
+        // Любая цель — хост в окне за строковым каналом
+        const channel = createInlineChannel(frames.schedule);
+        channels.push(channel);
+        const immediate: OpenResult = { ok: true, channel };
+        return { immediate, result: Promise.resolve(immediate), cancel: () => {} };
+      },
+    });
+    const traffic = () => app.store.getState().engine.traffic;
+    const start = traffic();
+    expect(start.tx).toBeGreaterThan(0);
+    expect(start.rx).toBeGreaterThan(0);
+
+    actions.addNode('builtin:number', { x: 0, y: 0 });
+    frames.flushFrames();
+    const afterEdit = traffic();
+    expect(afterEdit.tx).toBeGreaterThan(start.tx);
+    expect(afterEdit.rx).toBeGreaterThan(start.rx);
+
+    // Обрыв и переподключение к той же цели — счёт продолжается
+    channels.at(-1)!.onClose('closed');
+    app.engine!.retryNow();
+    frames.flushFrames();
+    expect(traffic().tx).toBeGreaterThan(afterEdit.tx);
+
+    // Другая цель — с нуля (только обмен с новой целью)
+    app.engine!.select({ kind: 'worker' });
+    frames.flushFrames();
+    expect(traffic().tx).toBeLessThan(afterEdit.tx);
+    expect(traffic().tx).toBeGreaterThan(0);
   });
 });

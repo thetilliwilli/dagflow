@@ -129,7 +129,36 @@ test('US6 #5: вкладка больше 8 МБ → сообщение о ли�
   await expect(await valueOf(page, big, 'out', 'value')).toHaveText('small');
 });
 
-test('US6 #6: цель не смогла обработать вкладку → уведомление и один повтор', async ({ page }) => {
+test('FR-024, FR-002: лимит 8 МБ — только у сервера; в окне такая вкладка считается', async ({
+  page,
+}) => {
+  const dir = mkdtempSync(join(tmpdir(), 'dagflow-big-'));
+  const file = join(dir, 'big-local.dagflow.json');
+  const base = JSON.parse(readFileSync('tests/conformance/fixtures/waiting.json', 'utf8')) as {
+    workflow: { name: string; graph: { nodes: Array<Record<string, unknown>> } };
+  };
+  base.workflow.name = 'Big local';
+  base.workflow.graph.nodes.push({
+    id: 'big',
+    type: 'builtin:text',
+    name: 'Big',
+    position: { x: 0, y: 500 },
+    values: { value: 'x'.repeat(8 * 1024 * 1024 + 10) },
+  });
+  writeFileSync(file, JSON.stringify(base));
+
+  await page.goto('/');
+  await (await openSidebar(page)).getByLabel('Import from file').setInputFiles(file);
+  await closeSidebar(page);
+  const big = page.locator('.react-flow__node').filter({ hasText: 'Big' });
+  await expect(big.locator('.flow-node')).toHaveClass(/status-ok/);
+  await expect(big.locator('.flow-node')).not.toHaveClass(/is-stale/);
+  await expect(page.getByRole('alert').filter({ hasText: 'too large' })).toHaveCount(0);
+});
+
+test('US6 #6: цель не смогла обработать вкладку → уведомление и один повтор без лишних уведомлений', async ({
+  page,
+}) => {
   await page.goto('/');
   await addNode(page, 'Number', 80, 60);
   await withFake('failing', async (address) => {
@@ -137,11 +166,11 @@ test('US6 #6: цель не смогла обработать вкладку →
     await expect(
       page.getByText('The engine could not process the workflow. Retrying.').first(),
     ).toBeVisible();
-    // Один повтор на граф: уведомлений два (исходный сбой и повтор), дальше — тишина
+    // Один повтор на граф: повторный сбой того же графа уведомления не даёт (повтор — при правке)
     await page.waitForTimeout(500);
     await expect(
       page.getByText('The engine could not process the workflow. Retrying.'),
-    ).toHaveCount(2);
+    ).toHaveCount(1);
   });
 });
 

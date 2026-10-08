@@ -39,7 +39,7 @@ test('US4 #1, #7: при первом запуске — «This tab · Local» �
   await indicator(page).click();
   const s = page.getByRole('region', { name: 'Engine' });
   await expect(s).toBeVisible();
-  await expect(s.getByRole('listitem')).toHaveText(['This tabLocal', 'This browserWorker']);
+  await expect(s.getByRole('listitem')).toHaveText(['This tab · Local', 'This browser · Worker']);
 });
 
 test('US4 #2–#6: серверы в порядке добавления, до 5, «×», щелчок по строке, перезагрузка', async ({

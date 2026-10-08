@@ -42,7 +42,7 @@ function setup() {
         target: { value: address },
       },
     );
-    fireEvent.click(within(s).getByRole('button', { name: 'Connect' }));
+    fireEvent.click(within(s).getByRole('button', { name: /^(Connect|Connecting…)$/ }));
   };
   return { app, frames, pending, section, connect };
 }
@@ -58,7 +58,7 @@ describe('раздел «Engine»', () => {
   it('при первом запуске — две строки, выбрана «This tab · Local» (US4 #1)', () => {
     const { section } = setup();
     const rows = within(section()).getAllByRole('listitem');
-    expect(rows.map((r) => r.textContent)).toEqual(['This tabLocal', 'This browserWorker']);
+    expect(rows.map((r) => r.textContent)).toEqual(['This tab · Local', 'This browser · Worker']);
     expect(within(rows[0]!).getByRole('button')).toHaveAttribute('aria-current', 'true');
   });
 
@@ -75,7 +75,8 @@ describe('раздел «Engine»', () => {
   it('пробное подключение: «Connecting…», затем сервер выбран и первый в списке (US1 #1, US4 #2)', async () => {
     const { section, connect, pending, frames, app } = setup();
     await connect('LocalHost:8080');
-    expect(within(section()).getByRole('button', { name: 'Connecting…' })).toBeDisabled();
+    // Кнопка не блокируется: новая попытка отменит эту (FR-007)
+    expect(within(section()).getByRole('button', { name: 'Connecting…' })).toBeEnabled();
     expect(pending[0]!.target).toEqual({ kind: 'server', address: 'localhost:8080' });
     await act(async () => {
       pending[0]!.resolve({
@@ -93,7 +94,7 @@ describe('раздел «Engine»', () => {
       address: 'localhost:8080',
     });
     const rows = within(section()).getAllByRole('listitem');
-    expect(rows[2]).toHaveTextContent('localhost:8080Server');
+    expect(rows[2]).toHaveTextContent('localhost:8080 · Server');
     expect(within(rows[2]!).getByRole('button')).toHaveAttribute('aria-current', 'true');
     expect(screen.getByRole('button', { name: /^Engine: / })).toHaveTextContent(
       '● Server · localhost:8080 · engine 0.1.0',
@@ -187,5 +188,27 @@ describe('раздел «Engine»', () => {
     expect(within(section()).getByRole('alert')).toHaveTextContent(
       'The browser blocks access to the local network for this page. Allow it in the site settings and try again.',
     );
+  });
+
+  it('ошибка строки — у этой строки: Worker недоступен (Edge Cases, T089)', async () => {
+    const { section, pending, app } = setup();
+    fireEvent.click(within(section()).getByRole('button', { name: /This browser/ }));
+    await act(async () => pending[0]!.resolve({ ok: false, reason: 'no-worker' }));
+    await settle();
+    const row = within(section()).getAllByRole('listitem')[1]!;
+    expect(within(row).getByRole('alert')).toHaveTextContent(
+      'This browser cannot run the engine in the background.',
+    );
+    expect(app.store.getState().engine.target).toEqual({ kind: 'local' });
+  });
+
+  it('«Connect» во время попытки запускает новую, прежняя отменяется (FR-007)', async () => {
+    const { connect, pending } = setup();
+    await connect('localhost:8080');
+    await connect('localhost:9090');
+    expect(pending.map((p) => p.target)).toEqual([
+      { kind: 'server', address: 'localhost:8080' },
+      { kind: 'server', address: 'localhost:9090' },
+    ]);
   });
 });

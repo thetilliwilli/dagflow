@@ -26,7 +26,11 @@
 | `invalidAddress`          | Enter a server address, for example localhost:8080. |
 | строка выбранного сервера, версии engine разные (US6 #3) | engine `<server>` (editor `<editor>`) — подпись под адресом |
 
-## Индикатор в верхней панели (FR-013, FR-014)
+## Индикатор в верхней панели (FR-013, FR-013a, FR-014)
+
+Справа от состояния, в той же строке, — объём обмена с текущей целью (FR-013a):
+`tx <переданные> / rx <принятые>`, например `tx 0 B / rx 0 B`, `tx 12.4 KB / rx 3.1 MB`.
+Единицы: `B` (целое), `KB`, `MB`, `GB` (одна цифра после точки, 1 KB = 1024 B).
 
 | Состояние                                 | Текст                                                          |
 | ----------------------------------------- | -------------------------------------------------------------- |
@@ -84,6 +88,7 @@
 | Порт занят                         | Port `<port>` is already in use. Start the server with another port: --port &lt;number&gt;. (`&lt;number&gt;` — буквально) |
 | Неверный порт                      | Invalid port “`<value>`”. Use a number from 1 to 65535.                                      |
 | Неизвестный параметр               | Unknown option “`<name>`”. Options: --port `<number>`, --host `<address>`, --verbose.        |
+| `--host` без значения | Option --host needs an address, for example --host 127.0.0.1. |
 | Адрес недоступен для прослушивания | Cannot listen on `<host>`. Check the --host address.                                         |
 | Подключение                        | Connected: `<client>` (connections: `<n>`)                                                   |
 | Отключение                         | Disconnected: `<client>` (connections: `<n>`)                                                |

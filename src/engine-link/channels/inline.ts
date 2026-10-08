@@ -9,7 +9,8 @@ type Schedule = (fn: () => void) => void;
  * несколько правок до кадра объединяются в один пересчёт (FR-016).
  */
 export function createInlineChannel(schedule: Schedule): Channel {
-  const host = createEngineHost();
+  // В окне лимита размера нет: он у сервера (FR-024, FR-002)
+  const host = createEngineHost({ maxMessageBytes: Infinity });
   let scheduled = false;
   let closed = false;
 

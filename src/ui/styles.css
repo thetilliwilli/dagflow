@@ -958,7 +958,7 @@ button.link {
   display: flex;
   align-items: center;
   gap: 6px;
-  max-width: 55%;
+  max-width: 65%;
   padding: 0 8px;
   border-left: 1px solid var(--border);
   font-size: 13px;
@@ -974,6 +974,13 @@ button.link {
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+}
+.engine-indicator__traffic {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .engine-indicator > button:not(.engine-indicator__state) {
   flex: none;
@@ -1083,7 +1090,16 @@ button.link {
 
 .engine-section__item {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+}
+.engine-section__item > p {
+  flex-basis: 100%;
+  padding-left: 20px;
+}
+.engine-section__sep {
+  color: var(--muted);
+  white-space: pre;
 }
 .engine-section__item .engine-section__row {
   flex: 1;

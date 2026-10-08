@@ -127,21 +127,28 @@ describe('probe', () => {
     expect(sockets).toHaveLength(1);
   });
 
-  it('синхронное исключение конструктора → схема пропускается; все запрещены → blocked', async () => {
-    const { deps } = setup({ blocked: () => true });
-    expect(await probe('domain.com', { hint: 'ws' }, { ...deps, pageSecure: true }).result).toEqual(
-      {
-        ok: false,
-        reason: 'blocked',
-      },
-    );
+  it('схема ws:// со страницы по https: ws бросает синхронно, wss не удался → blocked (FR-011)', async () => {
+    // Как в настоящем браузере: синхронно бросает только ws (mixed content), wss — нет
+    const { deps, sockets } = setup({ pageSecure: true, blocked: (url) => url.startsWith('ws:') });
+    const p = probe('domain.com', { hint: 'ws' }, { ...deps, pageSecure: true });
+    sockets[0]!.fail();
+    expect(sockets.map((s) => s.url)).toEqual(['wss://domain.com']);
+    expect(await p.result).toEqual({ ok: false, reason: 'blocked' });
   });
 
-  it('страница по https и адрес не локальный — пробуется только wss', async () => {
+  it('страница по https и адрес не локальный — пробуется только wss; неудача → blocked (нужен wss-адрес)', async () => {
     const { deps, sockets } = setup({ pageSecure: true });
     const p = probe('domain.com', {}, deps);
     sockets[0]!.fail();
     expect(sockets.map((s) => s.url)).toEqual(['wss://domain.com']);
+    expect(await p.result).toEqual({ ok: false, reason: 'blocked' });
+  });
+
+  it('страница по https, локальный адрес: обе схемы не удались → unreachable', async () => {
+    const { deps, sockets } = setup({ pageSecure: true });
+    const p = probe('localhost:8080', {}, deps);
+    sockets[0]!.fail();
+    sockets[1]!.fail();
     expect(await p.result).toEqual({ ok: false, reason: 'unreachable' });
   });
 

@@ -174,6 +174,13 @@ describe.each(RUNTIMES)('$name: параметры запуска', (rt) => {
     }
   });
 
+  it('FR-030: адрес, который нельзя слушать → «Cannot listen on …», код выхода 1', async () => {
+    // 203.0.113.0/24 — адреса для документации (TEST-NET-3): на машине их нет
+    const r = launch(rt, ['--port', '18099', '--host', '203.0.113.1']);
+    expect(await r.exited).toBe(1);
+    expect(r.out().trim()).toBe('Cannot listen on 203.0.113.1. Check the --host address.');
+  });
+
   it('Ctrl+C → код выхода 0', async () => {
     const s = await startServer(rt);
     expect(await s.stop()).toBe(0);

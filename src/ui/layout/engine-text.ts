@@ -40,7 +40,7 @@ export function indicatorText(engine: EngineSlice, secondsLeft = 0): string {
     case 'incompatible':
       return m.protocolDiffers(status.host.protocol, PROTOCOL_VERSION);
     case 'failed':
-      return m.workerFailing;
+      return status.reason === 'no-worker' ? m.noWorker : m.workerFailing;
   }
 }
 

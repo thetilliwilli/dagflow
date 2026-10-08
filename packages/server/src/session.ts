@@ -76,7 +76,8 @@ export function createConnections({ log, verbose, schedule }: ConnectionsOptions
     const connection: Connection = {
       receive(text) {
         if (!host) return;
-        if (text.length > TRANSPORT_LIMIT) {
+        // Лимит транспорта — в байтах UTF-8, как у ws и Bun (Deno: лимит делает этот код)
+        if (text.length > TRANSPORT_LIMIT || byteLength(text) > TRANSPORT_LIMIT) {
           socket.close(1009);
           return;
         }

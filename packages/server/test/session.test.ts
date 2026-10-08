@@ -117,6 +117,14 @@ describe('соединения сервера', () => {
     expect(s.closedWith).toBe(1009);
   });
 
+  it('лимит транспорта — в байтах: многобайтовый текст длиннее лимита закрывает соединение', () => {
+    const { conns, socket } = setup();
+    const s = socket();
+    // 'я' — 2 байта: символов меньше лимита, байтов — больше
+    conns.open(s, 'c').receive('я'.repeat(Math.ceil(TRANSPORT_LIMIT / 2) + 10));
+    expect(s.closedWith).toBe(1009);
+  });
+
   it('закрытие сокета отпускает хост; новое соединение начинает с чистого хоста (FR-018)', () => {
     const { conns, socket } = setup();
     const a = conns.open(socket(), 'a');

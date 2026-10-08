@@ -8,5 +8,6 @@ export {
   type ClientEvent,
   type ClientOutput,
   type EngineClient,
+  type EngineClientOptions,
   type Snapshot,
 } from './client';

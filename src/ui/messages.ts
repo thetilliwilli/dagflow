@@ -224,6 +224,21 @@ export const engineMessages = {
   workerFailing: 'The background engine keeps failing.',
   useLocal: 'Use local engine',
   indicatorLabel: (state: string) => `Engine: ${state}. Open engine settings.`,
+  /** Байты с единицами: B — целое, KB / MB / GB — одна цифра после точки (1 KB = 1024 B). */
+  bytes: (n: number) => {
+    if (n < 1024) return `${Math.round(n)} B`;
+    const units = ['KB', 'MB', 'GB'];
+    let value = n / 1024;
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+      value /= 1024;
+      unit += 1;
+    }
+    return `${value.toFixed(1)} ${units[unit]}`;
+  },
+  /** Объём обмена с текущей целью (FR-013a). */
+  traffic: (tx: number, rx: number) =>
+    `tx ${engineMessages.bytes(tx)} / rx ${engineMessages.bytes(rx)}`,
   // Ошибки пробной попытки (у поля или строки)
   couldNotConnect: (address: string) =>
     `Could not connect to ${address}. Check that the server is running and the address is correct.`,

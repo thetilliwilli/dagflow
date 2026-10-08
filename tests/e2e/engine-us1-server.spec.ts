@@ -95,3 +95,41 @@ for (const kind of ['not-engine', 'silent'] as const) {
     }
   });
 }
+
+/** «tx 12.4 KB / rx 3.1 MB» → байты (приблизительно — для сравнения «больше/меньше»). */
+async function traffic(page: Page): Promise<{ tx: number; rx: number }> {
+  const text = (await page.getByTestId('engine-traffic').textContent()) ?? '';
+  const unit: Record<string, number> = { B: 1, KB: 1024, MB: 1024 ** 2, GB: 1024 ** 3 };
+  const m = /^tx ([\d.]+) (B|KB|MB|GB) \/ rx ([\d.]+) (B|KB|MB|GB)$/.exec(text);
+  if (!m) throw new Error(`unexpected traffic text: ${text}`);
+  return { tx: Number(m[1]) * unit[m[2]!]!, rx: Number(m[3]) * unit[m[4]!]! };
+}
+
+test('US1 #9, FR-013a: справа от индикатора — объём обмена tx/rx; растёт при правке, при смене цели — с нуля', async ({
+  page,
+  engineServer,
+}) => {
+  await page.goto('/');
+  await expect(page.getByTestId('engine-traffic')).toHaveText(
+    /^tx [\d.]+ (B|KB|MB) \/ rx [\d.]+ (B|KB|MB)$/,
+  );
+  const n = await addNode(page, 'Number', 80, 60);
+  for (let i = 0; i < 3; i++) await addNode(page, 'Number', 80 + 200 * i, 260);
+  await connectTo(page, engineServer.address);
+  await expect(indicator(page)).toHaveText(/● Server/);
+  await closeSidebar(page);
+  const before = await traffic(page);
+  expect(before.tx).toBeGreaterThan(0);
+  expect(before.rx).toBeGreaterThan(0);
+
+  await setInput(page, n, 'value', '42');
+  await expect.poll(async () => (await traffic(page)).tx).toBeGreaterThan(before.tx);
+  await expect.poll(async () => (await traffic(page)).rx).toBeGreaterThan(before.rx);
+  const onServer = await traffic(page);
+
+  // Смена цели — счёт с нуля: на Local пока ушёл только начальный снимок
+  const section = (await openSidebar(page)).getByRole('region', { name: 'Engine' });
+  await section.getByRole('listitem').filter({ hasText: 'This tab' }).getByRole('button').click();
+  await expect(indicator(page)).toHaveText('● Local');
+  expect((await traffic(page)).tx).toBeLessThan(onServer.tx);
+});

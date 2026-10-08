@@ -7,7 +7,8 @@ const scope = self as unknown as {
   close(): void;
 };
 
-const host = createEngineHost();
+// В фоновом потоке лимита размера нет: он у сервера (FR-024, FR-002)
+const host = createEngineHost({ maxMessageBytes: Infinity });
 let scheduled = false;
 
 function post(replies: HostMessage[]) {

@@ -28,7 +28,7 @@ export function parseOptions(args: readonly string[]): ParsedOptions {
       options.port = port;
     } else if (arg === '--host') {
       const value = args[++i];
-      if (!value) return fail(serverMessages.unknownOption(arg));
+      if (!value) return fail(serverMessages.missingHost);
       options.host = value;
     } else return fail(serverMessages.unknownOption(arg));
   }

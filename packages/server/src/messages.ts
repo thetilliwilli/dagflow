@@ -11,6 +11,7 @@ export const serverMessages = {
   invalidPort: (value: string) => `Invalid port “${value}”. Use a number from 1 to 65535.`,
   unknownOption: (name: string) =>
     `Unknown option “${name}”. Options: --port <number>, --host <address>, --verbose.`,
+  missingHost: 'Option --host needs an address, for example --host 127.0.0.1.',
   cannotListen: (host: string) => `Cannot listen on ${host}. Check the --host address.`,
   connected: (client: string, count: number) => `Connected: ${client} (connections: ${count})`,
   disconnected: (client: string, count: number) =>

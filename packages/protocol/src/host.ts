@@ -38,6 +38,8 @@ export interface EngineHostOptions {
   registry?: (composites: CompositeDef[]) => NodeRegistry;
   /** Версия engine в `welcome`; по умолчанию — ENGINE_VERSION. */
   engineVersion?: string;
+  /** Лимит входящего сообщения; по умолчанию MAX_MESSAGE_BYTES, Infinity — без лимита (Local, Worker). */
+  maxMessageBytes?: number;
 }
 
 interface HostDoc {
@@ -58,6 +60,7 @@ const error = (code: ProtocolError['code'], extra: Partial<ProtocolError> = {}):
 export function createEngineHost(options: EngineHostOptions = {}): EngineHost {
   const registry = options.registry ?? ((composites) => createRegistry(composites));
   const engine = options.engineVersion ?? ENGINE_VERSION;
+  const maxBytes = options.maxMessageBytes ?? MAX_MESSAGE_BYTES;
   const docs = new Map<DocId, HostDoc>();
   let composites: CompositeDef[] = [];
   let ready = false;
@@ -120,7 +123,7 @@ export function createEngineHost(options: EngineHostOptions = {}): EngineHost {
     },
 
     receive(raw) {
-      if (byteLength(raw) > MAX_MESSAGE_BYTES) return [error('too-large')];
+      if (byteLength(raw) > maxBytes) return [error('too-large')];
       let data: unknown;
       try {
         data = JSON.parse(raw);
@@ -129,7 +132,14 @@ export function createEngineHost(options: EngineHostOptions = {}): EngineHost {
       }
       const parsed = v.safeParse(ClientMessageSchema, data);
       if (!parsed.success) {
-        return [error('invalid-message', { detail: describeIssues(parsed.issues) })];
+        // Вкладка, если её можно прочитать, — чтобы клиент передал её заново (FR-025)
+        const doc = (data as { doc?: unknown } | null)?.doc;
+        return [
+          error('invalid-message', {
+            ...(typeof doc === 'string' && doc !== '' ? { doc } : {}),
+            detail: describeIssues(parsed.issues),
+          }),
+        ];
       }
       const msg = parsed.output as ClientMessage;
       if (!ready && msg.type !== 'hello') return [error('not-ready')];

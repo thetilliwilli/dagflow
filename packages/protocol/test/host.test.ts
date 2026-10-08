@@ -262,4 +262,18 @@ describe('EngineHost: сбои', () => {
     expect(() => host.tick()).not.toThrow();
     expect(host.needsTick()).toBe(false);
   });
+
+  it('maxMessageBytes: Infinity — без лимита (хост в окне и фоновом потоке)', () => {
+    const host = createEngineHost({ maxMessageBytes: Infinity });
+    send(host, { type: 'hello', protocol: PROTOCOL_VERSION, engine: ENGINE_VERSION });
+    const big = graph([node('t', 'builtin:text', { value: 'x'.repeat(MAX_MESSAGE_BYTES) })]);
+    expect(send(host, { type: 'open', doc: 'd', rev: 1, graph: big })[0]).toMatchObject({
+      type: 'pending',
+    });
+  });
+
+  it('не прошло схему, но вкладка читается → invalid-message с doc (клиент передаст её заново)', () => {
+    const out = send(ready(), { type: 'update', doc: 'tab-1', rev: 'x', graph: {} });
+    expect(out[0]).toMatchObject({ type: 'error', code: 'invalid-message', doc: 'tab-1' });
+  });
 });

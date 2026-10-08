@@ -59,7 +59,7 @@ type ConnectionStatus =
   | { kind: 'ready'; engine: string; encrypted: boolean }
   | { kind: 'offline'; attempt: number; retryAt: number } // retryAt — время по часам адаптера
   | { kind: 'incompatible'; host: { protocol: number; engine: string } }
-  | { kind: 'failed' }; // фоновый поток упал 3 раза за минуту
+  | { kind: 'failed'; reason?: 'no-worker' }; // фоновый поток падает (3 за минуту) или Worker в браузере нет
 ```
 
 ```text
@@ -98,7 +98,13 @@ interface Trial {
   phase: 'probing';
   awaitingPermission?: boolean; // ждём ответа на запрос Local Network Access
   // Причина неудачи; текст у поля или строки — из src/ui/messages.ts (уточнено при реализации, T036)
-  failure?: 'unreachable' | 'blocked' | 'incompatible' | 'invalid-address' | 'no-worker';
+  failure?:
+    | 'unreachable'
+    | 'blocked'
+    | 'incompatible'
+    | 'invalid-address'
+    | 'no-worker'
+    | 'lna-denied'; // доступ к локальной сети запрещён в настройках сайта (T078)
   host?: { protocol: number; engine: string }; // при failure: 'incompatible'
 }
 ```
@@ -118,8 +124,15 @@ interface EngineSlice {
   status: ConnectionStatus;
   trial?: Trial;
   tooLarge: { library: boolean; tabs: Record<string /* tabId */, true> }; // FR-024
+  traffic: { tx: number; rx: number }; // FR-013a: байты UTF-8 обмена с текущей целью
 }
 ```
+
+- `traffic` считает связка (`src/store/engine.ts`): каждая отправленная в канал строка — в
+  `tx`, каждая принятая (и `welcome`, полученный пробой) — в `rx`. Обнуляется, когда
+  подключение идёт к другой цели (`kind` или адрес); переподключение к той же цели — нет.
+  В стор пишется вместе с событиями протокола (ответ цели приходит на каждую отправку) и после
+  отправки, если объём изменился, — без отдельного планировщика (уточнено при реализации, T100).
 
 - `nodeStates` (существующий срез) пишет только связка с клиентом протокола
   (`src/store/engine.ts`, бывший `evaluation.ts`).

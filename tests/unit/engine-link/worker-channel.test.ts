@@ -158,4 +158,63 @@ describe('connection: падения фонового потока', () => {
     expect(channels).toHaveLength(5);
     expect(statuses.filter((s) => s.kind === 'failed')).toEqual([]);
   });
+
+  it('новый поток после падения не запустился → это тоже падение: третье за минуту → failed, без «Offline»', async () => {
+    const clock = 0;
+    const statuses: ConnectionStatus[] = [];
+    const restarts: number[] = [];
+    let opened = 0;
+    const first: Channel = {
+      onMessage: () => {},
+      onClose: () => {},
+      send: () => {},
+      close: () => {},
+    };
+    const conn = createConnection(
+      {
+        open: () => {
+          opened += 1;
+          const r: OpenResult =
+            opened === 1 ? { ok: true, channel: first } : { ok: false, reason: 'unreachable' };
+          return { result: Promise.resolve(r), cancel: () => {} };
+        },
+        now: () => clock,
+        random: () => 0.5,
+        setTimer: () => 0,
+        clearTimer: () => {},
+      },
+      {
+        attach: () => {},
+        trial: () => {},
+        status: (s) => statuses.push(s),
+        restarted: () => restarts.push(clock),
+      },
+    );
+    conn.start({ kind: 'worker' });
+    await new Promise((r) => setTimeout(r, 0));
+    first.onClose('crashed');
+    for (let i = 0; i < 5; i++) await new Promise((r) => setTimeout(r, 0));
+    expect(restarts).toHaveLength(2);
+    expect(statuses.at(-1)).toEqual({ kind: 'failed' });
+    expect(statuses.filter((s) => s.kind === 'offline')).toEqual([]);
+  });
+
+  it('сохранённая цель Worker, а Worker в браузере нет → failed с причиной no-worker (без повторов)', async () => {
+    const statuses: ConnectionStatus[] = [];
+    const conn = createConnection(
+      {
+        open: () => {
+          const r: OpenResult = { ok: false, reason: 'no-worker' };
+          return { immediate: r, result: Promise.resolve(r), cancel: () => {} };
+        },
+        now: () => 0,
+        random: () => 0.5,
+        setTimer: () => 0,
+        clearTimer: () => {},
+      },
+      { attach: () => {}, trial: () => {}, status: (s) => statuses.push(s), restarted: () => {} },
+    );
+    conn.start({ kind: 'worker' });
+    expect(statuses).toEqual([{ kind: 'failed', reason: 'no-worker' }]);
+  });
 });

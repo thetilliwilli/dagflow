@@ -1,7 +1,9 @@
 // Связка стора с целью вычисления через протокол (research R15). Единственный, кто пишет nodeStates.
 import type { CompositeDef, NodeState } from '@dagflow/engine';
 import {
+  byteLength,
   createEngineClient,
+  MAX_MESSAGE_BYTES,
   type Channel,
   type ClientEvent,
   type ClientOutput,
@@ -64,9 +66,13 @@ export interface EngineOptions {
 export function startEngine(app: AppStore, options: EngineOptions = {}): () => void {
   const { store } = app;
   const schedule = options.schedule ?? defaultSchedule;
-  const client = createEngineClient();
   let channel: Channel | null = null;
   let encrypted = false;
+  /** Лимит 8 МБ — только у сервера; в окне и фоновом потоке размер не ограничен (FR-024, FR-002). */
+  let limited = false;
+  const client = createEngineClient({
+    maxMessageBytes: () => (limited ? MAX_MESSAGE_BYTES : undefined),
+  });
 
   // Один и тот же массив определений, пока state.composites не изменился: клиент сравнивает по ссылке
   let compositesRecord: AppState['composites'] | undefined;
@@ -87,11 +93,19 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
 
   function handle(out: ClientOutput) {
     if (out.events.length > 0) apply(out.events);
-    for (const text of out.send) channel?.send(text);
+    for (const text of out.send) {
+      if (!channel) continue;
+      // Учёт до отправки: в Local ответ приходит синхронно, внутри send
+      count('tx', text);
+      channel.send(text);
+    }
+    if (traffic !== written) writeTraffic();
   }
 
   function apply(events: ClientEvent[]) {
     store.setState((draft: AppState) => {
+      draft.engine.traffic = traffic;
+      written = traffic;
       for (const e of events) {
         switch (e.kind) {
           case 'ready':
@@ -119,7 +133,9 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
             else delete draft.engine.tooLarge.tabs[e.doc];
             break;
           case 'failed':
-            // Цель не смогла обработать запрос: уведомление; повтор делает клиент (FR-025)
+            // Цель не смогла обработать запрос: уведомление «…Retrying.» — только если повтор
+            // будет; повторный сбой на том же графе не шумит (повтор — при правке, FR-025)
+            if (e.doc !== undefined && !e.retrying) break;
             draft.notifications.push({
               id: app.deps.newId(),
               kind: 'warning',
@@ -161,9 +177,34 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
   }
 
   /** Новый текущий канал: полный снимок открытых вкладок (FR-015, FR-021). */
+  // Объём обмена с текущей целью (FR-013a): байты строк в канал и из канала. В стор пишется
+  // вместе с событиями протокола (ответ хоста приходит на каждую отправку) — без лишних записей
+  let traffic = { tx: 0, rx: 0 };
+  let trafficTarget: EngineTarget | null = null;
+
+  let written = traffic;
+
+  function count(dir: 'tx' | 'rx', text: string) {
+    traffic = { ...traffic, [dir]: traffic[dir] + byteLength(text) };
+  }
+
+  function writeTraffic() {
+    written = traffic;
+    store.setState((draft: AppState) => {
+      draft.engine.traffic = traffic;
+    });
+  }
+
   function attach(next: Channel, welcome: string | undefined, info: AttachInfo) {
     channel = next;
+    // Другая цель — счёт с нуля; переподключение к той же — продолжается
+    if (!trafficTarget || !sameTarget(trafficTarget, info.target)) {
+      trafficTarget = info.target;
+      traffic = { tx: 0, rx: 0 };
+      writeTraffic();
+    }
     encrypted = info.encrypted;
+    limited = info.target.kind === 'server';
     store.setState((draft: AppState) => {
       draft.engine.target = info.target;
       draft.engine.status = { kind: 'connecting' };
@@ -173,12 +214,18 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
       }
     });
     // onClose канала ведёт подключение (переподключение, connection.ts)
-    next.onMessage = (text) => handle(client.receive(text));
+    next.onMessage = (text) => {
+      count('rx', text);
+      handle(client.receive(text));
+    };
     // Сначала сброс клиента, потом снимок (до welcome он только запоминается)
     const hello = client.start();
     client.sync(snapshot(store.getState()));
     if (welcome === undefined) handle({ events: [], send: hello });
-    else handle(client.receive(welcome));
+    else {
+      count('rx', welcome);
+      handle(client.receive(welcome));
+    }
   }
 
   const open: ConnectionDeps['open'] =
@@ -288,3 +335,6 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     delete app.engine;
   };
 }
+
+const sameTarget = (a: EngineTarget, b: EngineTarget) =>
+  a.kind === b.kind && (a.kind !== 'server' || (b.kind === 'server' && a.address === b.address));

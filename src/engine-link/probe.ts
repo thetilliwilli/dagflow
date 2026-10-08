@@ -1,7 +1,7 @@
 // Пробное подключение к серверу: перебор схем по очереди, hello → welcome (FR-007 – FR-012, R8)
 import { ENGINE_VERSION } from '@dagflow/engine';
 import { PROTOCOL_VERSION, type Channel } from '@dagflow/protocol';
-import { schemeOrder, toUrl, type Scheme } from './address';
+import { isLocalHost, schemeOrder, toUrl, type Scheme } from './address';
 import { createWebSocketChannel, type SocketLike } from './channels/websocket';
 
 export type { SocketLike } from './channels/websocket';
@@ -68,7 +68,11 @@ export function probe(
     if (done) return;
     const scheme = schemes[index];
     if (!scheme) {
-      finish({ ok: false, reason: blocked === schemes.length ? 'blocked' : 'unreachable' });
+      // Со страницы по https к не локальному адресу браузер пускает только wss: если и он не
+      // удался, объясняем, что серверу нужен защищённый адрес (FR-011); так же — если браузер
+      // синхронно запретил какую-то схему. Причину неудачи wss скрипт не видит (research R8)
+      const secureOnly = deps.pageSecure && !isLocalHost(address);
+      finish({ ok: false, reason: blocked > 0 || secureOnly ? 'blocked' : 'unreachable' });
       return;
     }
     let socket: SocketLike;

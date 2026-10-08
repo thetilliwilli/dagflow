@@ -18,8 +18,8 @@ export type ConnectionStatus =
   /** retryAt — время следующей попытки по часам адаптера. */
   | { kind: 'offline'; attempt: number; retryAt: number }
   | { kind: 'incompatible'; host: { protocol: number; engine: string } }
-  /** Фоновый поток упал 3 раза за минуту. */
-  | { kind: 'failed' };
+  /** Фоновый поток упал 3 раза за минуту; no-worker — в браузере нет Worker. */
+  | { kind: 'failed'; reason?: 'no-worker' };
 
 export interface Trial {
   target: EngineTarget;
@@ -39,6 +39,8 @@ export interface EngineSlice {
   trial?: Trial;
   /** FR-024: что не отправлено из-за лимита — набор определений и вкладки. */
   tooLarge: { library: boolean; tabs: Record<string, true> };
+  /** FR-013a: байты обмена с текущей целью — передано (tx) и принято (rx). */
+  traffic: { tx: number; rx: number };
 }
 
 export const LOCAL: EngineTarget = { kind: 'local' };
@@ -49,5 +51,6 @@ export function initialEngine(): EngineSlice {
     recent: [],
     status: { kind: 'connecting' },
     tooLarge: { library: false, tabs: {} },
+    traffic: { tx: 0, rx: 0 },
   };
 }

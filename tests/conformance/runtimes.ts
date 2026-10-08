@@ -80,7 +80,11 @@ export async function startServer(
   const { child, dir, out, exited } = launch(rt, ['--port', String(port), ...extra]);
   await new Promise<void>((ok, fail) => {
     const timer = setInterval(() => {
-      if (out().includes(`is listening on ${host}:${port}`)) {
+      // Запуск закончен, когда напечатаны обе строки (вторая приходит отдельной записью)
+      if (
+        out().includes(`is listening on ${host}:${port}`) &&
+        out().includes('Press Ctrl+C to stop.')
+      ) {
         clearInterval(timer);
         ok();
       }
