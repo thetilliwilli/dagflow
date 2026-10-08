@@ -51,22 +51,22 @@ export function isLocalHost(address: string): boolean {
     host === 'localhost' ||
     host.endsWith('.localhost') ||
     /^127\.\d+\.\d+\.\d+$/.test(host) ||
+    /^\[::ffff:127\.\d+\.\d+\.\d+\]$/.test(host) ||
     host === '[::1]'
   );
 }
 
 /**
- * Порядок попыток (FR-009, FR-011): локальный адрес — ws, wss; остальные — wss, ws; со страницы
- * по https к не локальному адресу — только wss. Указанная пользователем схема — первой (даже если
- * браузер её запретит: тогда пользователь увидит объяснение), запомненная — первой из разрешённых.
- */
-/**
  * Адрес локальной сети (не этого компьютера): частные IPv4, link-local, ULA и link-local IPv6,
- * имена `*.local` — к ним браузер может спрашивать разрешение Local Network Access (R8).
+ * IPv4 внутри IPv6, односложные имена и `*.local`, `*.lan`, `*.home.arpa`, `*.internal` — к ним
+ * браузер может спрашивать разрешение Local Network Access (R8). Имя, которое браузер сам
+ * разрешит в частный адрес, отсюда не видно — принятое ограничение (research R8).
  */
 export function isPrivateHost(address: string): boolean {
+  if (isLocalHost(address)) return false; // этот компьютер — не локальная сеть
   const host = hostOf(address);
-  const v4 = /^(\d+)\.(\d+)\.\d+\.\d+$/.exec(host);
+  const mapped = /^\[::ffff:(\d+\.\d+\.\d+\.\d+)\]$/.exec(host);
+  const v4 = /^(\d+)\.(\d+)\.\d+\.\d+$/.exec(mapped?.[1] ?? host);
   if (v4) {
     const [a, b] = [Number(v4[1]), Number(v4[2])];
     return (
@@ -77,9 +77,17 @@ export function isPrivateHost(address: string): boolean {
     );
   }
   if (host.startsWith('[')) return /^\[(f[cd]|fe[89ab])/i.test(host);
-  return host.endsWith('.local');
+  return (
+    !host.includes('.') ||
+    ['.local', '.lan', '.home.arpa', '.internal'].some((suffix) => host.endsWith(suffix))
+  );
 }
 
+/**
+ * Порядок попыток (FR-009, FR-011): локальный адрес — ws, wss; остальные — wss, ws; со страницы
+ * по https к не локальному адресу — только wss. Указанная пользователем схема — первой (даже если
+ * браузер её запретит: тогда пользователь увидит объяснение), запомненная — первой из разрешённых.
+ */
 export function schemeOrder(
   address: string,
   opts: { pageSecure: boolean; hint?: Scheme; remembered?: Scheme },

@@ -423,5 +423,5 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 
 ## Phase 17: Convergence
 
-- [ ] T120 Считать локальной сетью и очевидные локальные имена и записи: односложное имя (`nas`), `*.lan`, `*.home.arpa`, `*.internal`, IPv4 внутри IPv6 (`[::ffff:192.168.0.2]`, `[::ffff:127.0.0.1]` — как локальный компьютер) — `isPrivateHost`/`isLocalHost` в `src/engine-link/address.ts`, строки в таблицах `tests/unit/engine-link/address.test.ts`; в research R8 записать остаток как принятое ограничение (имя, которое браузер сам разрешает в частный адрес, скрипт не видит) per FR-011, FR-012, Edge Cases (LNA) (partial)
-- [ ] T121 Вернуть JSDoc «Порядок попыток (FR-009, FR-011)…» прямо над `export function schemeOrder` в `src/engine-link/address.ts` per T119, CLAUDE.md (contradicts)
+- [X] T120 Считать локальной сетью и очевидные локальные имена и записи: односложное имя (`nas`), `*.lan`, `*.home.arpa`, `*.internal`, IPv4 внутри IPv6 (`[::ffff:192.168.0.2]`, `[::ffff:127.0.0.1]` — как локальный компьютер) — `isPrivateHost`/`isLocalHost` в `src/engine-link/address.ts`, строки в таблицах `tests/unit/engine-link/address.test.ts`; в research R8 записать остаток как принятое ограничение (имя, которое браузер сам разрешает в частный адрес, скрипт не видит) per FR-011, FR-012, Edge Cases (LNA) (partial)
+- [X] T121 Вернуть JSDoc «Порядок попыток (FR-009, FR-011)…» прямо над `export function schemeOrder` в `src/engine-link/address.ts` per T119, CLAUDE.md (contradicts)
