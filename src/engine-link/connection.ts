@@ -71,6 +71,8 @@ export interface Connection {
   useLocal(): void;
   /** Цель другой версии протокола: закрытие канала — не обрыв, повторов нет (FR-023). */
   halt(): void;
+  /** Отменить идущую пробную попытку (неверный адрес в поле — тоже новая попытка, FR-007). */
+  cancelTrial(): void;
   dispose(): void;
 }
 
@@ -192,6 +194,13 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
       events.status({ kind: 'incompatible', host: r.host });
       return;
     }
+    if (r.reason === 'lna-denied') {
+      // Запрет в настройках сайта — повторять бессмысленно, пока пользователь не разрешит
+      halted = true;
+      stopRetries();
+      events.status({ kind: 'failed', reason: 'lna-denied' });
+      return;
+    }
     if (r.reason === 'no-worker') {
       // Фонового потока в браузере нет — повторять бессмысленно
       halted = true;
@@ -262,6 +271,11 @@ export function createConnection(deps: ConnectionDeps, events: ConnectionEvents)
     halt() {
       halted = true;
       stopRetries();
+    },
+
+    cancelTrial() {
+      trial?.cancel();
+      trial = null;
     },
 
     dispose() {

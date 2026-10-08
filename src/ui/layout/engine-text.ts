@@ -38,7 +38,9 @@ export function indicatorText(engine: EngineSlice, secondsLeft = 0): string {
     case 'incompatible':
       return m.protocolDiffers(status.host.protocol, PROTOCOL_VERSION);
     case 'failed':
-      return status.reason === 'no-worker' ? m.noWorker : m.workerFailing;
+      if (status.reason === 'no-worker') return m.noWorker;
+      if (status.reason === 'lna-denied') return m.lnaDenied;
+      return m.workerFailing;
   }
 }
 

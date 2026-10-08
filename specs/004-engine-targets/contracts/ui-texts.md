@@ -44,6 +44,8 @@
 | Кнопки                                    | Retry now · Use local engine                                   |
 | Другая версия протокола                   | Protocol version differs (server `<x>`, editor `<y>`)          |
 | Сбой фонового потока (3 за минуту)        | The background engine keeps failing.                           |
+| Worker нет в браузере (`failed`, `no-worker`) | This browser cannot run the engine in the background. |
+| Доступ к локальной сети запрещён (`failed`, `lna-denied`) | The browser blocks access to the local network for this page. Allow it in the site settings and try again. |
 | Кнопка (другая версия, сбой потока)       | Use local engine                                               |
 | aria-label индикатора                     | Engine: `<текст состояния>`. Open engine settings.             |
 

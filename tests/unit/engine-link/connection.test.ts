@@ -342,4 +342,22 @@ describe('connection: обрыв и переподключение (US3)', () =>
     await flush();
     expect(log.at(-1)).toBe('attach local - local false');
   });
+
+  it('lna-denied при старте или повторе → failed с причиной, повторов нет (FR-011)', async () => {
+    const { conn, openings, statuses, timers } = setup();
+    conn.start(server('localhost:8080'));
+    openings[0]!.resolve({ ok: false, reason: 'lna-denied' });
+    await flush();
+    expect(statuses.at(-1)).toEqual({ kind: 'failed', reason: 'lna-denied' });
+    expect(timers.size).toBe(0);
+  });
+
+  it('cancelTrial отменяет идущую пробную попытку (FR-007)', async () => {
+    const { conn, openings, log } = setup();
+    conn.select(server('a:1'));
+    conn.cancelTrial();
+    expect(openings[0]!.cancelled).toBe(true);
+    await flush();
+    expect(log).toEqual([]);
+  });
 });

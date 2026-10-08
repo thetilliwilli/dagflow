@@ -76,7 +76,19 @@ export function probe(
       // удался, объясняем, что серверу нужен защищённый адрес (FR-011); так же — если браузер
       // синхронно запретил какую-то схему. Причину неудачи wss скрипт не видит (research R8)
       const secureOnly = deps.pageSecure && !isLocalHost(address);
-      finish({ ok: false, reason: blocked > 0 || secureOnly ? 'blocked' : 'unreachable' });
+      const failure: ProbeResult = {
+        ok: false,
+        reason: blocked > 0 || secureOnly ? 'blocked' : 'unreachable',
+      };
+      // Был запрос разрешения, и подключения не вышло: возможно, пользователь нажал «Block» —
+      // тогда объясняем, где разрешить доступ (FR-011)
+      if (!waitForUser || !deps.permission) return finish(failure);
+      void deps
+        .permission(address)
+        .catch((): PermissionState => undefined)
+        .then((state) =>
+          finish(state === 'denied' ? { ok: false, reason: 'lna-denied' } : failure),
+        );
       return;
     }
     let socket: SocketLike;

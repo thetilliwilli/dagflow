@@ -275,6 +275,7 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
     select: (target, opts) => connection.select(target, opts ?? {}),
     retryNow: () => connection.retryNow(),
     useLocal: () => connection.useLocal(),
+    cancelTrial: () => connection.cancelTrial(),
   };
 
   // Сеть вернулась или вкладка снова видна — попробовать сразу (FR-020; online — только подсказка, R7)

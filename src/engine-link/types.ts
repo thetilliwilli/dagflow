@@ -18,8 +18,11 @@ export type ConnectionStatus =
   /** retryAt — время следующей попытки по часам адаптера. */
   | { kind: 'offline'; attempt: number; retryAt: number }
   | { kind: 'incompatible'; host: { protocol: number; engine: string } }
-  /** Фоновый поток упал 3 раза за минуту; no-worker — в браузере нет Worker. */
-  | { kind: 'failed'; reason?: 'no-worker' };
+  /**
+   * Без повторов: фоновый поток упал 3 раза за минуту; no-worker — в браузере нет Worker;
+   * lna-denied — браузер запретил доступ к локальной сети (FR-011).
+   */
+  | { kind: 'failed'; reason?: 'no-worker' | 'lna-denied' };
 
 export interface Trial {
   target: EngineTarget;

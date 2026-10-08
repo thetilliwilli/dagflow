@@ -271,7 +271,7 @@ H: error   {code:"version-mismatch", detail:"2"}          → хост закр�
 
 | Цель   | Канал                                            | Где                                               | Планирование `tick()`             |
 | ------ | ------------------------------------------------ | ------------------------------------------------- | --------------------------------- |
-| Local  | in-memory пара, доставка в следующей макрозадаче | `src/engine-link/channels/inline.ts`              | `setTimeout(0)` при `needsTick()` |
+| Local  | in-memory пара, доставка синхронная (research R4, T019) | `src/engine-link/channels/inline.ts`              | планировщик кадра (`requestAnimationFrame`) при `needsTick()` |
 | Worker | `postMessage(string)`                            | `src/engine-link/engine-worker.ts`                | `setTimeout(0)` в worker          |
 | Server | WebSocket, текстовые кадры                       | `packages/server/src/adapters/{node,bun,deno}.ts` | `setTimeout(0)`                   |
 

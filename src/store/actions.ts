@@ -311,6 +311,8 @@ export function createActions(app: AppStore) {
     connectServer(input: string) {
       const parsed = parseAddress(input);
       if (!parsed.ok) {
+        // Неверный ввод — тоже новая попытка: идущую отменяем (FR-007)
+        app.engine?.cancelTrial();
         store.setState((draft: AppState) => {
           draft.engine.trial = {
             target: { kind: 'server', address: input.trim() },

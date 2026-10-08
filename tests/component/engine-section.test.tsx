@@ -211,4 +211,26 @@ describe('раздел «Engine»', () => {
       { kind: 'server', address: 'localhost:9090' },
     ]);
   });
+
+  it('неверный адрес во время попытки отменяет её — она не переключит цель позже (FR-007)', async () => {
+    const { connect, pending, section, app, frames } = setup();
+    await connect('localhost:8080');
+    await connect('user@bad');
+    await act(async () =>
+      pending[0]!.resolve({
+        ok: true,
+        channel: createInlineChannel(frames.schedule),
+        scheme: 'ws',
+        engine: '0.1.0',
+        encrypted: false,
+        welcome: JSON.stringify({ type: 'welcome', protocol: PROTOCOL_VERSION, engine: '0.1.0' }),
+        hello: '',
+      }),
+    );
+    await settle();
+    expect(app.store.getState().engine.target).toEqual({ kind: 'local' });
+    expect(within(section()).getByRole('alert')).toHaveTextContent(
+      'Enter a server address, for example localhost:8080.',
+    );
+  });
 });

@@ -87,6 +87,7 @@ export interface EngineControl {
   select(target: EngineTarget, opts?: { hint?: 'ws' | 'wss'; remembered?: 'ws' | 'wss' }): void;
   retryNow(): void;
   useLocal(): void;
+  cancelTrial(): void;
 }
 
 export const defaultDeps: StoreDeps = {

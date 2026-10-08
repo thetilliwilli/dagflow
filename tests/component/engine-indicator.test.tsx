@@ -86,6 +86,7 @@ describe('индикатор цели', () => {
       select: () => calls.push('select'),
       retryNow: () => calls.push('retry'),
       useLocal: () => calls.push('local'),
+      cancelTrial: () => calls.push('cancel'),
     };
     setEngine(app, {
       target: { kind: 'server', address: 'localhost:8080' },
@@ -149,5 +150,17 @@ describe('индикатор цели', () => {
     const traffic = screen.getByTestId('engine-traffic');
     expect(traffic).toHaveTextContent('tx 12.4 KB / rx 3.1 MB');
     expect(traffic.parentElement).toBe(indicator().parentElement);
+  });
+
+  it('доступ к локальной сети запрещён → текст про настройки сайта и «Use local engine» (FR-011)', () => {
+    const app = setup();
+    setEngine(app, {
+      target: { kind: 'server', address: 'localhost:8080' },
+      status: { kind: 'failed', reason: 'lna-denied' },
+    });
+    expect(indicator()).toHaveTextContent(
+      'The browser blocks access to the local network for this page. Allow it in the site settings and try again.',
+    );
+    expect(screen.getByRole('button', { name: 'Use local engine' })).toBeInTheDocument();
   });
 });

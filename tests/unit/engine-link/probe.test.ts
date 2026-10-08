@@ -219,6 +219,26 @@ describe('probe', () => {
       }
     });
 
+    it('запрос разрешения → пользователь нажал «Block» → все схемы не удались → lna-denied', async () => {
+      const { deps, sockets } = setup();
+      const states: Array<'prompt' | 'denied'> = ['prompt', 'denied'];
+      const p = probe('localhost:8080', {}, { ...deps, permission: async () => states.shift() });
+      await flush();
+      sockets[0]!.fail();
+      sockets[1]!.fail();
+      expect(await p.result).toEqual({ ok: false, reason: 'lna-denied' });
+    });
+
+    it('запрос разрешения → разрешено, но сервера нет → unreachable', async () => {
+      const { deps, sockets } = setup();
+      const states: Array<'prompt' | 'granted'> = ['prompt', 'granted'];
+      const p = probe('localhost:8080', {}, { ...deps, permission: async () => states.shift() });
+      await flush();
+      sockets[0]!.fail();
+      sockets[1]!.fail();
+      expect(await p.result).toEqual({ ok: false, reason: 'unreachable' });
+    });
+
     it('ошибка запроса разрешения → обычный путь', async () => {
       const { deps, sockets } = setup();
       probe(
