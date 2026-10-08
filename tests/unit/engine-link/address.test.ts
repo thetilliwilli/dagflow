@@ -1,6 +1,12 @@
 // Адрес сервера: разбор, нормализация, локальность, порядок схем (FR-008 – FR-011, research R8, R9)
 import { describe, expect, it } from 'vitest';
-import { isLocalHost, parseAddress, schemeOrder, toUrl } from '../../../src/engine-link/address';
+import {
+  isLocalHost,
+  isPrivateHost,
+  parseAddress,
+  schemeOrder,
+  toUrl,
+} from '../../../src/engine-link/address';
 
 describe('parseAddress', () => {
   it.each([
@@ -82,5 +88,24 @@ describe('schemeOrder', () => {
   it('схема, указанная пользователем, — первой, даже если браузер её запретит', () => {
     expect(schemeOrder('domain.com', { pageSecure: false, hint: 'ws' })).toEqual(['ws', 'wss']);
     expect(schemeOrder('domain.com', { pageSecure: true, hint: 'ws' })).toEqual(['ws', 'wss']);
+  });
+});
+
+describe('isPrivateHost', () => {
+  it.each([
+    ['192.168.1.20:9000', true],
+    ['10.0.0.5', true],
+    ['172.16.0.1', true],
+    ['172.31.255.1', true],
+    ['172.32.0.1', false],
+    ['169.254.1.1', true],
+    ['[fd12::1]:8080', true],
+    ['[fe80::1]', true],
+    ['printer.local', true],
+    ['domain.com', false],
+    ['8.8.8.8', false],
+    ['localhost:8080', false],
+  ])('%s → %s', (address, local) => {
+    expect(isPrivateHost(address)).toBe(local);
   });
 });

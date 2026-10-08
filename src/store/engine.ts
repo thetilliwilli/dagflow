@@ -29,7 +29,6 @@ type Schedule = (fn: () => void) => void;
 
 const defaultSchedule: Schedule = (fn) => requestAnimationFrame(() => fn());
 
-/** Браузерные зависимости пробы: настоящий WebSocket и таймеры. */
 /** Разрешение браузера на доступ к localhost / локальной сети (Chrome 147+, Firefox 154+; R8). */
 async function lnaPermission(address: string) {
   const name = isLocalHost(address) ? 'loopback-network' : 'local-network';
@@ -40,6 +39,7 @@ async function lnaPermission(address: string) {
     : undefined;
 }
 
+/** Браузерные зависимости пробы: настоящий WebSocket и таймеры. */
 function browserProbeDeps(): ProbeDeps {
   return {
     permission: globalThis.navigator?.permissions ? lnaPermission : undefined,

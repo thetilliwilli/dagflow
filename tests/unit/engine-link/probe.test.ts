@@ -239,6 +239,36 @@ describe('probe', () => {
       expect(await p.result).toEqual({ ok: false, reason: 'unreachable' });
     });
 
+    it('публичный адрес: разрешение не спрашивается — таймаут 3 с и без подсказки', async () => {
+      const { deps, sockets, timers } = setup();
+      let asked = false;
+      let prompted = false;
+      probe(
+        'domain.com',
+        { onPrompt: () => (prompted = true) },
+        {
+          ...deps,
+          permission: async () => {
+            asked = true;
+            return 'prompt';
+          },
+        },
+      );
+      expect(sockets).toHaveLength(1);
+      expect(timers.size).toBe(1);
+      await flush();
+      expect(asked).toBe(false);
+      expect(prompted).toBe(false);
+    });
+
+    it('адрес локальной сети: разрешение спрашивается (prompt → без таймаута открытия)', async () => {
+      const { deps, sockets, timers } = setup();
+      probe('192.168.1.20:9000', {}, { ...deps, permission: async () => 'prompt' });
+      await flush();
+      expect(sockets).toHaveLength(1);
+      expect(timers.size).toBe(0);
+    });
+
     it('ошибка запроса разрешения → обычный путь', async () => {
       const { deps, sockets } = setup();
       probe(

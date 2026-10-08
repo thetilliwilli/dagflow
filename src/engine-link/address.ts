@@ -60,6 +60,26 @@ export function isLocalHost(address: string): boolean {
  * по https к не локальному адресу — только wss. Указанная пользователем схема — первой (даже если
  * браузер её запретит: тогда пользователь увидит объяснение), запомненная — первой из разрешённых.
  */
+/**
+ * Адрес локальной сети (не этого компьютера): частные IPv4, link-local, ULA и link-local IPv6,
+ * имена `*.local` — к ним браузер может спрашивать разрешение Local Network Access (R8).
+ */
+export function isPrivateHost(address: string): boolean {
+  const host = hostOf(address);
+  const v4 = /^(\d+)\.(\d+)\.\d+\.\d+$/.exec(host);
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])];
+    return (
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 169 && b === 254)
+    );
+  }
+  if (host.startsWith('[')) return /^\[(f[cd]|fe[89ab])/i.test(host);
+  return host.endsWith('.local');
+}
+
 export function schemeOrder(
   address: string,
   opts: { pageSecure: boolean; hint?: Scheme; remembered?: Scheme },

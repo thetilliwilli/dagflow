@@ -1,7 +1,7 @@
 // Пробное подключение к серверу: перебор схем по очереди, hello → welcome (FR-007 – FR-012, R8)
 import { ENGINE_VERSION } from '@dagflow/engine';
 import { PROTOCOL_VERSION, type Channel } from '@dagflow/protocol';
-import { isLocalHost, schemeOrder, toUrl, type Scheme } from './address';
+import { isLocalHost, isPrivateHost, schemeOrder, toUrl, type Scheme } from './address';
 import { createWebSocketChannel, type SocketLike } from './channels/websocket';
 
 export type { SocketLike } from './channels/websocket';
@@ -149,9 +149,15 @@ export function probe(
     };
   }
 
-  if (!deps.permission) attempt(0);
+  // Разрешение спрашиваем только для этого компьютера и локальной сети: к публичному адресу
+  // браузер ничего не спрашивает — обычный путь с таймаутом (FR-011, FR-012)
+  const permission =
+    deps.permission && (isLocalHost(address) || isPrivateHost(address))
+      ? deps.permission
+      : undefined;
+  if (!permission) attempt(0);
   else {
-    const query = deps.permission(address).catch((): PermissionState => undefined);
+    const query = permission(address).catch((): PermissionState => undefined);
     void query.then((state) => {
       if (done) return;
       if (state === 'denied') return finish({ ok: false, reason: 'lna-denied' });
