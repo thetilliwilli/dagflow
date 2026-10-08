@@ -1,6 +1,6 @@
 // Метка за курсором при перетаскивании параметра (US4 #1). Не перехватывает указатель —
 // иначе elementFromPoint находил бы её вместо нода под курсором.
-import { nodePorts } from '../../engine';
+import { nodePorts } from '@dagflow/engine';
 import { useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';

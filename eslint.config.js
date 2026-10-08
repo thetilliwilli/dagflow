@@ -1,11 +1,36 @@
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 
+// API среды выполнения, запрещённые в ядре engine и хосте протокола (research R2)
+const SANS_IO_GLOBALS = [
+  'setTimeout',
+  'setInterval',
+  'clearTimeout',
+  'clearInterval',
+  'queueMicrotask',
+  'requestAnimationFrame',
+  'console',
+  'structuredClone',
+  'fetch',
+  'crypto',
+  'performance',
+  'process',
+  'Deno',
+  'Bun',
+  'globalThis',
+  'self',
+  'window',
+  'document',
+  'TextEncoder',
+  'TextDecoder',
+].map((name) => ({ name, message: 'Ядро без ввода-вывода: API среды передаётся адаптером.' }));
+
 export default tseslint.config(
   {
     ignores: [
       'node_modules/',
-      'dist/',
+      '**/dist/',
+      'ignore/',
       'build/',
       'coverage/',
       'test-results/',
@@ -31,13 +56,45 @@ export default tseslint.config(
   },
   {
     // Движок — чистый TypeScript: никакого UI, стора, хранилища и сторонних UI-библиотек.
-    files: ['src/engine/**/*.ts'],
+    files: ['packages/engine/src/**/*.ts'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
-          paths: ['react', 'react-dom', 'zustand', 'immer', 'idb-keyval'],
-          patterns: ['@xyflow/*', '**/ui/**', '**/store/**', '**/storage/**', '**/model/**'],
+          paths: ['react', 'react-dom', 'zustand', 'immer', 'idb-keyval', 'valibot'],
+          patterns: ['@xyflow/*', '@dagflow/*', '**/src/**'],
+        },
+      ],
+    },
+  },
+  {
+    // Протокол: только engine и valibot — без сервера, приложения и UI-библиотек.
+    files: ['packages/protocol/src/**/*.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: ['react', 'react-dom', 'zustand', 'immer', 'idb-keyval', '@dagflow/server'],
+          patterns: ['@xyflow/*', '**/src/**'],
+        },
+      ],
+    },
+  },
+  {
+    // Ядро без ввода-вывода (sans-IO, конституция 2.1.0, research R2): ни API среды, ни недетерминизма.
+    files: ['packages/engine/src/**/*.ts', 'packages/protocol/src/**/*.ts'],
+    rules: {
+      'no-restricted-globals': ['error', ...SANS_IO_GLOBALS],
+      'no-restricted-properties': [
+        'error',
+        { object: 'Date', property: 'now', message: 'Время передаётся извне (sans-IO).' },
+        { object: 'Math', property: 'random', message: 'Случайность передаётся извне (sans-IO).' },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "NewExpression[callee.name='Date']",
+          message: 'Время передаётся извне (sans-IO).',
         },
       ],
     },

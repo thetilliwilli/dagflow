@@ -1,7 +1,7 @@
 import { act, render, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { createActions } from '../../src/store/actions';
-import { startEvaluation } from '../../src/store/evaluation';
+import { startEngine } from '../../src/store/engine';
 import { AppProvider } from '../../src/store/react';
 import { Editor } from '../../src/ui/Editor';
 import type { UiActions } from '../../src/store/ui';
@@ -11,7 +11,7 @@ function setup() {
   const app = testStore();
   const actions = createActions(app);
   const frames = manualScheduler();
-  startEvaluation(app, frames.schedule);
+  startEngine(app, { schedule: frames.schedule });
   let ui!: UiActions;
   const view = render(
     <AppProvider app={app}>

@@ -3,7 +3,7 @@ import { act, render } from '@testing-library/react';
 import { Profiler, type ComponentProps } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { createActions } from '../../src/store/actions';
-import { startEvaluation } from '../../src/store/evaluation';
+import { startEngine } from '../../src/store/engine';
 import { AppProvider } from '../../src/store/react';
 import { manualScheduler, testStore } from './helpers';
 
@@ -29,7 +29,7 @@ describe('перерисовки на графе из 100 нодов', () => {
     const app = testStore();
     const actions = createActions(app);
     const frames = manualScheduler();
-    startEvaluation(app, frames.schedule);
+    startEngine(app, { schedule: frames.schedule });
     const ids: string[] = [];
     for (let i = 0; i < 99; i++) {
       const r = actions.addNode('builtin:number', {

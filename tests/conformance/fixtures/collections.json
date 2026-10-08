@@ -1,0 +1,225 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-07T00:00:00.000Z",
+  "workflow": {
+    "id": "wf-coll",
+    "name": "Collections",
+    "graph": {
+      "nodes": [
+        {
+          "id": "arr",
+          "type": "builtin:json",
+          "name": "arr",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "value": [1, 2]
+          }
+        },
+        {
+          "id": "app",
+          "type": "builtin:array-append",
+          "name": "app",
+          "position": {
+            "x": 280,
+            "y": 0
+          },
+          "values": {
+            "item": 3
+          }
+        },
+        {
+          "id": "get",
+          "type": "builtin:array-get",
+          "name": "get",
+          "position": {
+            "x": 560,
+            "y": 0
+          },
+          "values": {
+            "index": 2
+          }
+        },
+        {
+          "id": "out",
+          "type": "builtin:array-get",
+          "name": "out",
+          "position": {
+            "x": 840,
+            "y": 0
+          },
+          "values": {
+            "index": 9
+          }
+        },
+        {
+          "id": "len",
+          "type": "builtin:array-length",
+          "name": "len",
+          "position": {
+            "x": 0,
+            "y": 170
+          },
+          "values": {}
+        },
+        {
+          "id": "obj",
+          "type": "builtin:json",
+          "name": "obj",
+          "position": {
+            "x": 280,
+            "y": 170
+          },
+          "values": {
+            "value": {
+              "a": 1
+            }
+          }
+        },
+        {
+          "id": "set",
+          "type": "builtin:object-set",
+          "name": "set",
+          "position": {
+            "x": 560,
+            "y": 170
+          },
+          "values": {
+            "key": "b",
+            "value": true
+          }
+        },
+        {
+          "id": "oget",
+          "type": "builtin:object-get",
+          "name": "oget",
+          "position": {
+            "x": 840,
+            "y": 170
+          },
+          "values": {
+            "key": "b"
+          }
+        },
+        {
+          "id": "miss",
+          "type": "builtin:object-get",
+          "name": "miss",
+          "position": {
+            "x": 0,
+            "y": 340
+          },
+          "values": {
+            "key": "zzz"
+          }
+        },
+        {
+          "id": "show",
+          "type": "builtin:show",
+          "name": "show",
+          "position": {
+            "x": 280,
+            "y": 340
+          },
+          "values": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e25",
+          "source": {
+            "node": "arr",
+            "port": "value"
+          },
+          "target": {
+            "node": "app",
+            "port": "array"
+          }
+        },
+        {
+          "id": "e26",
+          "source": {
+            "node": "app",
+            "port": "array"
+          },
+          "target": {
+            "node": "get",
+            "port": "array"
+          }
+        },
+        {
+          "id": "e27",
+          "source": {
+            "node": "app",
+            "port": "array"
+          },
+          "target": {
+            "node": "out",
+            "port": "array"
+          }
+        },
+        {
+          "id": "e28",
+          "source": {
+            "node": "app",
+            "port": "array"
+          },
+          "target": {
+            "node": "len",
+            "port": "array"
+          }
+        },
+        {
+          "id": "e29",
+          "source": {
+            "node": "obj",
+            "port": "value"
+          },
+          "target": {
+            "node": "set",
+            "port": "object"
+          }
+        },
+        {
+          "id": "e30",
+          "source": {
+            "node": "set",
+            "port": "object"
+          },
+          "target": {
+            "node": "oget",
+            "port": "object"
+          }
+        },
+        {
+          "id": "e31",
+          "source": {
+            "node": "set",
+            "port": "object"
+          },
+          "target": {
+            "node": "miss",
+            "port": "object"
+          }
+        },
+        {
+          "id": "e32",
+          "source": {
+            "node": "set",
+            "port": "object"
+          },
+          "target": {
+            "node": "show",
+            "port": "value"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-10-07T00:00:00.000Z",
+    "updatedAt": "2026-10-07T00:00:00.000Z"
+  },
+  "composites": []
+}

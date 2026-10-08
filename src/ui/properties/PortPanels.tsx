@@ -1,7 +1,7 @@
 // Панели «Входы» и «Выходы» нода — общие для окна свойств и временного окна, чтобы набор
 // и порядок строк в них совпадали (FR-020)
 import type { PointerEvent } from 'react';
-import { nodePorts, type LinkCandidates, type PortDef, type PortSide } from '../../engine';
+import { nodePorts, type LinkCandidates, type PortDef, type PortSide } from '@dagflow/engine';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';

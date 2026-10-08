@@ -10,9 +10,9 @@ import {
   workflowToFile,
   workspaceToFile,
 } from '../../../src/model/serialize';
-import type { Workspace } from '../../../src/engine';
+import type { Workspace } from '@dagflow/engine';
 import { sampleWorkflow } from './fixtures';
-import { doubleSum } from '../engine/composite-fixtures';
+import { doubleSum } from '../../../packages/engine/test/composite-fixtures';
 
 describe('сериализация workflow', () => {
   it('workflow → JSON → workflow даёт глубоко равный объект (SC-005)', () => {

@@ -1,66 +1,15 @@
 // Valibot-схемы файлов (contracts/file-formats.md) с ограничениями data-model
 import * as v from 'valibot';
-import type { JsonValue } from '../engine';
+import { CompositeSchema, GraphSchema, NameSchema } from '@dagflow/protocol';
 
-export const JsonValueSchema: v.GenericSchema<JsonValue> = v.lazy(() =>
-  v.union([
-    v.null(),
-    v.boolean(),
-    v.number(),
-    v.string(),
-    v.array(JsonValueSchema),
-    v.record(v.string(), JsonValueSchema),
-  ]),
-);
+// Схемы графа и составного нода — общие с протоколом (@dagflow/protocol, research R5 фичи 004)
+export { CompositeSchema, GraphSchema, JsonValueSchema, PortDefSchema } from '@dagflow/protocol';
 
-const PortTypeSchema = v.picklist(['number', 'text', 'boolean', 'array', 'object', 'any']);
-
-export const PortDefSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(1)),
-  type: PortTypeSchema,
-  required: v.optional(v.boolean()),
-  default: v.optional(JsonValueSchema),
-});
-
-const PositionSchema = v.object({ x: v.number(), y: v.number() });
-const PortRefSchema = v.object({ node: v.string(), port: v.string() });
-
-export const GraphSchema = v.object({
-  nodes: v.array(
-    v.object({
-      id: v.pipe(v.string(), v.minLength(1)),
-      type: v.pipe(v.string(), v.minLength(1)),
-      // Имя экземпляра обязательно (фича 002, contracts/file-formats.md): файлы без имён некорректны
-      name: v.pipe(v.string(), v.trim(), v.minLength(1)),
-      position: PositionSchema,
-      values: v.record(v.string(), JsonValueSchema),
-      ports: v.optional(v.array(PortDefSchema)),
-    }),
-  ),
-  edges: v.array(
-    v.object({
-      id: v.pipe(v.string(), v.minLength(1)),
-      source: PortRefSchema,
-      target: PortRefSchema,
-    }),
-  ),
-});
-
-const NameSchema = v.pipe(v.string(), v.trim(), v.minLength(1));
 const VersionSchema = v.pipe(v.number(), v.integer(), v.minValue(1));
 
 export const WorkflowSchema = v.object({
   id: v.pipe(v.string(), v.minLength(1)),
   name: NameSchema,
-  graph: GraphSchema,
-  createdAt: v.string(),
-  updatedAt: v.string(),
-});
-
-export const CompositeSchema = v.object({
-  id: v.pipe(v.string(), v.minLength(1)),
-  name: NameSchema,
-  description: v.string(),
   graph: GraphSchema,
   createdAt: v.string(),
   updatedAt: v.string(),

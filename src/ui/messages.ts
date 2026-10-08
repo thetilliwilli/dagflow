@@ -1,5 +1,5 @@
 // Тексты интерфейса (принцип IV: все сообщения понятные; язык — английский, фича 003)
-import { typeNames, type NodeStatus, type PortType } from '../engine';
+import { typeNames, type NodeStatus, type PortType } from '@dagflow/engine';
 
 export const statusLabels: Record<NodeStatus, string> = {
   ok: 'computed',
@@ -195,4 +195,71 @@ export const edgeMessages = {
   windowTitle: (source: string, target: string) => `Links: ${source} → ${target}`,
   link: (out: string, input: string) => `${out}→${input}`,
   remove: (link: string) => `Delete link “${link}”`,
+};
+
+/** Цель вычисления: раздел «Engine», индикатор, ошибки подключения (фича 004, contracts/ui-texts.md). */
+export const engineMessages = {
+  section: 'Engine',
+  localRow: 'This tab',
+  workerRow: 'This browser',
+  kindLocal: 'Local',
+  kindWorker: 'Worker',
+  kindServer: 'Server',
+  addressPlaceholder: 'Server address, e.g. localhost:8080',
+  connect: 'Connect',
+  connecting: 'Connecting…',
+  remove: (address: string) => `Remove ${address} from the list`,
+  invalidAddress: 'Enter a server address, for example localhost:8080.',
+  serverVersions: (server: string, editor: string) => `engine ${server} (editor ${editor})`,
+  // Индикатор
+  indicatorLocal: '● Local',
+  indicatorWorker: '● Worker',
+  indicatorServer: (address: string, engine: string, editor: string) =>
+    `● Server · ${address} · engine ${engine}${engine === editor ? '' : ` (editor ${editor})`}`,
+  notEncrypted: 'not encrypted',
+  /** Разделитель адреса и типа в строке списка: «This tab · Local» (FR-003). */
+  rowSeparator: ' · ',
+  withNotEncrypted: (text: string) => `${text} · not encrypted`,
+  connectingWithPrompt: 'Connecting… Allow local network access in the browser prompt.',
+  offline: (seconds: number) => `◌ Offline — retrying in ${seconds} s`,
+  retryNow: 'Retry now',
+  protocolDiffers: (server: number, editor: number) =>
+    `Protocol version differs (server ${server}, editor ${editor})`,
+  workerFailing: 'The background engine keeps failing.',
+  useLocal: 'Use local engine',
+  indicatorLabel: (state: string) => `Engine: ${state}. Open engine settings.`,
+  /** Байты с единицами: B — целое, KB / MB / GB — одна цифра после точки (1 KB = 1024 B). */
+  bytes: (n: number) => {
+    if (n < 1024) return `${Math.round(n)} B`;
+    const units = ['KB', 'MB', 'GB'];
+    let value = n / 1024;
+    let unit = 0;
+    // Сравнение уже округлённого значения: 1 048 550 B → «1.0 MB», а не «1024.0 KB»
+    while (Number(value.toFixed(1)) >= 1024 && unit < units.length - 1) {
+      value /= 1024;
+      unit += 1;
+    }
+    return `${value.toFixed(1)} ${units[unit]}`;
+  },
+  /** Объём обмена с текущей целью (FR-013a). */
+  traffic: (tx: number, rx: number) =>
+    `tx ${engineMessages.bytes(tx)} / rx ${engineMessages.bytes(rx)}`,
+  // Ошибки пробной попытки (у поля или строки)
+  couldNotConnect: (address: string) =>
+    `Could not connect to ${address}. Check that the server is running and the address is correct.`,
+  blocked: (address: string) =>
+    `The browser blocks unencrypted connections from this page. The server at ${address} needs an encrypted (wss) address.`,
+  protocolMismatch: (server: number, editor: number) =>
+    `The server uses a different protocol version (server ${server}, editor ${editor}). Update the server or the editor.`,
+  noWorker: 'This browser cannot run the engine in the background.',
+  lnaDenied:
+    'The browser blocks access to the local network for this page. Allow it in the site settings and try again.',
+  lnaPrompt: 'Allow local network access in the browser prompt.',
+  // Ноды, вкладки, уведомления
+  staleValue: 'Last known value — engine offline',
+  tooLarge: 'This workflow is too large for the server (limit: 8 MB).',
+  processFailed: 'The engine could not process the workflow. Retrying.',
+  /** Повтора не будет (например, сообщение цели повреждено) — без «Retrying.» (FR-025). */
+  processFailedNoRetry: 'The engine could not process the workflow.',
+  workerRestarted: 'The engine restarted after a failure.',
 };

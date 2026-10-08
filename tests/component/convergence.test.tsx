@@ -1,7 +1,7 @@
 import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
-import { startEvaluation } from '../../src/store/evaluation';
+import { startEngine } from '../../src/store/engine';
 import type { Persistence } from '../../src/store/persistence';
 import { PersistenceProvider } from '../../src/store/persistence-react';
 import { AppProvider } from '../../src/store/react';
@@ -23,7 +23,7 @@ const fakePersistence = {
 function setup(state: Partial<AppState> = {}) {
   const app = testStore();
   const frames = manualScheduler();
-  startEvaluation(app, frames.schedule);
+  startEngine(app, { schedule: frames.schedule });
   app.store.setState(state);
   render(
     <AppProvider app={app}>

@@ -1,11 +1,12 @@
 // Стор приложения (research R5). Создаётся фабрикой, чтобы тесты получали свежий экземпляр.
 import { createStore } from 'zustand/vanilla';
 import { immer } from 'zustand/middleware/immer';
-import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '../engine';
+import type { CompositeDef, Graph, NodeState, Tab, Workflow } from '@dagflow/engine';
 import type { UnavailableItem } from '../storage/directory-storage';
 import type { TabHistory } from './history';
 import type { StorageLocation } from '../storage/location';
 import { messages } from '../ui/messages';
+import { initialEngine, type EngineSlice, type EngineTarget } from '../engine-link/types';
 
 export type NotificationKind = 'info' | 'warning' | 'error';
 
@@ -39,6 +40,8 @@ export interface AppState {
   unavailable: UnavailableItem[];
   /** История отмены: tabId → снапшоты графа. Не сохраняется между сессиями. */
   history: Record<string, TabHistory>;
+  /** Цель вычисления и состояние подключения (фича 004). В файлы workflow не попадает. */
+  engine: EngineSlice;
 }
 
 export interface StoreDeps {
@@ -63,6 +66,7 @@ function makeStore(initial?: Partial<AppState>) {
       folderSupported: false,
       unavailable: [],
       history: {},
+      engine: initialEngine(),
       ...initial,
     })),
   );
@@ -74,6 +78,16 @@ export type AppStoreApi = ReturnType<typeof makeStore>;
 export interface AppStore {
   store: AppStoreApi;
   deps: StoreDeps;
+  /** Управление целью вычисления; появляется после startEngine (src/store/engine.ts). */
+  engine?: EngineControl;
+}
+
+/** Действия с целью вычисления, которые выполняет связка с протоколом. */
+export interface EngineControl {
+  select(target: EngineTarget, opts?: { hint?: 'ws' | 'wss'; remembered?: 'ws' | 'wss' }): void;
+  retryNow(): void;
+  useLocal(): void;
+  cancelTrial(): void;
 }
 
 export const defaultDeps: StoreDeps = {
@@ -133,4 +147,15 @@ export function tabGraph(state: AppState, tab: Tab | undefined): Graph | undefin
   return tab.kind === 'workflow'
     ? state.workflows[tab.targetId]?.graph
     : state.composites[tab.targetId]?.graph;
+}
+
+/** Связи с целью нет — пометка «Last known value — engine offline» (FR-019). */
+export function isOffline(state: AppState): boolean {
+  return state.engine.status.kind !== 'ready';
+}
+
+/** Значения вкладки устарели: связи с целью нет или вкладка не передана из-за лимита (FR-019, FR-024). */
+export function isStale(state: AppState, tabId: string): boolean {
+  const { status, tooLarge } = state.engine;
+  return status.kind !== 'ready' || tooLarge.library || tooLarge.tabs[tabId] === true;
 }

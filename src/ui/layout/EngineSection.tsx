@@ -1,0 +1,123 @@
+// Раздел «Engine» левой панели (FR-003 – FR-005): плоский список целей, поле адреса и «Connect»
+import { useState } from 'react';
+import { ENGINE_VERSION } from '@dagflow/engine';
+import { useActions, useAppState } from '../../store/react';
+import type { EngineTarget } from '../../engine-link/types';
+import { engineMessages as m } from '../messages';
+import { engineTone, trialError } from './engine-text';
+
+const same = (a: EngineTarget, b: EngineTarget) =>
+  a.kind === b.kind && (a.kind !== 'server' || (b.kind === 'server' && a.address === b.address));
+
+export function EngineSection() {
+  const engine = useAppState((s) => s.engine);
+  const { status } = engine;
+  const actions = useActions();
+  const [address, setAddress] = useState('');
+  const probing = engine.trial !== undefined && engine.trial.failure === undefined;
+  const error = trialError(engine.trial);
+
+  const rows: Array<{ target: EngineTarget; title: string; kind: string }> = [
+    { target: { kind: 'local' }, title: m.localRow, kind: m.kindLocal },
+    { target: { kind: 'worker' }, title: m.workerRow, kind: m.kindWorker },
+    ...engine.recent.map((r) => ({
+      target: { kind: 'server' as const, address: r.address },
+      title: r.address,
+      kind: m.kindServer,
+    })),
+  ];
+
+  // Ошибка и подсказка — у строки, к которой подключались (Worker или сервер из списка),
+  // иначе — у поля адреса (новый адрес, неверный ввод; FR-007, Edge Cases)
+  const trial = engine.trial;
+  const atRow =
+    trial !== undefined &&
+    trial.failure !== 'invalid-address' &&
+    rows.some((r) => same(r.target, trial.target));
+  const feedback = (
+    <>
+      {trial?.awaitingPermission && !error && <p className="engine-section__hint">{m.lnaPrompt}</p>}
+      {error && (
+        <p className="engine-section__error" role="alert">
+          {error}
+        </p>
+      )}
+    </>
+  );
+
+  return (
+    <section className="engine-section" aria-label={m.section}>
+      <h2>{m.section}</h2>
+      <ul className="engine-section__list">
+        {rows.map(({ target, title, kind }) => {
+          const selected = same(target, engine.target);
+          const versions =
+            selected &&
+            target.kind === 'server' &&
+            status.kind === 'ready' &&
+            status.engine !== ENGINE_VERSION
+              ? m.serverVersions(status.engine, ENGINE_VERSION)
+              : undefined;
+          return (
+            <li
+              key={target.kind === 'server' ? target.address : target.kind}
+              className="engine-section__item"
+            >
+              <button
+                type="button"
+                className="engine-section__row"
+                aria-current={selected || undefined}
+                onClick={() => actions.selectTarget(target)}
+              >
+                <span
+                  className="engine-dot"
+                  data-tone={selected ? engineTone(engine) : undefined}
+                  aria-hidden="true"
+                />
+                <span className="engine-section__title">
+                  {title}
+                  {versions && <small className="engine-section__versions"> {versions}</small>}
+                </span>
+                {/* «This tab · Local» — разделитель между адресом и типом (FR-003) */}
+                <span className="engine-section__sep">{m.rowSeparator}</span>
+                <span className="engine-section__kind">{kind}</span>
+              </button>
+              {/* «×» — только у невыбранного сервера (FR-005) */}
+              {target.kind === 'server' && !selected && (
+                <button
+                  type="button"
+                  className="engine-section__remove"
+                  aria-label={m.remove(target.address)}
+                  title={m.remove(target.address)}
+                  onClick={() => actions.removeServer(target.address)}
+                >
+                  ×
+                </button>
+              )}
+              {atRow && same(target, trial.target) && feedback}
+            </li>
+          );
+        })}
+      </ul>
+      <form
+        className="engine-section__connect"
+        onSubmit={(e) => {
+          e.preventDefault();
+          actions.connectServer(address);
+        }}
+      >
+        <input
+          type="text"
+          value={address}
+          placeholder={m.addressPlaceholder}
+          aria-label={m.addressPlaceholder}
+          aria-invalid={error ? true : undefined}
+          onChange={(e) => setAddress(e.target.value)}
+        />
+        {/* Не блокируется: новая попытка отменяет незавершённую (FR-007) */}
+        <button type="submit">{probing ? m.connecting : m.connect}</button>
+      </form>
+      {!atRow && feedback}
+    </section>
+  );
+}

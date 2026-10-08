@@ -1,15 +1,15 @@
 // Окно свойств выделенного нода: панели «Входы» и «Выходы», ручной ввод, источники,
 // состояние и действия нода (US3, FR-012 – FR-017); строки — источники связывания (US4)
-import { compositeIdOf, IO_INPUT, IO_OUTPUT } from '../../engine';
+import { compositeIdOf, IO_INPUT, IO_OUTPUT } from '@dagflow/engine';
 import { useActions, useAppState } from '../../store/react';
 import { registryOf } from '../../store/registry';
-import { activeTab, tabGraph } from '../../store/store';
+import { activeTab, isOffline, isStale, tabGraph } from '../../store/store';
 import { useUi } from '../../store/ui';
 import { IoPortsEditor } from '../canvas/IoPortsEditor';
 import { NodeNameEditor } from '../canvas/NodeNameEditor';
 import { NodeMessage, NodeStatusBadge } from '../canvas/NodeStatus';
 import { ManagedWindow } from '../floating/ManagedWindow';
-import { compositeMessages, propertiesMessages as m } from '../messages';
+import { compositeMessages, engineMessages, propertiesMessages as m } from '../messages';
 import { PortPanels } from './PortPanels';
 
 export function PropertyGrid({ nodeId }: { nodeId: string }) {
@@ -20,6 +20,9 @@ export function PropertyGrid({ nodeId }: { nodeId: string }) {
     s.activeTabId ? s.nodeStates[s.activeTabId]?.[nodeId] : undefined,
   );
   const picking = useUi((s) => s.linking.kind === 'picking');
+  const stale = useAppState((s) => (s.activeTabId ? isStale(s, s.activeTabId) : false));
+  // Текст «engine offline» — только без связи; вкладка больше лимита приглушена без него (FR-019, FR-024)
+  const offline = useAppState(isOffline);
   const node = graph?.nodes.find((n) => n.id === nodeId);
   if (!graph || !node) return null;
   const def = registry.get(node.type);
@@ -27,7 +30,12 @@ export function PropertyGrid({ nodeId }: { nodeId: string }) {
   const isIo = node.type === IO_INPUT || node.type === IO_OUTPUT;
 
   return (
-    <ManagedWindow id="properties" label={m.title} title={m.title} className="prop-grid">
+    <ManagedWindow
+      id="properties"
+      label={m.title}
+      title={m.title}
+      className={stale ? 'prop-grid is-stale' : 'prop-grid'}
+    >
       <div className="prop-grid__head">
         <NodeNameEditor
           className="prop-grid__name"
@@ -43,6 +51,7 @@ export function PropertyGrid({ nodeId }: { nodeId: string }) {
       <div className="prop-grid__status">
         <NodeStatusBadge state={state} />
         <NodeMessage state={state} />
+        {offline && <p className="prop-grid__stale">{engineMessages.staleValue}</p>}
         {!def && (
           <div className="node-message node-message--error">
             {compositeMessages.unknownType(node.type)}

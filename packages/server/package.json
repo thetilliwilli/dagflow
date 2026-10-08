@@ -1,0 +1,16 @@
+{
+  "name": "@dagflow/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24",
+    "bun": ">=1.4",
+    "deno": ">=2.9"
+  },
+  "dependencies": {
+    "@dagflow/engine": "*",
+    "@dagflow/protocol": "*",
+    "ws": "^8.22.0"
+  }
+}

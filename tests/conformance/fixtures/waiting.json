@@ -1,0 +1,84 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-07T00:00:00.000Z",
+  "workflow": {
+    "id": "wf-wait",
+    "name": "Waiting",
+    "graph": {
+      "nodes": [
+        {
+          "id": "add",
+          "type": "builtin:add",
+          "name": "add",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "a": 1
+          }
+        },
+        {
+          "id": "show",
+          "type": "builtin:show",
+          "name": "show",
+          "position": {
+            "x": 280,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "cat",
+          "type": "builtin:concat",
+          "name": "cat",
+          "position": {
+            "x": 560,
+            "y": 0
+          },
+          "values": {
+            "a": "x"
+          }
+        },
+        {
+          "id": "len",
+          "type": "builtin:text-length",
+          "name": "len",
+          "position": {
+            "x": 840,
+            "y": 0
+          },
+          "values": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e44",
+          "source": {
+            "node": "add",
+            "port": "result"
+          },
+          "target": {
+            "node": "show",
+            "port": "value"
+          }
+        },
+        {
+          "id": "e45",
+          "source": {
+            "node": "cat",
+            "port": "result"
+          },
+          "target": {
+            "node": "len",
+            "port": "text"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-10-07T00:00:00.000Z",
+    "updatedAt": "2026-10-07T00:00:00.000Z"
+  },
+  "composites": []
+}

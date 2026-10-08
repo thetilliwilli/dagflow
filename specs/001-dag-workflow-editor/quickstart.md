@@ -6,8 +6,8 @@
 ## Требования
 
 - Node.js 24 LTS, npm 11+
-- Chromium-браузер (Chrome, Edge, Яндекс) для проверки рабочей папки; Firefox или
-  Safari — для проверки запасного хранилища
+- Chromium-браузер (Chrome, Edge, Яндекс) для проверки рабочей папки; Firefox — для
+  проверки запасного хранилища
 - Для e2e: `npx playwright install chromium`
 
 ## Команды

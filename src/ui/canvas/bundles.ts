@@ -1,5 +1,5 @@
 // Пучки связей: все связи от нода A к ноду B рисуются одной линией (FR-023, FR-024; research R2)
-import type { Edge } from '../../engine';
+import type { Edge } from '@dagflow/engine';
 import { edgeMessages } from '../messages';
 
 export interface Bundle {

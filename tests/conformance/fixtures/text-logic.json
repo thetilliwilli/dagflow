@@ -1,0 +1,308 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-07T00:00:00.000Z",
+  "workflow": {
+    "id": "wf-text",
+    "name": "Text and logic",
+    "graph": {
+      "nodes": [
+        {
+          "id": "t1",
+          "type": "builtin:text",
+          "name": "t1",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "values": {
+            "value": "Привет, "
+          }
+        },
+        {
+          "id": "t2",
+          "type": "builtin:text",
+          "name": "t2",
+          "position": {
+            "x": 280,
+            "y": 0
+          },
+          "values": {
+            "value": "мир 🌍"
+          }
+        },
+        {
+          "id": "cat",
+          "type": "builtin:concat",
+          "name": "cat",
+          "position": {
+            "x": 560,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "len",
+          "type": "builtin:text-length",
+          "name": "len",
+          "position": {
+            "x": 840,
+            "y": 0
+          },
+          "values": {}
+        },
+        {
+          "id": "num",
+          "type": "builtin:number",
+          "name": "num",
+          "position": {
+            "x": 0,
+            "y": 170
+          },
+          "values": {
+            "value": 3.5
+          }
+        },
+        {
+          "id": "tt",
+          "type": "builtin:to-text",
+          "name": "tt",
+          "position": {
+            "x": 280,
+            "y": 170
+          },
+          "values": {}
+        },
+        {
+          "id": "tn",
+          "type": "builtin:to-number",
+          "name": "tn",
+          "position": {
+            "x": 560,
+            "y": 170
+          },
+          "values": {
+            "text": "42"
+          }
+        },
+        {
+          "id": "bad",
+          "type": "builtin:to-number",
+          "name": "bad",
+          "position": {
+            "x": 840,
+            "y": 170
+          },
+          "values": {
+            "text": "abc"
+          }
+        },
+        {
+          "id": "yes",
+          "type": "builtin:boolean",
+          "name": "yes",
+          "position": {
+            "x": 0,
+            "y": 340
+          },
+          "values": {
+            "value": true
+          }
+        },
+        {
+          "id": "no",
+          "type": "builtin:boolean",
+          "name": "no",
+          "position": {
+            "x": 280,
+            "y": 340
+          },
+          "values": {
+            "value": false
+          }
+        },
+        {
+          "id": "and",
+          "type": "builtin:and",
+          "name": "and",
+          "position": {
+            "x": 560,
+            "y": 340
+          },
+          "values": {}
+        },
+        {
+          "id": "or",
+          "type": "builtin:or",
+          "name": "or",
+          "position": {
+            "x": 840,
+            "y": 340
+          },
+          "values": {}
+        },
+        {
+          "id": "not",
+          "type": "builtin:not",
+          "name": "not",
+          "position": {
+            "x": 0,
+            "y": 510
+          },
+          "values": {}
+        },
+        {
+          "id": "eq",
+          "type": "builtin:equals",
+          "name": "eq",
+          "position": {
+            "x": 280,
+            "y": 510
+          },
+          "values": {
+            "b": 42
+          }
+        },
+        {
+          "id": "if",
+          "type": "builtin:if",
+          "name": "if",
+          "position": {
+            "x": 560,
+            "y": 510
+          },
+          "values": {
+            "then": "big",
+            "else": "small"
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e14",
+          "source": {
+            "node": "t1",
+            "port": "value"
+          },
+          "target": {
+            "node": "cat",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e15",
+          "source": {
+            "node": "t2",
+            "port": "value"
+          },
+          "target": {
+            "node": "cat",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e16",
+          "source": {
+            "node": "cat",
+            "port": "result"
+          },
+          "target": {
+            "node": "len",
+            "port": "text"
+          }
+        },
+        {
+          "id": "e17",
+          "source": {
+            "node": "num",
+            "port": "value"
+          },
+          "target": {
+            "node": "tt",
+            "port": "value"
+          }
+        },
+        {
+          "id": "e18",
+          "source": {
+            "node": "yes",
+            "port": "value"
+          },
+          "target": {
+            "node": "and",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e19",
+          "source": {
+            "node": "no",
+            "port": "value"
+          },
+          "target": {
+            "node": "and",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e20",
+          "source": {
+            "node": "yes",
+            "port": "value"
+          },
+          "target": {
+            "node": "or",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e21",
+          "source": {
+            "node": "no",
+            "port": "value"
+          },
+          "target": {
+            "node": "or",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e22",
+          "source": {
+            "node": "no",
+            "port": "value"
+          },
+          "target": {
+            "node": "not",
+            "port": "value"
+          }
+        },
+        {
+          "id": "e23",
+          "source": {
+            "node": "tn",
+            "port": "value"
+          },
+          "target": {
+            "node": "eq",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e24",
+          "source": {
+            "node": "eq",
+            "port": "result"
+          },
+          "target": {
+            "node": "if",
+            "port": "condition"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-10-07T00:00:00.000Z",
+    "updatedAt": "2026-10-07T00:00:00.000Z"
+  },
+  "composites": []
+}

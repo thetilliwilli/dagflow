@@ -1,7 +1,9 @@
 // SC-002 / SC-003 (фича 001, SC-008 фичи 002) и SC-005 (фича 002) на графе из 100 нодов.
 // Отдельный проект Playwright `perf` (npm run test:perf). Замеры — внутри страницы
-// (performance.now), чтобы не учитывать накладные расходы протокола.
-import { expect, test, type Page } from '@playwright/test';
+// (performance.now), чтобы не учитывать накладные расходы протокола Playwright.
+// Фича 004: то же распространение для целей Worker и Server (SC-002 фичи 004).
+import { expect, test, type Locator, type Page } from '@playwright/test';
+import { startEngineServer } from './engine-server';
 import { openSidebar, paletteItem, selectNode, setInput } from './helpers';
 
 function chainExport() {
@@ -211,4 +213,87 @@ test('SC-002/SC-003/SC-005: граф из 100 нодов', async ({ page }) => {
   expect(report['SC-002 перемещение']).toBeLessThan(100);
   expect(report['SC-005 окно свойств']).toBeLessThan(100);
   expect(report['SC-005 временное окно']).toBeLessThan(100);
+});
+
+/** Медиана времени от отмены/повтора правки «Числа» до нового значения в «Показать». */
+async function propagationOn(page: Page): Promise<number> {
+  await setInput(page, node(page, 'src'), 'value', '10');
+  await selectNode(node(page, 'show'));
+  await expect(showValue(page)).toHaveText('108');
+  const runs = await page.evaluate(async () => {
+    const out = () =>
+      document.querySelector('.prop-grid li.prop-row[data-port="value"] .value-view')!.textContent;
+    const result: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const before = out();
+      const t0 = performance.now();
+      window.dispatchEvent(
+        new KeyboardEvent('keydown', {
+          key: 'z',
+          ctrlKey: true,
+          shiftKey: i % 2 === 1,
+          bubbles: true,
+        }),
+      );
+      await new Promise<void>((resolve) => {
+        const check = () => (out() !== before ? resolve() : requestAnimationFrame(check));
+        check();
+      });
+      result.push(performance.now() - t0);
+    }
+    return result;
+  });
+  return median(runs);
+}
+
+async function openChain(page: Page) {
+  await page.goto('/');
+  await (await openSidebar(page)).getByLabel('Import from file').setInputFiles({
+    name: 'perf.dagflow.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(chainExport()),
+  });
+  await expect(page.locator('.react-flow__node')).toHaveCount(100);
+}
+
+/** Выбрать цель в разделе «Engine» (панель открыта) и дождаться подключения. */
+async function useTarget(page: Page, pick: (section: Locator) => Promise<void>, ready: RegExp) {
+  const section = (await openSidebar(page)).getByRole('region', { name: 'Engine' });
+  await pick(section);
+  await expect(page.getByRole('button', { name: /^Engine: / })).toHaveText(ready);
+  await page.getByRole('button', { name: 'Menu' }).click();
+  await page.locator('.react-flow__controls-fitview').click();
+}
+
+test('SC-002 фичи 004: граф из 100 нодов — Worker < 0,2 с, сервер на этом компьютере < 0,5 с', async ({
+  page,
+}) => {
+  const server = await startEngineServer();
+  try {
+    await openChain(page);
+    await useTarget(
+      page,
+      (s) =>
+        s.getByRole('listitem').filter({ hasText: 'This browser' }).getByRole('button').click(),
+      /● Worker/,
+    );
+    const worker = await propagationOn(page);
+
+    await useTarget(
+      page,
+      async (s) => {
+        await s
+          .getByRole('textbox', { name: 'Server address, e.g. localhost:8080' })
+          .fill(server.address);
+        await s.getByRole('button', { name: 'Connect' }).click();
+      },
+      /● Server/,
+    );
+    const remote = await propagationOn(page);
+    console.log(`SC-002 (004) Worker: ${worker.toFixed(1)} мс; Server: ${remote.toFixed(1)} мс`);
+    expect(worker).toBeLessThan(200);
+    expect(remote).toBeLessThan(500);
+  } finally {
+    await server.stop();
+  }
 });

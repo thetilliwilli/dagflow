@@ -14,5 +14,12 @@
     "noEmit": true,
     "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom", "node"]
   },
-  "include": ["src", "tests", "vite.config.ts", "playwright.config.ts"]
+  "include": [
+    "src",
+    "tests",
+    "packages/*/test",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "playwright.bundle.config.ts"
+  ]
 }

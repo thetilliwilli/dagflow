@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { DirectoryStorage } from '../../../src/storage/directory-storage';
 import { toJsonText, workflowToFile } from '../../../src/model/serialize';
-import type { CompositeDef, Workspace } from '../../../src/engine';
+import type { CompositeDef, Workspace } from '@dagflow/engine';
 import { sampleWorkflow } from '../model/fixtures';
 import { FakeDirectory } from './fake-directory';
 import { readFileSync } from 'node:fs';
-import { createEvaluator } from '../../../src/engine/evaluator';
-import { createRegistry } from '../../../src/engine/registry';
+import { createEvaluator, createRegistry } from '@dagflow/engine';
 
 const composite: CompositeDef = {
   id: 'c1',

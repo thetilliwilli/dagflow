@@ -1,5 +1,5 @@
 // Раскладка рабочего хранилища поверх FileSystemDirectoryHandle — одна реализация для папки и OPFS (research R7)
-import type { CompositeDef, Workflow, Workspace } from '../engine';
+import type { CompositeDef, Workflow, Workspace } from '@dagflow/engine';
 import {
   compositeToFile,
   fileToComposite,

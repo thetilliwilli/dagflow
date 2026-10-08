@@ -1,7 +1,7 @@
 // Палитра — плавающее окно с вкладками категорий (US1 #3–#5, FR-005, FR-006)
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { categories, COMPOSITE_CATEGORY } from '../../src/engine';
+import { categories, COMPOSITE_CATEGORY } from '@dagflow/engine';
 import { createActions } from '../../src/store/actions';
 import { AppProvider } from '../../src/store/react';
 import { activeTab, tabGraph } from '../../src/store/store';

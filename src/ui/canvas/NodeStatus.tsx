@@ -1,5 +1,5 @@
 // Бейдж статуса нода и текст причины (FR-016…FR-018)
-import type { NodeState } from '../../engine';
+import type { NodeState } from '@dagflow/engine';
 import { statusLabels } from '../messages';
 
 const icons: Record<NodeState['status'], string> = {

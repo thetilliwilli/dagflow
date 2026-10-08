@@ -1,0 +1,13 @@
+{
+  "name": "@dagflow/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@dagflow/engine": "*",
+    "valibot": "^1.5.0"
+  }
+}

@@ -15,6 +15,11 @@
   --t-array: #8250df;
   --t-object: #bf3989;
   --t-any: #57606a;
+  /* Состояние цели вычисления (фича 004, FR-014) */
+  --engine-ready: #2da44e;
+  --engine-pending: #bf8700;
+  --engine-offline: #8c959f;
+  --engine-problem: #cf222e;
 }
 
 html,
@@ -28,6 +33,7 @@ body,
 }
 
 .editor {
+  position: relative;
   height: 100%;
 }
 
@@ -944,4 +950,187 @@ button.link {
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
+}
+
+/* Цель вычисления (фича 004): индикатор в верхней панели и раздел «Engine» (FR-003, FR-013, FR-014) */
+.topbar > .engine-indicator {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 65%;
+  padding: 0 8px;
+  border-left: 1px solid var(--border);
+  font-size: 13px;
+}
+.engine-indicator__state {
+  min-width: 0;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.engine-indicator__traffic {
+  flex: none;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.engine-indicator > button:not(.engine-indicator__state) {
+  flex: none;
+  font-size: 12px;
+}
+/* Связи с целью нет: последние известные значения приглушены (FR-019) — это не состояние нода */
+.flow-node.is-stale,
+.prop-grid.is-stale .value-view {
+  opacity: 0.55;
+}
+.prop-grid__stale {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.engine-indicator[data-tone='ready'] {
+  color: var(--engine-ready);
+}
+.engine-indicator[data-tone='pending'] {
+  color: var(--engine-pending);
+}
+.engine-indicator[data-tone='offline'] {
+  color: var(--engine-offline);
+}
+.engine-indicator[data-tone='problem'] {
+  color: var(--engine-problem);
+}
+.engine-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border-radius: 6px;
+  background: var(--bg);
+}
+.engine-section h2 {
+  margin: 0;
+  font-size: 14px;
+}
+.engine-section__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.engine-section__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.engine-section__row[aria-current='true'] {
+  font-weight: 600;
+}
+.engine-section__title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.engine-section__kind {
+  color: var(--muted);
+  font-size: 12px;
+}
+.engine-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.engine-dot[data-tone='ready'] {
+  background: var(--engine-ready);
+}
+.engine-dot[data-tone='pending'] {
+  background: var(--engine-pending);
+}
+.engine-dot[data-tone='offline'] {
+  background: var(--engine-offline);
+}
+.engine-dot[data-tone='problem'] {
+  background: var(--engine-problem);
+}
+.engine-section__connect {
+  display: flex;
+  gap: 6px;
+}
+.engine-section__connect input {
+  flex: 1;
+  min-width: 0;
+}
+.engine-section__hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.engine-section__error {
+  margin: 0;
+  color: var(--error);
+  font-size: 12px;
+}
+
+.engine-section__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.engine-section__item > p {
+  flex-basis: 100%;
+  padding-left: 20px;
+}
+.engine-section__sep {
+  color: var(--muted);
+  white-space: pre;
+}
+.engine-section__item .engine-section__row {
+  flex: 1;
+  min-width: 0;
+}
+.engine-section__versions {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: normal;
+}
+.engine-section__remove {
+  flex: none;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Вкладка больше лимита 8 МБ для цели (FR-024) */
+.editor__banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--error);
+  font-size: 13px;
 }

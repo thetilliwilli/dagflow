@@ -1,6 +1,6 @@
 // Компактное отображение JSON-значения с раскрытием (FR-007a)
 import { useState } from 'react';
-import { formatCompact, type JsonValue } from '../../engine';
+import { formatCompact, type JsonValue } from '@dagflow/engine';
 import { messages } from '../messages';
 
 function full(value: JsonValue): string {

@@ -12,7 +12,7 @@ import { useStore } from 'zustand';
 import { createStore, type StoreApi } from 'zustand/vanilla';
 import { activeTab, tabGraph, type AppStore } from './store';
 import * as logic from './ui-logic';
-import type { LinkEnd } from '../engine';
+import type { LinkEnd } from '@dagflow/engine';
 import type { LinkIntent, Point, StorageHint, UiState, WindowId } from './ui-logic';
 
 export type UiStoreApi = StoreApi<UiState>;

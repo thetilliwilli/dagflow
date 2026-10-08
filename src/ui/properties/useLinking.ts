@@ -1,7 +1,7 @@
 // Контроллер связывания (US4, research R5): указатель на документе → переходы машины связывания
 // в сторе интерфейса; цель под курсором ищется через document.elementFromPoint.
 import { useCallback, useEffect } from 'react';
-import { linkCandidates, type LinkEnd, type PortSide } from '../../engine';
+import { linkCandidates, type LinkEnd, type PortSide } from '@dagflow/engine';
 import { useActions, useApp } from '../../store/react';
 import { registryOf } from '../../store/registry';
 import { activeTab, tabGraph } from '../../store/store';

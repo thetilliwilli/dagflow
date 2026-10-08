@@ -1,5 +1,5 @@
 // Автосохранение: запись изменённых файлов через 300 мс после последнего изменения (research R7, FR-028, SC-008)
-import type { CompositeDef, Workflow, Workspace } from '../engine';
+import type { CompositeDef, Workflow, Workspace } from '@dagflow/engine';
 import type { AppState, AppStoreApi } from '../store/store';
 
 export interface AutosaveTarget {

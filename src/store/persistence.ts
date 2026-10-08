@@ -1,5 +1,5 @@
 // Хранение: загрузка при старте, восстановление доступа, смена хранилища и слияние, сбой папки (FR-028…028d)
-import type { CompositeDef, Workflow } from '../engine';
+import type { CompositeDef, Workflow } from '@dagflow/engine';
 import { createAutosave, workspaceOf } from '../storage/autosave';
 import { DirectoryStorage, type LoadedData } from '../storage/directory-storage';
 import {

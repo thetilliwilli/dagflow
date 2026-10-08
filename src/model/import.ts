@@ -8,7 +8,7 @@ import {
   type CompositeDef,
   type Graph,
   type Workflow,
-} from '../engine';
+} from '@dagflow/engine';
 import { ExportFileSchema } from './schemas';
 import { FORMAT_VERSION, issuePath } from './serialize';
 

@@ -1,0 +1,363 @@
+{
+  "format": "dagflow-export",
+  "version": 1,
+  "exportedAt": "2026-10-07T00:00:00.000Z",
+  "workflow": {
+    "id": "wf-comp",
+    "name": "Composite",
+    "graph": {
+      "nodes": [
+        {
+          "id": "n",
+          "type": "builtin:number",
+          "name": "n",
+          "position": {
+            "x": 0,
+            "y": 340
+          },
+          "values": {
+            "value": 5
+          }
+        },
+        {
+          "id": "i1",
+          "type": "composite:DS",
+          "name": "i1",
+          "position": {
+            "x": 280,
+            "y": 340
+          },
+          "values": {
+            "b": 3
+          }
+        },
+        {
+          "id": "i2",
+          "type": "composite:Q",
+          "name": "i2",
+          "position": {
+            "x": 560,
+            "y": 340
+          },
+          "values": {}
+        },
+        {
+          "id": "zero",
+          "type": "builtin:number",
+          "name": "zero",
+          "position": {
+            "x": 840,
+            "y": 340
+          },
+          "values": {
+            "value": 0
+          }
+        },
+        {
+          "id": "div",
+          "type": "builtin:divide",
+          "name": "div",
+          "position": {
+            "x": 0,
+            "y": 510
+          },
+          "values": {
+            "a": 1
+          }
+        },
+        {
+          "id": "i3",
+          "type": "composite:DS",
+          "name": "i3",
+          "position": {
+            "x": 280,
+            "y": 510
+          },
+          "values": {
+            "a": 1
+          }
+        },
+        {
+          "id": "show",
+          "type": "builtin:show",
+          "name": "show",
+          "position": {
+            "x": 560,
+            "y": 510
+          },
+          "values": {}
+        }
+      ],
+      "edges": [
+        {
+          "id": "e39",
+          "source": {
+            "node": "n",
+            "port": "value"
+          },
+          "target": {
+            "node": "i1",
+            "port": "a"
+          }
+        },
+        {
+          "id": "e40",
+          "source": {
+            "node": "n",
+            "port": "value"
+          },
+          "target": {
+            "node": "i2",
+            "port": "x"
+          }
+        },
+        {
+          "id": "e41",
+          "source": {
+            "node": "zero",
+            "port": "value"
+          },
+          "target": {
+            "node": "div",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e42",
+          "source": {
+            "node": "div",
+            "port": "result"
+          },
+          "target": {
+            "node": "i3",
+            "port": "b"
+          }
+        },
+        {
+          "id": "e43",
+          "source": {
+            "node": "i2",
+            "port": "y"
+          },
+          "target": {
+            "node": "show",
+            "port": "value"
+          }
+        }
+      ]
+    },
+    "createdAt": "2026-10-07T00:00:00.000Z",
+    "updatedAt": "2026-10-07T00:00:00.000Z"
+  },
+  "composites": [
+    {
+      "id": "DS",
+      "name": "Double sum",
+      "description": "",
+      "graph": {
+        "nodes": [
+          {
+            "id": "ia",
+            "type": "builtin:input",
+            "name": "ia",
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "values": {},
+            "ports": [
+              {
+                "name": "a",
+                "type": "number",
+                "required": true
+              }
+            ]
+          },
+          {
+            "id": "ib",
+            "type": "builtin:input",
+            "name": "ib",
+            "position": {
+              "x": 280,
+              "y": 0
+            },
+            "values": {},
+            "ports": [
+              {
+                "name": "b",
+                "type": "number",
+                "required": true
+              }
+            ]
+          },
+          {
+            "id": "add",
+            "type": "builtin:add",
+            "name": "add",
+            "position": {
+              "x": 560,
+              "y": 0
+            },
+            "values": {}
+          },
+          {
+            "id": "mul",
+            "type": "builtin:multiply",
+            "name": "mul",
+            "position": {
+              "x": 840,
+              "y": 0
+            },
+            "values": {
+              "b": 2
+            }
+          },
+          {
+            "id": "o",
+            "type": "builtin:output",
+            "name": "o",
+            "position": {
+              "x": 0,
+              "y": 170
+            },
+            "values": {},
+            "ports": [
+              {
+                "name": "result",
+                "type": "number"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "id": "e33",
+            "source": {
+              "node": "ia",
+              "port": "a"
+            },
+            "target": {
+              "node": "add",
+              "port": "a"
+            }
+          },
+          {
+            "id": "e34",
+            "source": {
+              "node": "ib",
+              "port": "b"
+            },
+            "target": {
+              "node": "add",
+              "port": "b"
+            }
+          },
+          {
+            "id": "e35",
+            "source": {
+              "node": "add",
+              "port": "result"
+            },
+            "target": {
+              "node": "mul",
+              "port": "a"
+            }
+          },
+          {
+            "id": "e36",
+            "source": {
+              "node": "mul",
+              "port": "result"
+            },
+            "target": {
+              "node": "o",
+              "port": "result"
+            }
+          }
+        ]
+      },
+      "createdAt": "2026-10-07T00:00:00.000Z",
+      "updatedAt": "2026-10-07T00:00:00.000Z"
+    },
+    {
+      "id": "Q",
+      "name": "Quad",
+      "description": "",
+      "graph": {
+        "nodes": [
+          {
+            "id": "qa",
+            "type": "builtin:input",
+            "name": "qa",
+            "position": {
+              "x": 280,
+              "y": 170
+            },
+            "values": {},
+            "ports": [
+              {
+                "name": "x",
+                "type": "number",
+                "required": true
+              }
+            ]
+          },
+          {
+            "id": "ds",
+            "type": "composite:DS",
+            "name": "ds",
+            "position": {
+              "x": 560,
+              "y": 170
+            },
+            "values": {
+              "b": 1
+            }
+          },
+          {
+            "id": "qo",
+            "type": "builtin:output",
+            "name": "qo",
+            "position": {
+              "x": 840,
+              "y": 170
+            },
+            "values": {},
+            "ports": [
+              {
+                "name": "y",
+                "type": "number"
+              }
+            ]
+          }
+        ],
+        "edges": [
+          {
+            "id": "e37",
+            "source": {
+              "node": "qa",
+              "port": "x"
+            },
+            "target": {
+              "node": "ds",
+              "port": "a"
+            }
+          },
+          {
+            "id": "e38",
+            "source": {
+              "node": "ds",
+              "port": "result"
+            },
+            "target": {
+              "node": "qo",
+              "port": "y"
+            }
+          }
+        ]
+      },
+      "createdAt": "2026-10-07T00:00:00.000Z",
+      "updatedAt": "2026-10-07T00:00:00.000Z"
+    }
+  ]
+}

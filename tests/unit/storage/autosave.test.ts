@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAutosave, type AutosaveTarget } from '../../../src/storage/autosave';
 import { createAppStore, type AppState } from '../../../src/store/store';
-import type { CompositeDef, Workflow, Workspace } from '../../../src/engine';
+import type { CompositeDef, Workflow, Workspace } from '@dagflow/engine';
 
 function fakeTarget() {
   const t = {

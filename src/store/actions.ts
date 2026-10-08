@@ -22,7 +22,10 @@ import {
   type PortRef,
   type Position,
   type Rejection,
-} from '../engine';
+} from '@dagflow/engine';
+import { parseAddress } from '../engine-link/address';
+import { removeServer } from '../engine-link/recent';
+import type { EngineTarget } from '../engine-link/types';
 import { compositeMessages, messages } from '../ui/messages';
 import { record, redo as redoStep, undo as undoStep } from './history';
 import { registryOf } from './registry';
@@ -47,7 +50,8 @@ export function uniqueName(base: string, taken: Iterable<string>): string {
 
 export type Result<T = object> = ({ ok: true } & T) | Rejection;
 
-export function createActions({ store, deps }: AppStore) {
+export function createActions(app: AppStore) {
+  const { store, deps } = app;
   /** Все графы: workflow и определения составных нодов. */
   function allGraphs(draft: AppState): Graph[] {
     return [
@@ -299,6 +303,60 @@ export function createActions({ store, deps }: AppStore) {
         draft.workflowOrder.push(workflow.id);
         openTabIn(draft, 'workflow', workflow.id);
       });
+    },
+
+    // --- Цель вычисления (фича 004: FR-001, FR-007, FR-008) ---
+
+    /** Подключиться к серверу по короткому адресу; неверный адрес — ошибка у поля без попытки. */
+    connectServer(input: string) {
+      const parsed = parseAddress(input);
+      if (!parsed.ok) {
+        // Неверный ввод — тоже новая попытка: идущую отменяем (FR-007)
+        app.engine?.cancelTrial();
+        store.setState((draft: AppState) => {
+          draft.engine.trial = {
+            target: { kind: 'server', address: input.trim() },
+            phase: 'probing',
+            failure: 'invalid-address',
+          };
+        });
+        return;
+      }
+      // Адрес из списка — запомненная схема первой; схема, введённая явно, важнее (FR-009)
+      const remembered = store
+        .getState()
+        .engine.recent.find((r) => r.address === parsed.address)?.scheme;
+      app.engine?.select(
+        { kind: 'server', address: parsed.address },
+        { hint: parsed.hint, remembered },
+      );
+    },
+
+    /** Выбрать цель из списка: сервер — пробная попытка с запомненной схемой. */
+    selectTarget(target: EngineTarget) {
+      const remembered =
+        target.kind === 'server'
+          ? store.getState().engine.recent.find((r) => r.address === target.address)?.scheme
+          : undefined;
+      app.engine?.select(target, { remembered });
+    },
+
+    /** «×» у невыбранного сервера в списке (FR-005). */
+    removeServer(address: string) {
+      store.setState((draft: AppState) => {
+        const next = removeServer(draft.engine.recent, address, draft.engine.target);
+        if (next !== draft.engine.recent) draft.engine.recent = next;
+      });
+    },
+
+    /** «Retry now»: попытка подключения сразу (FR-020). */
+    retryNow() {
+      app.engine?.retryNow();
+    },
+
+    /** «Use local engine»: цель Local сразу, повторы к прежней цели прекращаются (FR-022a). */
+    useLocalEngine() {
+      app.engine?.useLocal();
     },
 
     /** Показать уведомление; возвращает его id. */
