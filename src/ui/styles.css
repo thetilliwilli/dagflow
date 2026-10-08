@@ -33,6 +33,7 @@ body,
 }
 
 .editor {
+  position: relative;
   height: 100%;
 }
 
@@ -1096,4 +1097,19 @@ button.link {
   color: var(--muted);
   font-size: 14px;
   cursor: pointer;
+}
+
+/* Вкладка больше лимита 8 МБ для цели (FR-024) */
+.editor__banner {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  z-index: 5;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--error);
+  font-size: 13px;
 }

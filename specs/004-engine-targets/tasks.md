@@ -233,14 +233,14 @@ engine»; другая версия engine → подключение работ
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T073 [US6] Поддельные серверы в `tests/e2e/engine-server.ts`: «другой протокол» (`welcome` с `protocol: 2`, затем `error version-mismatch` и закрытие), «другой engine» (настоящий хост, `welcome.engine = '0.0.9'`), «не знает нод» (хост с реестром без одного встроенного нода), «сбоит» (отвечает `error internal` с `doc`)
-- [ ] T074 [US6] e2e `tests/e2e/engine-us6-errors.spec.ts` — US6 #1–#7: ручное подключение к «другому протоколу» → «The server uses a different protocol version (server 2, editor 1). Update the server or the editor.», прежняя цель (#1); сохранённая цель стала «другим протоколом» → индикатор «Protocol version differs (server 2, editor 1)» + «Use local engine», повторов нет (#2); «другой engine» → подключение работает, индикатор и раздел показывают обе версии (#3); «не знает нод» → у этого нода ошибка неизвестного типа, остальные считаются (#4, FR-023a); workflow > 8 МБ → на вкладке «This workflow is too large for the server (limit: 8 MB).», ноды приглушены, после правки, уменьшившей граф, — снова считается (#5); «сбоит» → уведомление «The engine could not process the workflow. Retrying.» и один повтор на ревизию (#6); сервер «забыл» вкладку → молча передаётся заново (#7)
+- [X] T073 [US6] Поддельные серверы в `tests/e2e/engine-server.ts`: «другой протокол» (`welcome` с `protocol: 2`, затем `error version-mismatch` и закрытие), «другой engine» (настоящий хост, `welcome.engine = '0.0.9'`), «не знает нод» (хост с реестром без одного встроенного нода), «сбоит» (отвечает `error internal` с `doc`)
+- [X] T074 [US6] e2e `tests/e2e/engine-us6-errors.spec.ts` — US6 #1–#7: ручное подключение к «другому протоколу» → «The server uses a different protocol version (server 2, editor 1). Update the server or the editor.», прежняя цель (#1); сохранённая цель стала «другим протоколом» → индикатор «Protocol version differs (server 2, editor 1)» + «Use local engine», повторов нет (#2); «другой engine» → подключение работает, индикатор и раздел показывают обе версии (#3); «не знает нод» → у этого нода ошибка неизвестного типа, остальные считаются (#4, FR-023a); workflow > 8 МБ → на вкладке «This workflow is too large for the server (limit: 8 MB).», ноды приглушены, после правки, уменьшившей граф, — снова считается (#5); «сбоит» → уведомление «The engine could not process the workflow. Retrying.» и один повтор на ревизию (#6); сервер «забыл» вкладку → молча передаётся заново (#7)
 
 ### Implementation for User Story 6
 
-- [ ] T075 [US6] Статус `incompatible` в `connection.ts` и `src/store/engine.ts` (из события клиента; закрытие после `version-mismatch` — не обрыв); тексты у поля и в индикаторе — по ui-texts.md
-- [ ] T076 [US6] Обработка событий клиента в `src/store/engine.ts`: `too-large` → `tooLarge.tabs[doc]` / `tooLarge.library` (сброс при следующей успешной отправке), полоса «This workflow is too large…» над холстом в `src/ui/Editor.tsx`; `failed` → уведомление `notify('warning', …)` и повтор по правилам клиента; `resend` — без уведомления
-- [ ] T077 [US6] Прогнать T073–T074 и unit-тесты клиента (T016) по ошибкам обмена
+- [X] T075 [US6] Статус `incompatible` в `connection.ts` и `src/store/engine.ts` (из события клиента; закрытие после `version-mismatch` — не обрыв); тексты у поля и в индикаторе — по ui-texts.md
+- [X] T076 [US6] Обработка событий клиента в `src/store/engine.ts`: `too-large` → `tooLarge.tabs[doc]` / `tooLarge.library` (сброс при следующей успешной отправке), полоса «This workflow is too large…» над холстом в `src/ui/Editor.tsx`; `failed` → уведомление `notify('warning', …)` и повтор по правилам клиента; `resend` — без уведомления
+- [X] T077 [US6] Прогнать T073–T074 и unit-тесты клиента (T016) по ошибкам обмена
 
 **Checkpoint**: все ошибки обмена понятны пользователю и не теряют работу.
 

@@ -107,8 +107,15 @@ export function startEngine(app: AppStore, options: EngineOptions = {}): () => v
             else delete draft.engine.tooLarge.tabs[e.doc];
             break;
           case 'failed':
+            // Цель не смогла обработать запрос: уведомление; повтор делает клиент (FR-025)
+            draft.notifications.push({
+              id: app.deps.newId(),
+              kind: 'warning',
+              text: engineMessages.processFailed,
+            });
+            break;
           case 'resend':
-            // Уведомления — US6 (T076)
+            // Цель забыла вкладку — клиент молча передал её заново (FR-025)
             break;
         }
       }
