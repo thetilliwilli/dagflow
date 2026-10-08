@@ -402,4 +402,4 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 
 ## Phase 14: Convergence
 
-- [ ] T114 Дописать `'lna-denied'` в тип `ConnectionStatus` (`failed.reason`) и комментарий к нему в `specs/004-engine-targets/data-model.md` — как в `src/engine-link/types.ts` per Constitution V, CLAUDE.md «отклонения» (contradicts)
+- [X] T114 Дописать `'lna-denied'` в тип `ConnectionStatus` (`failed.reason`) и комментарий к нему в `specs/004-engine-targets/data-model.md` — как в `src/engine-link/types.ts` per Constitution V, CLAUDE.md «отклонения» (contradicts)

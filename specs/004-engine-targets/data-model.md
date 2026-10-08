@@ -59,7 +59,7 @@ type ConnectionStatus =
   | { kind: 'ready'; engine: string; encrypted: boolean }
   | { kind: 'offline'; attempt: number; retryAt: number } // retryAt — время по часам адаптера
   | { kind: 'incompatible'; host: { protocol: number; engine: string } }
-  | { kind: 'failed'; reason?: 'no-worker' }; // фоновый поток падает (3 за минуту) или Worker в браузере нет
+  | { kind: 'failed'; reason?: 'no-worker' | 'lna-denied' }; // без повторов: поток падает (3 за минуту), Worker нет в браузере или браузер запретил доступ к локальной сети
 ```
 
 ```text
