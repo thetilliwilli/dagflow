@@ -418,3 +418,10 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 ## Phase 16: Convergence
 
 - [X] T119 Спрашивать разрешение Local Network Access только для адресов этого компьютера и локальной сети (`localhost`, `127.0.0.0/8`, `[::1]`, `10/8`, `172.16/12`, `192.168/16`, `169.254/16`, `fc00::/7`, `fe80::/10`, `*.local`): для публичного адреса — обычный путь с таймаутом 3 с, без подсказки и без `lna-denied` (`src/engine-link/address.ts` — `isPrivateHost`, `src/engine-link/probe.ts`); уточнить research R8 п. 4; тесты в `tests/unit/engine-link/probe.test.ts` и `address.test.ts`; заодно поправить JSDoc, оказавшиеся не над своими функциями (`src/store/engine.ts` `browserProbeDeps`, `src/store/store.ts` `isStale`) per FR-011, FR-012, Edge Cases (LNA) (partial)
+
+---
+
+## Phase 17: Convergence
+
+- [ ] T120 Считать локальной сетью и очевидные локальные имена и записи: односложное имя (`nas`), `*.lan`, `*.home.arpa`, `*.internal`, IPv4 внутри IPv6 (`[::ffff:192.168.0.2]`, `[::ffff:127.0.0.1]` — как локальный компьютер) — `isPrivateHost`/`isLocalHost` в `src/engine-link/address.ts`, строки в таблицах `tests/unit/engine-link/address.test.ts`; в research R8 записать остаток как принятое ограничение (имя, которое браузер сам разрешает в частный адрес, скрипт не видит) per FR-011, FR-012, Edge Cases (LNA) (partial)
+- [ ] T121 Вернуть JSDoc «Порядок попыток (FR-009, FR-011)…» прямо над `export function schemeOrder` в `src/engine-link/address.ts` per T119, CLAUDE.md (contradicts)
