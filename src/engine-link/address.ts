@@ -51,7 +51,6 @@ export function isLocalHost(address: string): boolean {
     host === 'localhost' ||
     host.endsWith('.localhost') ||
     /^127\.\d+\.\d+\.\d+$/.test(host) ||
-    /^\[::ffff:127\.\d+\.\d+\.\d+\]$/.test(host) ||
     host === '[::1]'
   );
 }

@@ -425,3 +425,10 @@ Phase 1 → Phase 2 → US1 → **STOP and VALIDATE**: `engine-us1-server.spec.t
 
 - [X] T120 Считать локальной сетью и очевидные локальные имена и записи: односложное имя (`nas`), `*.lan`, `*.home.arpa`, `*.internal`, IPv4 внутри IPv6 (`[::ffff:192.168.0.2]`, `[::ffff:127.0.0.1]` — как локальный компьютер) — `isPrivateHost`/`isLocalHost` в `src/engine-link/address.ts`, строки в таблицах `tests/unit/engine-link/address.test.ts`; в research R8 записать остаток как принятое ограничение (имя, которое браузер сам разрешает в частный адрес, скрипт не видит) per FR-011, FR-012, Edge Cases (LNA) (partial)
 - [X] T121 Вернуть JSDoc «Порядок попыток (FR-009, FR-011)…» прямо над `export function schemeOrder` в `src/engine-link/address.ts` per T119, CLAUDE.md (contradicts)
+
+---
+
+## Phase 18: Convergence
+
+- [X] T122 Вернуть `isLocalHost` к определению spec (Assumptions, R9: `localhost`, `*.localhost`, `127.0.0.0/8`, `[::1]`) — убрать `[::ffff:127.x.x.x]` из `src/engine-link/address.ts` и из таблицы `tests/unit/engine-link/address.test.ts`; в research R8 записать как ограничение: IPv4 внутри IPv6 распознаётся только в точечной записи и только для частных диапазонов per Assumptions, R9, Constitution V (contradicts)
+- [X] T123 Переписать пункт 4 решения R8 в `research.md`: «в `try` — …» — сразу после вызова `navigator.permissions.query(...)`, принятое ограничение — отдельным предложением per research R8 (partial)

@@ -56,7 +56,6 @@ describe('isLocalHost', () => {
     ['127.0.0.1:8080', true],
     ['127.5.6.7', true],
     ['[::1]:8080', true],
-    ['[::ffff:127.0.0.1]:8080', true],
     ['192.168.1.20:9000', false],
     ['domain.com/dagflow', false],
     ['localhost.com', false],
