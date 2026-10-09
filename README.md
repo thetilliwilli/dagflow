@@ -29,11 +29,3 @@ npm run server -- --port 8080    # сервер выполнения (необя
 Сервер — один файл `packages/server/dist/dagflow-server.mjs`: его можно скопировать на
 другую машину и запустить в Node, Bun или Deno без копии проекта. По умолчанию он слушает
 только `127.0.0.1`; аутентификации нет.
-
-## Как сделан проект
-
-Весь путь от идеи до кода лежит в репозитории: по каталогу на фичу в [`specs/`](specs/)
-(spec, plan, research, tasks, quickstart), принципы — в
-[конституции](.specify/memory/constitution.md), исследования до фич — в
-[`docs/research/`](docs/research/), термины — в [глоссарии](docs/glossary.md).
-Команды, устройство и соглашения разработки — в [CLAUDE.md](CLAUDE.md).
