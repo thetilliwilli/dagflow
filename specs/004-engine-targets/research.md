@@ -1,8 +1,9 @@
 # Research: выполнение workflow на выбранном engine
 
-Решения для [plan.md](./plan.md). Обсуждение архитектуры до specify — `ignore/artefacts/`
-(01–07); прототип сервера — `ignore/artefacts/proto-server/` (проверен в Node 24.18,
-Bun 1.4.2, Deno 2.9.6 на linux-x64).
+Решения для [plan.md](./plan.md). Обсуждение архитектуры до specify —
+[docs/research/remote-engine/](../../docs/research/remote-engine/) (01–07); прототип
+сервера не сохранён, его результаты (Node 24.18, Bun 1.4.2, Deno 2.9.6 на linux-x64) —
+[08-plan-research.md](../../docs/research/remote-engine/08-plan-research.md).
 
 ## R1. Монорепо: пакеты и место приложения
 
@@ -254,7 +255,7 @@ Bun 1.4.2, Deno 2.9.6 на linux-x64).
 
 ## R10. Сервер: один файл для трёх сред
 
-Проверено прототипом (`ignore/artefacts/proto-server/`).
+Проверено прототипом (не сохранён; итоги — `docs/research/remote-engine/08-plan-research.md`).
 
 - **Decision**: `packages/server/src/main.ts` выбирает среду при запуске:
   `globalThis.Deno` → `Deno.serve` + `Deno.upgradeWebSocket`; `globalThis.Bun` →
